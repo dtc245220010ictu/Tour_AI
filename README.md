@@ -216,3 +216,6 @@ Truy cập trang Chatbot tại **http://127.0.0.1:5000/chat** và thử nghiệm
 - *"Tôi có khoảng 5 triệu, muốn đi biển 3-4 ngày thì có tour nào?"* &rarr; Gợi ý Tour Phú Quốc và Đà Nẵng còn chỗ.
 - *"Tour Sa Pa leo núi Fansipan còn chỗ không?"* &rarr; Báo số chỗ còn của tour Sa Pa.
 - *"Có tour Đà Lạt nào dưới 100 nghìn không?"* &rarr; **Kiểm tra Zero Hallucination**: Chatbot thông báo lịch sự không có tour nào giá dưới 100k, tuyệt đối không bịa tour giả!
+
+#   H e _ t h o n g _ Q L _ t o u r _ c o _ t i c h _ h o p _ A I  
+ 
