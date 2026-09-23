@@ -97,7 +97,7 @@
                     <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
                         <div
                             class="{% if s.occupancy_rate >= 80 %}occupancy-high{% elif s.occupancy_rate >= 50 %}occupancy-mid{% else %}occupancy-low{% endif %}"
-                            style="height: 100%; width: {{ s.occupancy_rate }}%; border-radius: 4px;">
+                            style="height: 100%; width: 0; border-radius: 4px;" data-fill="{{ s.occupancy_rate }}">
                         </div>
                     </div>
                 </div>
@@ -147,4 +147,14 @@
         </table>
     </div>
 </div>
+
+<script>
+    // Áp dụng chiều rộng thanh công suất từ data-fill (tránh biểu thức Jinja trong style=)
+    document.querySelectorAll('[data-fill]').forEach(function (el) {
+        var w = parseFloat(el.getAttribute('data-fill'));
+        if (!isNaN(w)) {
+            el.style.width = w + '%';
+        }
+    });
+</script>
 {% endblock %}
