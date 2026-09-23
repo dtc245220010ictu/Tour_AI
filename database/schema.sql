@@ -84,10 +84,15 @@ CREATE TABLE IF NOT EXISTS payments (
     booking_id INTEGER NOT NULL,
     amount DECIMAL(12, 2) NOT NULL,
     payment_method VARCHAR(30) NOT NULL DEFAULT 'BANK_TRANSFER', -- 'CASH', 'BANK_TRANSFER', 'ONLINE'
+    payment_type VARCHAR(30) NOT NULL DEFAULT 'FULL', -- 'DEPOSIT', 'FULL', 'REMAINING', 'REFUND'
     transaction_id VARCHAR(100),
     payment_status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS', -- 'PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'
     payment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (booking_id) REFERENCES bookings (id) ON DELETE CASCADE
+    verified_by INTEGER,
+    verified_at DATETIME,
+    notes TEXT,
+    FOREIGN KEY (booking_id) REFERENCES bookings (id) ON DELETE CASCADE,
+    FOREIGN KEY (verified_by) REFERENCES users (id) ON DELETE SET NULL
 );
 
 -- 7. Bảng TOUR_GUIDES (Hồ sơ hướng dẫn viên)
@@ -140,7 +145,24 @@ CREATE TABLE IF NOT EXISTS chat_logs (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- INDEXES TỐI ƯU HÓA TÌM KIẾM VÀ RETRIEVAL CỦA RAG CHATBOT
+-- 11. Bảng TOUR_EXPENSES (Chi phí vận hành tour)
+CREATE TABLE IF NOT EXISTS tour_expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    schedule_id INTEGER NOT NULL,
+    category VARCHAR(50) NOT NULL, -- 'HOTEL', 'TRANSPORT', 'MEAL', 'TICKETS', 'GUIDE_FEE', 'OTHER'
+    title VARCHAR(200) NOT NULL,
+    amount DECIMAL(12, 2) NOT NULL,
+    supplier_name VARCHAR(150),
+    invoice_code VARCHAR(50),
+    expense_date DATE NOT NULL,
+    created_by INTEGER,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (schedule_id) REFERENCES tour_schedules (id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+);
+
+-- INDEXES TỐI ƯU HÓA TÌM KIẾM VÀ RETRIEVAL CỦA RAG CHATBOT & KẾ TOÁN
 CREATE INDEX IF NOT EXISTS idx_tours_destination ON tours (destination_id);
 CREATE INDEX IF NOT EXISTS idx_tours_price ON tours (base_price);
 CREATE INDEX IF NOT EXISTS idx_tours_duration ON tours (duration_days);
@@ -149,4 +171,7 @@ CREATE INDEX IF NOT EXISTS idx_schedules_lookup ON tour_schedules (tour_id, depa
 CREATE INDEX IF NOT EXISTS idx_bookings_user ON bookings (user_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_schedule ON bookings (schedule_id);
 CREATE INDEX IF NOT EXISTS idx_feedbacks_tour ON feedbacks (tour_id);
+CREATE INDEX IF NOT EXISTS idx_expenses_schedule ON tour_expenses (schedule_id);
+CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments (booking_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments (payment_status);
 

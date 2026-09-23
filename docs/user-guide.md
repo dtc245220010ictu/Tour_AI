@@ -73,3 +73,63 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
      - Các điểm khách hàng hài lòng nhất (Hướng dẫn viên, đồ ăn, cảnh quan...).
      - Các hạn chế cần khắc phục (xe cộ, thời gian nghỉ ngơi...).
      - Đề xuất cải tiến hành động cụ thể cho ban quản lý.
+
+---
+
+## PHẦN III. HƯỚNG DẪN DÀNH CHO KẾ TOÁN (ACCOUNTANT / ADMIN)
+
+Đăng nhập bằng tài khoản kế toán (`accountant@tourai.vn` / `accountant123`) hoặc quản trị viên (`admin@tourai.vn` / `admin123`), sau đó nhấn mục **💼 Kế toán** trên thanh menu.
+
+### 1. Dashboard Tài Chính Kế Toán
+1. Truy cập **Kế toán → Bảng điều khiển**.
+2. Theo dõi 4 chỉ số tài chính chính:
+   - **Tổng Thực Thu (Tiền Vào):** Tổng các khoản thanh toán thành công từ khách hàng.
+   - **Tổng Thực Chi (Tiền Ra):** Bao gồm chi phí vận hành tour và hoàn tiền hủy tour.
+   - **Tồn Quỹ Ròng (Net Cash):** Số dư tiền mặt & ngân hàng hiện có.
+   - **Công Nợ Phải Thu:** Tổng tiền khách hàng còn nợ chưa thanh toán đủ.
+3. Xem cảnh báo giao dịch chuyển khoản chờ duyệt và đơn hủy tour cần lập phiếu chi.
+4. Xem tóm tắt hiệu quả lợi nhuận (P&L) các đợt khởi hành gần nhất.
+
+### 2. Đối Soát & Duyệt Thanh Toán Chuyển Khoản
+1. Truy cập **Kế toán → Phiếu Thu & Đối Soát**.
+2. Danh sách hiển thị các giao dịch thanh toán (Đang chờ / Thành công).
+3. Khi khách hàng chuyển khoản ngân hàng, trạng thái là `PENDING`. Kế toán kiểm tra sao kê ngân hàng, nếu đúng thì nhấn nút **Duyệt tiền vào** để xác nhận.
+4. Sau khi duyệt, đơn đặt tour của khách tự động chuyển sang trạng thái `CONFIRMED`.
+
+### 3. Quản Lý Công Nợ Khách Hàng
+1. Truy cập **Kế toán → Công Nợ**.
+2. Hệ thống tự động tính toán: `Công nợ = Tổng tiền đơn tour - Tổng tiền đã thanh toán`.
+3. Bảng hiển thị: Mã đơn, Tên khách, Tour & Ngày đi, Đã nộp, Còn nợ, Trạng thái (Đặt cọc một phần / Chưa thanh toán).
+4. Nhấn **Thu nợ** để mở form lập phiếu thu cho từng đợt thanh toán còn lại.
+
+### 4. Quản Lý Chi Phí Vận Hành Đoàn Tour
+1. Truy cập **Kế toán → Chi Phí Tour**.
+2. Chọn Lịch khởi hành đoàn tour và ghi nhận từng khoản chi theo 6 hạng mục:
+   - 🚌 Xe vận chuyển / Vé máy bay
+   - 🏨 Phòng khách sạn / Lưu trú
+   - 🍽️ Ăn uống / Nhà hàng
+   - 🎟️ Vé thắng cảnh / Cáp treo
+   - 👨‍💼 Thù lao Hướng dẫn viên
+   - 📦 Chi phí phát sinh khác
+3. Nhập số tiền, tên nhà cung cấp, số hóa đơn, ngày lập phiếu và ghi chú.
+4. Có thể lọc chi phí theo từng đợt khởi hành để kiểm soát ngân sách chặt chẽ.
+
+### 5. Báo Cáo Lợi Nhuận Từng Đoàn Tour (P&L Report)
+1. Truy cập **Kế toán → Báo Cáo P&L**.
+2. Xem bảng lãi lỗ cho từng chuyến đi:
+   - **Doanh thu:** Tổng tiền khách hàng đã thanh toán thành công.
+   - **Chi phí vận hành:** Tổng các khoản chi đã ghi nhận (có phân loại cơ cấu chi phí).
+   - **Lợi nhuận gộp:** = Doanh thu - Chi phí.
+   - **Tỷ suất lợi nhuận (Margin %):** = (Lợi nhuận gộp / Doanh thu) × 100.
+3. Biên lợi nhuận được đánh dấu màu: 🟢 ≥ 20% (Tốt), 🟡 > 0% (Trung bình), 🔴 ≤ 0% (Lỗ).
+4. Có thể lọc theo chuyến đi cụ thể hoặc xem tổng hợp tất cả.
+
+### 6. Quản Lý Hoàn Tiền Khi Hủy Tour
+1. Truy cập **Kế toán → Hoàn Tiền Hủy**.
+2. Chính sách hoàn tiền tự động tính theo 3 mốc thời gian:
+   - Hủy trước ≥ 7 ngày trước khởi hành → Hoàn **90%** tiền đã nộp.
+   - Hủy từ 3 đến 6 ngày → Hoàn **50%**.
+   - Hủy dưới 3 ngày → **Không hoàn tiền (0%)**.
+3. Kế toán xem danh sách đơn hủy, số tiền đề xuất hoàn và nhấn **Lập phiếu chi** để xuất quỹ.
+4. Có thể điều chỉnh số tiền hoàn trả thực tế trước khi xác nhận nếu cần.
+

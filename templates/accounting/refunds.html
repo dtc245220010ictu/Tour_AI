@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Quản Lý Hoàn Tiền Huỷ Tour - TourAI Kế Toán{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 30px 20px 60px;">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Quản Lý Hoàn Tiền Khi Hủy
+                Tour</h1>
+            <p style="color: #64748b;">Đối soát các đơn tour bị hủy, áp dụng tỷ lệ hoàn tiền theo chính sách lữ hành và
+                lập phiếu chi</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ url_for('accounting.transactions') }}" class="btn btn-outline">Sổ thu & Đối soát</a>
+            <a href="{{ url_for('accounting.dashboard') }}" class="btn btn-primary" style="background: #0284c7;">&larr;
+                Bảng điều khiển</a>
+        </div>
+    </div>
+
+    <!-- Refund Policy Alert -->
+    <div
+        style="background: #eff6ff; border: 1px solid #bfdbfe; border-left: 5px solid #2563eb; border-radius: 12px; padding: 18px 22px; margin-bottom: 25px;">
+        <h4 style="font-size: 15px; font-weight: 700; color: #1e40af; margin-bottom: 6px;">📋 Chính Sách Hoàn Tiền Hủy
+            Tour Của Công Ty:</h4>
+        <ul style="margin: 0; padding-left: 20px; font-size: 13.5px; color: #1e3a8a; line-height: 1.6;">
+            <li><strong>Hủy trước $\ge$ 7 ngày:</strong> Hoàn lại <strong>90%</strong> số tiền khách đã thanh toán (giữ
+                lại 10% phí điều hành & giao dịch).</li>
+            <li><strong>Hủy từ 3 đến 6 ngày:</strong> Hoàn lại <strong>50%</strong> số tiền khách đã thanh toán.</li>
+            <li><strong>Hủy dưới 3 ngày trước khởi hành:</strong> <strong>Không hoàn tiền (0%)</strong> do các dịch vụ
+                vé xe, phòng KS đã chốt.</li>
+        </ul>
+    </div>
+
+    <!-- Summary Statistics -->
+    {% set ns = namespace(pending_count=0, refunded_count=0, total_refunded=0) %}
+    {% for r in refund_requests %}
+    {% if r.is_refunded %}
+    {% set ns.refunded_count = ns.refunded_count + 1 %}
+    {% set ns.total_refunded = ns.total_refunded + r.refunded_amount %}
+    {% else %}
+    {% set ns.pending_count = ns.pending_count + 1 %}
+    {% endif %}
+    {% endfor %}
+
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 30px;">
+        <div
+            style="background: #ffffff; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; border-left: 4px solid #f59e0b;">
+            <div style="font-size: 13px; color: #64748b; font-weight: 600;">CHỜ XỬ LÝ HOÀN TIỀN</div>
+            <div style="font-size: 26px; font-weight: 800; color: #d97706; margin-top: 6px;">{{ ns.pending_count }}
+                <span style="font-size: 14px; font-weight: 500;">đơn</span></div>
+            <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Đơn hủy có tiền cần thanh toán lại</div>
+        </div>
+
+        <div
+            style="background: #ffffff; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; border-left: 4px solid #10b981;">
+            <div style="font-size: 13px; color: #64748b; font-weight: 600;">ĐÃ HOÀN TẤT HOÀN TIỀN</div>
+            <div style="font-size: 26px; font-weight: 800; color: #10b981; margin-top: 6px;">{{ ns.refunded_count }}
+                <span style="font-size: 14px; font-weight: 500;">đơn</span></div>
+            <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Đã lập phiếu chi hoàn tiền</div>
+        </div>
+
+        <div
+            style="background: #ffffff; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; border-left: 4px solid #ef4444;">
+            <div style="font-size: 13px; color: #64748b; font-weight: 600;">TỔNG TIỀN ĐÃ HOÀN TRẢ</div>
+            <div style="font-size: 24px; font-weight: 800; color: #dc2626; margin-top: 6px;">{{ ns.total_refunded |
+                format_currency }}</div>
+            <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Xuất quỹ ngân hàng</div>
+        </div>
+    </div>
+
+    <!-- Table of Cancelled Bookings for Refund -->
+    <div
+        style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+        <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 20px;">
+            Danh Sách Đơn Đặt Tour Hủy Bỏ ({{ refund_requests | length }})
+        </h3>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                    <th style="padding: 12px 14px;">Mã Đơn & Khách hàng</th>
+                    <th style="padding: 12px 14px;">Tour & Khởi hành</th>
+                    <th style="padding: 12px 14px; text-align: right;">Khách đã nộp</th>
+                    <th style="padding: 12px 14px; text-align: center;">Đề xuất hoàn</th>
+                    <th style="padding: 12px 14px; text-align: right;">Số tiền hoàn đề xuất</th>
+                    <th style="padding: 12px 14px; text-align: center;">Trạng thái</th>
+                    <th style="padding: 12px 14px; text-align: center;">Lập phiếu chi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in refund_requests %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 14px;">
+                        <span style="font-weight: 800; color: #e11d48;">{{ r.booking_code }}</span><br>
+                        <strong>{{ r.customer_name }}</strong><br>
+                        <span style="font-size: 12px; color: #64748b;">📞 {{ r.customer_phone }}</span>
+                    </td>
+                    <td style="padding: 14px;">
+                        <div style="font-weight: 600; color: #0f172a;">{{ r.tour_title }}</div>
+                        <div style="font-size: 12px; color: #64748b;">📅 Khởi hành: {{ r.departure_date }}</div>
+                    </td>
+                    <td style="padding: 14px; text-align: right; font-weight: 700; color: #0284c7;">
+                        {{ r.paid_amount | format_currency }}
+                    </td>
+                    <td style="padding: 14px; text-align: center;">
+                        <span
+                            style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 13px; color: #334155;">
+                            {{ r.suggested_percent }}%
+                        </span>
+                    </td>
+                    <td style="padding: 14px; text-align: right; font-weight: 800; color: #e11d48;">
+                        {{ r.suggested_amount | format_currency }}
+                    </td>
+                    <td style="padding: 14px; text-align: center;">
+                        {% if r.is_refunded %}
+                        <span
+                            style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;">
+                            ✅ Đã hoàn: {{ r.refunded_amount | format_currency }}
+                        </span>
+                        {% else %}
+                        <span
+                            style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;">
+                            ⏳ Chờ lập phiếu chi
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px; text-align: center;">
+                        {% if not r.is_refunded %}
+                        <details style="position: relative; display: inline-block;">
+                            <summary class="btn btn-outline"
+                                style="padding: 6px 12px; font-size: 12px; cursor: pointer; color: #dc2626; border-color: #fca5a5;">
+                                💸 Lập phiếu chi
+                            </summary>
+                            <div
+                                style="position: absolute; right: 0; top: 35px; width: 320px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 18px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 100; text-align: left;">
+                                <h4 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Xác
+                                    nhận hoàn tiền cho {{ r.customer_name }}</h4>
+                                <form action="{{ url_for('accounting.refunds') }}" method="POST">
+                                    <input type="hidden" name="booking_id" value="{{ r.booking_id }}">
+
+                                    <div style="margin-bottom: 10px;">
+                                        <label style="font-size: 12px; font-weight: 600; color: #475569;">Số tiền hoàn
+                                            trả (VNĐ):</label>
+                                        <input type="number" name="refund_amount"
+                                            value="{{ r.suggested_amount | round | int }}" max="{{ r.paid_amount }}"
+                                            required
+                                            style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 700;">
+                                    </div>
+
+                                    <div style="margin-bottom: 12px;">
+                                        <label style="font-size: 12px; font-weight: 600; color: #475569;">Ghi chú / Số
+                                            tài khoản nhận:</label>
+                                        <input type="text" name="notes" placeholder="Hoàn tiền STK Vietcombank..."
+                                            style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary"
+                                        style="width: 100%; background: #dc2626; padding: 8px; font-size: 13px;">
+                                        Xác nhận Xuất Quỹ Hoàn Tiền
+                                    </button>
+                                </form>
+                            </div>
+                        </details>
+                        {% else %}
+                        <span style="font-size: 12px; color: #94a3b8;">Đã đóng</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="padding: 40px; text-align: center; color: #94a3b8;">
+                        Hiện không có đơn tour nào bị hủy cần xử lý hoàn tiền.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

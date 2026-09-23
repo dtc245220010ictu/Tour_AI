@@ -7,7 +7,9 @@ from database.db import execute_query, get_db
 
 class PaymentService:
     @staticmethod
-    def record_payment(booking_id: int, amount: float, payment_method: str = "BANK_TRANSFER", transaction_id: str = None):
+    def record_payment(booking_id: int, amount: float, payment_method: str = "BANK_TRANSFER",
+                       transaction_id: str = None, payment_type: str = "FULL",
+                       payment_status: str = "SUCCESS", notes: str = ""):
         if amount <= 0:
             raise ValueError("Số tiền thanh toán phải lớn hơn 0.")
 
@@ -23,14 +25,15 @@ class PaymentService:
             # Record payment
             cursor.execute(
                 """INSERT INTO payments 
-                (booking_id, amount, payment_method, transaction_id, payment_status)
-                VALUES (?, ?, ?, ?, 'SUCCESS');""",
-                (booking_id, amount, payment_method, transaction_id)
+                (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?);""",
+                (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, notes)
             )
             payment_id = cursor.lastrowid
 
-            # Update booking status to CONFIRMED
-            cursor.execute("UPDATE bookings SET status = 'CONFIRMED' WHERE id = ?;", (booking_id,))
+            # If payment is successful and not a refund, update booking status to CONFIRMED
+            if payment_status == "SUCCESS" and payment_type != "REFUND":
+                cursor.execute("UPDATE bookings SET status = 'CONFIRMED' WHERE id = ?;", (booking_id,))
 
         return payment_id
 

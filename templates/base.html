@@ -28,7 +28,11 @@
 
                 {% if session.get('user_id') %}
                 <li><a href="{{ url_for('booking.my_bookings') }}" class="nav-link">Đơn của tôi</a></li>
-                {% if session.get('role') in ['ADMIN', 'STAFF', 'ACCOUNTANT'] %}
+                {% if session.get('role') in ['ADMIN', 'ACCOUNTANT'] %}
+                <li><a href="{{ url_for('accounting.dashboard') }}" class="nav-link"
+                        style="color: #059669; font-weight: 600;">💼 Kế toán</a></li>
+                {% endif %}
+                {% if session.get('role') in ['ADMIN', 'STAFF'] %}
                 <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"
                         style="color: #d97706; font-weight: 600;">📊 Quản trị</a></li>
                 {% endif %}

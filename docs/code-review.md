@@ -51,3 +51,4 @@ Tài liệu này ghi nhận kết quả đánh giá chất lượng toàn bộ m
 | `ISSUE-01` | MEDIUM | `question_analyzer.py` | Bổ sung nhận diện đơn vị "nghìn/ngàn" để không bỏ sót các truy vấn ngân sách nhỏ. *(Đã khắc phục hoàn toàn trong đợt test tự động)*. |
 | `ISSUE-02` | LOW | `app.py` | Khi triển khai trên môi trường Production HTTPS, nên cấu hình thêm `SESSION_COOKIE_SECURE = True` và `SESSION_COOKIE_HTTPONLY = True`. |
 | `ISSUE-03` | LOW | `tour_service.py` | Có thể bổ sung cache tầng in-memory (ví dụ Redis hoặc lru_cache) cho danh mục `get_all_destinations()` để giảm bớt số lần đọc đĩa khi lưu lượng truy cập lớn. |
+

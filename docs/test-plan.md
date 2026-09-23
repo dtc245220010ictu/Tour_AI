@@ -53,3 +53,4 @@ Tài liệu này đặc tả kế hoạch kiểm thử tự động và thủ c�
 - **Môi trường CSDL Test:** SQLite isolated test database (`database/test_tour_ai.db`)
 - **HTTP Client:** Flask Test Client
 - **Lệnh thực thi:** `python -m pytest -v`
+

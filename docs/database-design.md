@@ -68,16 +68,33 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `notes` TEXT
 - `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 
-### 1.6 Bảng `payments` (Lịch sử thanh toán & Đặt cọc)
+### 1.6 Bảng `payments` (Lịch sử thanh toán, Đặt cọc, Công nợ & Hoàn tiền)
 - `id` INT PRIMARY KEY AUTO_INCREMENT
 - `booking_id` INT NOT NULL (FK -> `bookings.id`)
 - `amount` DECIMAL(12,2) NOT NULL
 - `payment_method` VARCHAR(30) NOT NULL (`CASH`, `BANK_TRANSFER`, `ONLINE_MOCK`)
+- `payment_type` VARCHAR(30) NOT NULL DEFAULT 'FULL' (`DEPOSIT`, `FULL`, `REMAINING`, `REFUND`)
 - `transaction_id` VARCHAR(100)
 - `payment_status` VARCHAR(20) NOT NULL DEFAULT 'SUCCESS' (`PENDING`, `SUCCESS`, `FAILED`, `REFUNDED`)
 - `payment_date` DATETIME DEFAULT CURRENT_TIMESTAMP
+- `verified_by` INT (FK -> `users.id`, Kế toán xác nhận giao dịch ngân hàng)
+- `verified_at` DATETIME
+- `notes` TEXT
 
-### 1.7 Bảng `tour_guides` (Hồ sơ hướng dẫn viên)
+### 1.7 Bảng `tour_expenses` (Chi phí vận hành theo đoàn tour / lịch khởi hành)
+- `id` INT PRIMARY KEY AUTO_INCREMENT
+- `schedule_id` INT NOT NULL (FK -> `tour_schedules.id`)
+- `category` VARCHAR(50) NOT NULL (`HOTEL`, `TRANSPORT`, `MEAL`, `TICKETS`, `GUIDE_FEE`, `OTHER`)
+- `title` VARCHAR(200) NOT NULL (Nội dung chi phí, ví dụ: "Thuê xe Limousine 29 chỗ")
+- `amount` DECIMAL(12,2) NOT NULL
+- `supplier_name` VARCHAR(150) (Đối tác nhà xe, khách sạn, nhà hàng...)
+- `invoice_code` VARCHAR(50) (Số hóa đơn/chứng từ đính kèm)
+- `expense_date` DATE NOT NULL
+- `created_by` INT (FK -> `users.id`, Kế toán hoặc điều hành lập phiếu)
+- `notes` TEXT
+- `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+
+### 1.8 Bảng `tour_guides` (Hồ sơ hướng dẫn viên)
 - `id` INT PRIMARY KEY AUTO_INCREMENT
 - `full_name` VARCHAR(100) NOT NULL
 - `phone` VARCHAR(20) NOT NULL UNIQUE

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Sổ Quỹ Phiếu Thu & Đối Soát Thanh Toán - TourAI Kế Toán{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 30px 20px 60px;">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Sổ Quỹ Thu & Đối Soát
+                Giao Dịch</h1>
+            <p style="color: #64748b;">Quản lý toàn bộ phiếu thu, đặt cọc và đối soát tiền chuyển khoản ngân hàng</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ url_for('accounting.dashboard') }}" class="btn btn-outline">&larr; Bảng điều khiển</a>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <a href="{{ url_for('accounting.transactions') }}"
+            class="btn {% if not current_status %}btn-primary{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px;">Tất cả giao dịch</a>
+        <a href="{{ url_for('accounting.transactions', status='PENDING') }}"
+            class="btn {% if current_status == 'PENDING' %}btn-primary{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px; background: {% if current_status == 'PENDING' %}#d97706{% endif %}; border-color: #d97706;">Chờ
+            kế toán duyệt (PENDING)</a>
+        <a href="{{ url_for('accounting.transactions', status='SUCCESS') }}"
+            class="btn {% if current_status == 'SUCCESS' %}btn-primary{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px;">Đã khớp tiền (SUCCESS)</a>
+    </div>
+
+    <!-- Transactions Table -->
+    <div
+        style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                    <th style="padding: 12px 16px;">Mã đơn & Mã GD</th>
+                    <th style="padding: 12px 16px;">Khách hàng</th>
+                    <th style="padding: 12px 16px;">Tour & Khởi hành</th>
+                    <th style="padding: 12px 16px;">Loại phiếu thu</th>
+                    <th style="padding: 12px 16px;">Phương thức</th>
+                    <th style="padding: 12px 16px; text-align: right;">Số tiền</th>
+                    <th style="padding: 12px 16px;">Trạng thái</th>
+                    <th style="padding: 12px 16px;">Người duyệt & Ngày</th>
+                    <th style="padding: 12px 16px; text-align: center;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 14px 16px;">
+                        <span style="font-weight: 700; color: #0284c7;">{{ p.booking_code }}</span><br>
+                        <span style="font-size: 11.5px; color: #64748b;">{{ p.transaction_id or 'Chưa có mã GD'
+                            }}</span>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <strong>{{ p.customer_name }}</strong><br>
+                        <span style="font-size: 12px; color: #64748b;">{{ p.customer_phone }}</span>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        {{ p.tour_title }}<br>
+                        <span style="font-size: 12px; color: #0284c7;">📅 {{ p.departure_date }}</span>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        {% if p.payment_type == 'DEPOSIT' %}
+                        <span
+                            style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11.5px;">ĐẶT
+                            CỌC</span>
+                        {% elif p.payment_type == 'FULL' %}
+                        <span
+                            style="background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11.5px;">TRỌN
+                            GÓI</span>
+                        {% elif p.payment_type == 'REMAINING' %}
+                        <span
+                            style="background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11.5px;">THU
+                            NỢ CÒN LẠI</span>
+                        {% elif p.payment_type == 'REFUND' %}
+                        <span
+                            style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11.5px;">HOÀN
+                            TIỀN HỦY</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px; font-size: 13px;">
+                        {{ p.payment_method }}
+                    </td>
+                    <td
+                        style="padding: 14px 16px; text-align: right; font-weight: 800; color: {% if p.payment_type == 'REFUND' %}#dc2626{% else %}#16a34a{% endif %};">
+                        {% if p.payment_type == 'REFUND' %}-{% endif %}{{ p.amount | format_currency }}
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        {% if p.payment_status == 'SUCCESS' %}
+                        <span
+                            style="color: #166534; background: #dcfce7; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px;">SUCCESS</span>
+                        {% elif p.payment_status == 'PENDING' %}
+                        <span
+                            style="color: #92400e; background: #fef3c7; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px;">PENDING</span>
+                        {% else %}
+                        <span
+                            style="color: #991b1b; background: #fee2e2; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px;">{{
+                            p.payment_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px; font-size: 12px; color: #64748b;">
+                        {% if p.accountant_name %}
+                        ✅ {{ p.accountant_name }}<br>
+                        <span>{{ p.verified_at or p.payment_date }}</span>
+                        {% else %}
+                        <span style="color: #94a3b8;">Chưa xác nhận</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                        {% if p.payment_status == 'PENDING' %}
+                        <form action="{{ url_for('accounting.verify_transaction', payment_id=p.id) }}" method="POST"
+                            onsubmit="return confirm('Bạn xác nhận khoản tiền này đã được nhận đủ trong tài khoản ngân hàng?');">
+                            <button type="submit" class="btn btn-primary"
+                                style="padding: 6px 12px; font-size: 12px; background: #16a34a;">Duyệt tiền vào</button>
+                        </form>
+                        {% else %}
+                        <span style="color: #10b981; font-weight: 600; font-size: 13px;">✓ Đã khớp</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

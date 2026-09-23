@@ -98,3 +98,24 @@ Tài liệu này đặc tả toàn bộ các endpoints của hệ thống TourAI
 | `POST` | `/booking/<id>/pay` | Xác nhận thanh toán (mô phỏng hoặc chuyển khoản) | `CUSTOMER`, `ACCOUNTANT` |
 | `POST` | `/booking/<id>/cancel` | Hủy đơn đặt tour, tự động hoàn trả số chỗ | `CUSTOMER`, `ADMIN` |
 | `POST` | `/feedback/new` | Gửi đánh giá sao (1-5) và nhận xét | `CUSTOMER` |
+
+---
+
+## 4. Quản Lý Kế Toán & Tài Chính (Accounting Module Endpoints)
+
+Tất cả các endpoints kế toán đều được bảo vệ bằng cơ chế RBAC (`@roles_required("ADMIN", "ACCOUNTANT")`).
+
+| Phương thức | Đường dẫn URL | Mô tả chức năng & Nghiệp vụ | Payload / Tham số |
+|---|---|---|---|
+| `GET` | `/accounting/dashboard` | Dashboard tài chính: Sổ quỹ dòng tiền (Inflow, Outflow, Net Cash), cảnh báo giao dịch chờ duyệt, top nợ khách hàng, tóm tắt P&L | Không |
+| `GET` | `/accounting/transactions` | Danh sách phiếu thu, lịch sử giao dịch và đối soát chuyển khoản ngân hàng | Query: `?status=PENDING` hoặc `?status=SUCCESS` |
+| `POST` | `/accounting/transactions/<id>/verify` | Kế toán xác nhận tiền đã vào tài khoản ngân hàng, chuyển đơn sang `CONFIRMED` | Không |
+| `GET` | `/accounting/debts` | Quản lý công nợ khách hàng (Total - Paid = Remaining Debt) | Không |
+| `POST` | `/accounting/debts/<booking_id>/pay` | Lập phiếu thu thanh toán nợ / đợt tiếp theo của khách hàng | Form: `amount`, `payment_method`, `notes` |
+| `GET` | `/accounting/expenses` | Xem danh sách chi phí vận hành đoàn tour (xe, phòng KS, ăn uống, vé, thù lao HDV) | Query: `?schedule_id=<id>` |
+| `POST` | `/accounting/expenses` | Lập phiếu chi mới gắn với Lịch khởi hành đoàn tour | Form: `schedule_id`, `category`, `title`, `amount`, `supplier_name`, `invoice_code`, `expense_date`, `notes` |
+| `GET` | `/accounting/tours-pnl` | Báo cáo Lợi nhuận (P&L): Doanh thu - Chi phí = Lợi nhuận gộp & Biên lợi nhuận (%) theo từng chuyến đi | Query: `?schedule_id=<id>` |
+| `GET` | `/accounting/refunds` | Danh sách đơn hủy tour, đối soát theo chính sách hoàn tiền 3 mốc (>=7 ngày: 90%, 3-6 ngày: 50%, <3 ngày: 0%) | Không |
+| `POST` | `/accounting/refunds` | Lập phiếu chi xuất quỹ hoàn tiền hủy tour cho khách hàng | Form: `booking_id`, `refund_amount`, `notes` |
+
+

@@ -35,7 +35,7 @@ def get_db():
         conn.close()
 
 def init_db():
-    """Initialize tables and indexes using schema.sql."""
+    """Initialize tables and indexes using schema.sql and apply backward-compatible migrations."""
     if not os.path.exists(SCHEMA_PATH):
         raise FileNotFoundError(f"Schema file not found at {SCHEMA_PATH}")
     
@@ -44,6 +44,22 @@ def init_db():
 
     with get_db() as conn:
         conn.executescript(schema_sql)
+        cursor = conn.cursor()
+        
+        # Backward-compatible migrations for existing SQLite database
+        try:
+            cursor.execute("PRAGMA table_info(payments);")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "payment_type" not in columns:
+                cursor.execute("ALTER TABLE payments ADD COLUMN payment_type VARCHAR(30) NOT NULL DEFAULT 'FULL';")
+            if "verified_by" not in columns:
+                cursor.execute("ALTER TABLE payments ADD COLUMN verified_by INTEGER REFERENCES users(id);")
+            if "verified_at" not in columns:
+                cursor.execute("ALTER TABLE payments ADD COLUMN verified_at DATETIME;")
+            if "notes" not in columns:
+                cursor.execute("ALTER TABLE payments ADD COLUMN notes TEXT;")
+        except Exception:
+            pass
 
 def execute_query(query, params=(), fetch_one=False, fetch_all=False, commit=False):
     """

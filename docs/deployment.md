@@ -142,3 +142,4 @@ sudo systemctl status tourai
    sudo apt install -y certbot python3-certbot-nginx
    sudo certbot --nginx -d tourai.vn -d www.tourai.vn
    ```
+

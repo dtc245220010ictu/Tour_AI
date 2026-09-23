@@ -20,6 +20,7 @@ from routes.feedback_routes import feedback_bp
 from routes.admin_routes import admin_bp
 from routes.chat_routes import chat_bp
 from routes.ai_tools_routes import ai_tools_bp
+from routes.accounting_routes import accounting_bp
 
 def create_app():
     app = Flask(__name__)
@@ -40,6 +41,7 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(ai_tools_bp)
+    app.register_blueprint(accounting_bp)
 
     # Custom Jinja filters
     @app.template_filter("format_currency")

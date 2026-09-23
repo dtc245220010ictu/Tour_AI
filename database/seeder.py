@@ -19,7 +19,71 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from werkzeug.security import generate_password_hash
 from database.db import get_db, init_db
 
-def seed_all():
+def seed_accounting_addon(cursor):
+    # Check if bookings already exist for accounting test
+    cursor.execute("SELECT id FROM bookings WHERE booking_code = 'BK-20261002';")
+    if not cursor.fetchone():
+        cursor.execute(
+            """INSERT INTO bookings 
+            (booking_code, user_id, schedule_id, customer_name, customer_email, customer_phone, num_adults, num_children, total_amount, status, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            ("BK-20261002", 5, 3, "Trần Văn Đặt Cọc", "customer@tourai.vn", "0905678901", 2, 0, 7700000, "CONFIRMED", "Đã đặt cọc 3 triệu, còn nợ 4.7 triệu")
+        )
+        b2_id = cursor.lastrowid
+        cursor.execute(
+            """INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, verified_by, verified_at, notes)
+            VALUES (?, ?, ?, 'DEPOSIT', ?, 'SUCCESS', 3, '2026-09-16 14:00:00', 'Đã nhận đặt cọc đợt 1');""",
+            (b2_id, 3000000, "BANK_TRANSFER", "TXN-DEP-002")
+        )
+
+        cursor.execute(
+            """INSERT INTO bookings 
+            (booking_code, user_id, schedule_id, customer_name, customer_email, customer_phone, num_adults, num_children, total_amount, status, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            ("BK-20261003", 5, 5, "Lê Thị Chờ Duyệt", "customer@tourai.vn", "0905678901", 2, 0, 10400000, "PENDING", "Khách đã chuyển khoản Vietcombank, chờ kế toán kiểm tra")
+        )
+        b3_id = cursor.lastrowid
+        cursor.execute(
+            """INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, notes)
+            VALUES (?, ?, ?, 'FULL', ?, 'PENDING', 'Khách báo đã chuyển từ tài khoản VCB 001100xxxx');""",
+            (b3_id, 10400000, "BANK_TRANSFER", "TXN-PENDING-003")
+        )
+
+        cursor.execute(
+            """INSERT INTO bookings 
+            (booking_code, user_id, schedule_id, customer_name, customer_email, customer_phone, num_adults, num_children, total_amount, status, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            ("BK-20261004", 5, 1, "Phạm Hủy Tour", "customer@tourai.vn", "0905678901", 1, 0, 3200000, "CANCELLED", "Hủy trước 10 ngày, đủ điều kiện hoàn 90%")
+        )
+        b4_id = cursor.lastrowid
+        cursor.execute(
+            """INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, verified_by, verified_at, notes)
+            VALUES (?, ?, ?, 'FULL', ?, 'SUCCESS', 3, '2026-09-14 09:00:00', 'Đã thanh toán trước khi hủy');""",
+            (b4_id, 3200000, "BANK_TRANSFER", "TXN-PAID-004")
+        )
+
+    # Insert expenses if none exist
+    cursor.execute("SELECT COUNT(*) FROM tour_expenses;")
+    if cursor.fetchone()[0] == 0:
+        expenses = [
+            (1, "TRANSPORT", "Xe Limousine đưa đón Hà Nội - Tuần Châu", 3500000, "Nhà xe Phúc Xuyên Limousine", "HD-2026-01", "2026-10-14", 3, "Bao gồm phí cầu đường, cao tốc"),
+            (1, "HOTEL", "Thuê phòng nghỉ du thuyền 5 sao Paradise", 11000000, "Paradise Cruise Hạ Long", "HD-2026-02", "2026-10-15", 3, "Giá hợp đồng B2B 5 phòng view vịnh"),
+            (1, "MEAL", "Set menu hải sản 4 bữa chính trên tàu", 4800000, "Bếp Du Thuyền Paradise", "HD-2026-03", "2026-10-15", 3, "Suất ăn cao cấp kèm tiệc trà chiều"),
+            (1, "TICKETS", "Vé thắng cảnh vịnh Hạ Long và chèo Kayak", 1400000, "BQL Vịnh Hạ Long", "VE-2026-04", "2026-10-15", 3, "Vé tham quan tuyến 2"),
+            (1, "GUIDE_FEE", "Thù lao công tác hướng dẫn viên 2 ngày", 1600000, "Lê Văn Hải (HDV)", "PC-2026-01", "2026-10-16", 3, "800.000đ/ngày x 2 ngày"),
+            (3, "TRANSPORT", "Xe 29 chỗ đời mới tuyến Đà Nẵng - Hội An - Bà Nà", 5200000, "Hải Vân Transport Đà Nẵng", "HD-2026-10", "2026-10-17", 3, "Trọn gói 3 ngày đón tiễn sân bay"),
+            (3, "HOTEL", "Khách sạn 4 sao biển Mỹ Khê (6 phòng 2 đêm)", 7800000, "Mỹ Khê Beach Hotel", "HD-2026-11", "2026-10-18", 3, "Phòng Deluxe bao gồm ăn sáng buffet"),
+            (3, "TICKETS", "Vé cáp treo Bà Nà Hills kèm buffet trưa", 6500000, "Sun World Bà Nà Hills", "VE-2026-12", "2026-10-19", 3, "Đại lý lữ hành chiết khấu"),
+            (3, "GUIDE_FEE", "Thù lao hướng dẫn viên dẫn đoàn 3 ngày", 2400000, "Lê Văn Hải (HDV)", "PC-2026-02", "2026-10-20", 3, "800.000đ/ngày x 3 ngày"),
+        ]
+        cursor.executemany(
+            """INSERT INTO tour_expenses 
+            (schedule_id, category, title, amount, supplier_name, invoice_code, expense_date, created_by, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            expenses
+        )
+
+def seed_all(force=False):
     init_db()
     
     with get_db() as conn:
@@ -27,7 +91,13 @@ def seed_all():
         
         # Check if already seeded
         cursor.execute("SELECT COUNT(*) FROM users;")
-        if cursor.fetchone()[0] > 0:
+        if cursor.fetchone()[0] > 0 and not force:
+            # Check if accounting data needs to be seeded
+            cursor.execute("SELECT COUNT(*) FROM tour_expenses;")
+            if cursor.fetchone()[0] == 0:
+                print("Seeding missing Tour Expenses & Additional Bookings...")
+                seed_accounting_addon(cursor)
+                conn.commit()
             print("Database already contains data. Skipping seeder.")
             return
 
@@ -159,7 +229,7 @@ def seed_all():
         )
 
         print("Seeding Initial Bookings & Payments...")
-        # 1 confirmed booking for customer
+        # 1. Fully paid confirmed booking for customer
         cursor.execute(
             """INSERT INTO bookings 
             (booking_code, user_id, schedule_id, customer_name, customer_email, customer_phone, num_adults, num_children, total_amount, status, notes)
@@ -168,9 +238,73 @@ def seed_all():
         )
         booking_id = cursor.lastrowid
         cursor.execute(
-            """INSERT INTO payments (booking_id, amount, payment_method, transaction_id, payment_status)
-            VALUES (?, ?, ?, ?, ?);""",
-            (booking_id, 8640000, "ONLINE_MOCK", "TXN-998877", "SUCCESS")
+            """INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, verified_by, verified_at, notes)
+            VALUES (?, ?, ?, 'FULL', ?, 'SUCCESS', 3, '2026-09-15 10:30:00', 'Thanh toán trực tuyến thành công');""",
+            (booking_id, 8640000, "ONLINE_MOCK", "TXN-998877")
+        )
+
+        # 2. Deposit booking (Partially paid, has debt remaining)
+        cursor.execute(
+            """INSERT INTO bookings 
+            (booking_code, user_id, schedule_id, customer_name, customer_email, customer_phone, num_adults, num_children, total_amount, status, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            ("BK-20261002", 5, 3, "Trần Văn Đặt Cọc", "customer@tourai.vn", "0905678901", 2, 0, 7700000, "CONFIRMED", "Đã đặt cọc 3 triệu, còn nợ 4.7 triệu")
+        )
+        b2_id = cursor.lastrowid
+        cursor.execute(
+            """INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, verified_by, verified_at, notes)
+            VALUES (?, ?, ?, 'DEPOSIT', ?, 'SUCCESS', 3, '2026-09-16 14:00:00', 'Đã nhận đặt cọc đợt 1');""",
+            (b2_id, 3000000, "BANK_TRANSFER", "TXN-DEP-002")
+        )
+
+        # 3. Pending payment booking (Waiting for accountant reconciliation/approval)
+        cursor.execute(
+            """INSERT INTO bookings 
+            (booking_code, user_id, schedule_id, customer_name, customer_email, customer_phone, num_adults, num_children, total_amount, status, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            ("BK-20261003", 5, 5, "Lê Thị Chờ Duyệt", "customer@tourai.vn", "0905678901", 2, 0, 10400000, "PENDING", "Khách đã chuyển khoản Vietcombank, chờ kế toán kiểm tra")
+        )
+        b3_id = cursor.lastrowid
+        cursor.execute(
+            """INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, notes)
+            VALUES (?, ?, ?, 'FULL', ?, 'PENDING', 'Khách báo đã chuyển từ tài khoản VCB 001100xxxx');""",
+            (b3_id, 10400000, "BANK_TRANSFER", "TXN-PENDING-003")
+        )
+
+        # 4. Cancelled booking eligible for refund
+        cursor.execute(
+            """INSERT INTO bookings 
+            (booking_code, user_id, schedule_id, customer_name, customer_email, customer_phone, num_adults, num_children, total_amount, status, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            ("BK-20261004", 5, 1, "Phạm Hủy Tour", "customer@tourai.vn", "0905678901", 1, 0, 3200000, "CANCELLED", "Hủy trước 10 ngày, đủ điều kiện hoàn 90%")
+        )
+        b4_id = cursor.lastrowid
+        cursor.execute(
+            """INSERT INTO payments (booking_id, amount, payment_method, payment_type, transaction_id, payment_status, verified_by, verified_at, notes)
+            VALUES (?, ?, ?, 'FULL', ?, 'SUCCESS', 3, '2026-09-14 09:00:00', 'Đã thanh toán trước khi hủy');""",
+            (b4_id, 3200000, "BANK_TRANSFER", "TXN-PAID-004")
+        )
+
+        print("Seeding Tour Expenses (Chi phí vận hành đoàn)...")
+        expenses = [
+            # Lịch trình 1 (Hạ Long 2N1Đ)
+            (1, "TRANSPORT", "Xe Limousine đưa đón Hà Nội - Tuần Châu", 3500000, "Nhà xe Phúc Xuyên Limousine", "HD-2026-01", "2026-10-14", 3, "Bao gồm phí cầu đường, cao tốc"),
+            (1, "HOTEL", "Thuê phòng nghỉ du thuyền 5 sao Paradise", 11000000, "Paradise Cruise Hạ Long", "HD-2026-02", "2026-10-15", 3, "Giá hợp đồng B2B 5 phòng view vịnh"),
+            (1, "MEAL", "Set menu hải sản 4 bữa chính trên tàu", 4800000, "Bếp Du Thuyền Paradise", "HD-2026-03", "2026-10-15", 3, "Suất ăn cao cấp kèm tiệc trà chiều"),
+            (1, "TICKETS", "Vé thắng cảnh vịnh Hạ Long và chèo Kayak", 1400000, "BQL Vịnh Hạ Long", "VE-2026-04", "2026-10-15", 3, "Vé tham quan tuyến 2"),
+            (1, "GUIDE_FEE", "Thù lao công tác hướng dẫn viên 2 ngày", 1600000, "Lê Văn Hải (HDV)", "PC-2026-01", "2026-10-16", 3, "800.000đ/ngày x 2 ngày"),
+
+            # Lịch trình 3 (Đà Nẵng 3N2Đ)
+            (3, "TRANSPORT", "Xe 29 chỗ đời mới tuyến Đà Nẵng - Hội An - Bà Nà", 5200000, "Hải Vân Transport Đà Nẵng", "HD-2026-10", "2026-10-17", 3, "Trọn gói 3 ngày đón tiễn sân bay"),
+            (3, "HOTEL", "Khách sạn 4 sao biển Mỹ Khê (6 phòng 2 đêm)", 7800000, "Mỹ Khê Beach Hotel", "HD-2026-11", "2026-10-18", 3, "Phòng Deluxe bao gồm ăn sáng buffet"),
+            (3, "TICKETS", "Vé cáp treo Bà Nà Hills kèm buffet trưa", 6500000, "Sun World Bà Nà Hills", "VE-2026-12", "2026-10-19", 3, "Đại lý lữ hành chiết khấu"),
+            (3, "GUIDE_FEE", "Thù lao hướng dẫn viên dẫn đoàn 3 ngày", 2400000, "Lê Văn Hải (HDV)", "PC-2026-02", "2026-10-20", 3, "800.000đ/ngày x 3 ngày"),
+        ]
+        cursor.executemany(
+            """INSERT INTO tour_expenses 
+            (schedule_id, category, title, amount, supplier_name, invoice_code, expense_date, created_by, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);""",
+            expenses
         )
 
         print("Seeding Feedbacks...")

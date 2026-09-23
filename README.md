@@ -218,4 +218,5 @@ Truy cập trang Chatbot tại **http://127.0.0.1:5000/chat** và thử nghiệm
 - *"Có tour Đà Lạt nào dưới 100 nghìn không?"* &rarr; **Kiểm tra Zero Hallucination**: Chatbot thông báo lịch sự không có tour nào giá dưới 100k, tuyệt đối không bịa tour giả!
 
 #   H e _ t h o n g _ Q L _ t o u r _ c o _ t i c h _ h o p _ A I  
+ #   T o u r _ A I  
  
