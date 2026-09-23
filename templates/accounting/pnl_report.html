@@ -125,7 +125,7 @@
                         <div
                             style="background: #e2e8f0; border-radius: 6px; height: 5px; width: 60px; margin: 4px auto 0; overflow: hidden;">
                             {% set pct = (r.booked_seats / r.total_seats * 100) if r.total_seats > 0 else 0 %}
-                            <div style="background: #0284c7; height: 100%; width: {{ pct }}%;"></div>
+                            <div style="background: #0284c7; height: 100%; width: 0;" data-fill="{{ pct }}"></div>
                         </div>
                     </td>
                     <td style="padding: 14px 12px; text-align: right; font-weight: 700; color: #166534;">
@@ -182,4 +182,14 @@
         </table>
     </div>
 </div>
+
+<script>
+    // Áp dụng chiều rộng thanh tiến độ từ data-fill (tránh biểu thức Jinja trong style=)
+    document.querySelectorAll('[data-fill]').forEach(function (el) {
+        var w = parseFloat(el.getAttribute('data-fill'));
+        if (!isNaN(w)) {
+            el.style.width = w + '%';
+        }
+    });
+</script>
 {% endblock %}
