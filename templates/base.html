@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TourAI - Quản Lý Tour Du Lịch Tích Hợp AI{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="{{ url_for('tour.index') }}" class="brand-logo">
+                <span>✈️</span> TourAI
+            </a>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('tour.index') }}" class="nav-link">Trang chủ</a></li>
+                <li><a href="{{ url_for('tour.catalog') }}" class="nav-link">Khám phá Tour</a></li>
+                <li><a href="{{ url_for('chat.chatbot_page') }}" class="nav-link"
+                        style="color: #0284c7; font-weight: 700;">🤖 Trợ lý AI</a></li>
+
+                {% if session.get('user_id') %}
+                <li><a href="{{ url_for('booking.my_bookings') }}" class="nav-link">Đơn của tôi</a></li>
+                {% if session.get('role') in ['ADMIN', 'STAFF', 'ACCOUNTANT'] %}
+                <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"
+                        style="color: #d97706; font-weight: 600;">📊 Quản trị</a></li>
+                {% endif %}
+                <li style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 14px; color: #64748b;">👤 {{ session.get('user_name') }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline"
+                        style="padding: 4px 10px; font-size: 13px;">Đăng xuất</a>
+                </li>
+                {% else %}
+                <li><a href="{{ url_for('auth.login') }}" class="nav-link">Đăng nhập</a></li>
+                <li><a href="{{ url_for('auth.register') }}" class="nav-btn">Đăng ký</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            <span>{{ message }}</span>
+            <button onclick="this.parentElement.remove()"
+                style="background: none; border: none; font-size: 18px; cursor: pointer; color: inherit;">&times;</button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main style="flex: 1;">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-col" style="max-width: 360px;">
+                    <h4>✈️ TourAI - Du Lịch Tích Hợp AI</h4>
+                    <p>Hệ sinh thái du lịch ứng dụng trí tuệ nhân tạo thế hệ mới (Đề tài 17). Tư vấn tour thông minh,
+                        gợi ý chính xác theo CSDL, quy trình đặt chỗ và quản trị chuyên nghiệp.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Khám Phá</h4>
+                    <p><a href="{{ url_for('tour.catalog') }}" style="color: #94a3b8;">Danh sách Tour</a></p>
+                    <p><a href="{{ url_for('chat.chatbot_page') }}" style="color: #94a3b8;">Chatbot AI Tư Vấn</a></p>
+                    <p><a href="{{ url_for('auth.login') }}" style="color: #94a3b8;">Đăng nhập hệ thống</a></p>
+                </div>
+                <div class="footer-col">
+                    <h4>Công Nghệ</h4>
+                    <p>Python Flask 3 & SQLite / MySQL</p>
+                    <p>Google Gemini Generative AI (RAG Pipeline)</p>
+                    <p>Standardized AI-Augmented SDLC</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 TourAI System. Bài tập lớn / Đồ án phát triển phần mềm chuẩn AI-Augmented SDLC.</p>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

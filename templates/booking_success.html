@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Đặt Chỗ Thành Công - TourAI{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 750px; padding: 50px 20px 70px; text-align: center;">
+    <div
+        style="background: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+        <div
+            style="width: 70px; height: 70px; background: #dcfce7; color: #166534; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 20px;">
+            ✓
+        </div>
+        <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Đặt Tour Thành Công!</h1>
+        <p style="color: #64748b; margin-bottom: 25px;">Mã đặt chỗ của bạn: <strong
+                style="color: #0284c7; font-size: 18px;">{{ booking.booking_code }}</strong></p>
+
+        <!-- Booking details summary -->
+        <div
+            style="text-align: left; background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 30px; font-size: 14.5px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #64748b;">Chuyến đi:</span>
+                <strong>{{ booking.tour_title }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #64748b;">Thời gian:</span>
+                <span>{{ booking.departure_date }} &rarr; {{ booking.return_date }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #64748b;">Hành khách:</span>
+                <span>{{ booking.num_adults }} người lớn{% if booking.num_children > 0 %}, {{ booking.num_children }}
+                    trẻ em{% endif %}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #64748b;">Trạng thái:</span>
+                {% if booking.status == 'CONFIRMED' %}
+                <span
+                    style="color: #166534; background: #dcfce7; padding: 2px 8px; border-radius: 4px; font-weight: 700;">ĐÃ
+                    THANH TOÁN</span>
+                {% else %}
+                <span
+                    style="color: #92400e; background: #fef3c7; padding: 2px 8px; border-radius: 4px; font-weight: 700;">CHỜ
+                    THANH TOÁN</span>
+                {% endif %}
+            </div>
+            <div
+                style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px dashed #cbd5e1; font-size: 16px;">
+                <span style="font-weight: 700; color: #0f172a;">Tổng số tiền:</span>
+                <span style="font-weight: 800; color: #e11d48;">{{ booking.total_amount | format_currency }}</span>
+            </div>
+        </div>
+
+        {% if booking.status == 'PENDING' %}
+        <!-- Payment Options -->
+        <div
+            style="text-align: left; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+            <h4 style="font-size: 16px; font-weight: 700; color: #166534; margin-bottom: 10px;">💳 Thanh Toán Xác Nhận
+                Giữ Chỗ</h4>
+            <p style="font-size: 14px; color: #374151; margin-bottom: 15px;">
+                Quý khách có thể thanh toán trực tuyến mô phỏng ngay bây giờ hoặc chuyển khoản theo số tài khoản ngân
+                hàng.
+            </p>
+            <form action="{{ url_for('booking.pay_booking', booking_id=booking.id) }}" method="POST">
+                <input type="hidden" name="payment_method" value="ONLINE_MOCK">
+                <button type="submit" class="btn btn-primary"
+                    style="background: #16a34a; border-color: #16a34a; padding: 10px 20px;">
+                    💳 Thanh toán ngay (Mô phỏng tức thì)
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <a href="{{ url_for('booking.my_bookings') }}" class="btn btn-outline">Xem đơn đặt của tôi</a>
+            <a href="{{ url_for('tour.index') }}" class="btn btn-primary">Về trang chủ</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

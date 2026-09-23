@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Quản Lý Đơn Đặt Tour - TourAI Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 30px 20px 60px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Quản Lý Đơn Đặt Chỗ
+                (Bookings)</h1>
+            <p style="color: #64748b;">Theo dõi trạng thái thanh toán, xác nhận và xử lý hủy tour</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline">&larr; Về Dashboard</a>
+    </div>
+
+    <!-- Filter Status Tabs -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <a href="{{ url_for('admin.manage_bookings') }}"
+            class="btn {% if not current_status %}btn-primary{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px;">Tất cả</a>
+        <a href="{{ url_for('admin.manage_bookings', status='PENDING') }}"
+            class="btn {% if current_status == 'PENDING' %}btn-primary{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px;">Chờ thanh toán</a>
+        <a href="{{ url_for('admin.manage_bookings', status='CONFIRMED') }}"
+            class="btn {% if current_status == 'CONFIRMED' %}btn-primary{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px;">Đã xác nhận</a>
+        <a href="{{ url_for('admin.manage_bookings', status='COMPLETED') }}"
+            class="btn {% if current_status == 'COMPLETED' %}btn-primary{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px;">Đã hoàn thành</a>
+        <a href="{{ url_for('admin.manage_bookings', status='CANCELLED') }}"
+            class="btn {% if current_status == 'CANCELLED' %}btn-primary{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px;">Đã hủy</a>
+    </div>
+
+    <!-- Bookings Table -->
+    <div
+        style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                    <th style="padding: 12px 16px;">Mã đơn</th>
+                    <th style="padding: 12px 16px;">Khách hàng</th>
+                    <th style="padding: 12px 16px;">Tour & Lịch đi</th>
+                    <th style="padding: 12px 16px;">Số khách</th>
+                    <th style="padding: 12px 16px;">Tổng tiền</th>
+                    <th style="padding: 12px 16px;">Trạng thái</th>
+                    <th style="padding: 12px 16px; text-align: center;">Cập nhật</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 14px 16px; font-weight: 700; color: #0284c7;">{{ b.booking_code }}</td>
+                    <td style="padding: 14px 16px;">
+                        <strong>{{ b.customer_name }}</strong><br>
+                        <span style="font-size: 12px; color: #64748b;">{{ b.customer_phone }}</span>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        {{ b.tour_title }}<br>
+                        <span style="font-size: 12px; color: #0284c7;">📅 {{ b.departure_date }}</span>
+                    </td>
+                    <td style="padding: 14px 16px;">{{ b.num_adults }} Lớn, {{ b.num_children }} Trẻ</td>
+                    <td style="padding: 14px 16px; font-weight: 700; color: #e11d48;">{{ b.total_amount |
+                        format_currency }}</td>
+                    <td style="padding: 14px 16px;">
+                        {% if b.status == 'CONFIRMED' %}
+                        <span
+                            style="color: #166534; background: #dcfce7; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px;">CONFIRMED</span>
+                        {% elif b.status == 'PENDING' %}
+                        <span
+                            style="color: #92400e; background: #fef3c7; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px;">PENDING</span>
+                        {% elif b.status == 'CANCELLED' %}
+                        <span
+                            style="color: #991b1b; background: #fee2e2; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px;">CANCELLED</span>
+                        {% elif b.status == 'COMPLETED' %}
+                        <span
+                            style="color: #0369a1; background: #e0f2fe; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 12px;">COMPLETED</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                        <form action="{{ url_for('admin.update_booking_status', booking_id=b.id) }}" method="POST"
+                            style="display: flex; gap: 6px; justify-content: center;">
+                            <select name="status"
+                                style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
+                                <option value="PENDING" {% if b.status=='PENDING' %}selected{% endif %}>PENDING</option>
+                                <option value="CONFIRMED" {% if b.status=='CONFIRMED' %}selected{% endif %}>CONFIRMED
+                                </option>
+                                <option value="COMPLETED" {% if b.status=='COMPLETED' %}selected{% endif %}>COMPLETED
+                                </option>
+                                <option value="CANCELLED" {% if b.status=='CANCELLED' %}selected{% endif %}>CANCELLED
+                                </option>
+                            </select>
+                            <button type="submit" class="btn btn-outline"
+                                style="padding: 4px 8px; font-size: 12px;">Lưu</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

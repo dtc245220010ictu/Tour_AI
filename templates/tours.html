@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Danh Sách Tour Du Lịch - TourAI{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 20px 60px;">
+    <!-- Page Title -->
+    <div style="margin-bottom: 30px;">
+        <h1 style="font-size: 32px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Danh Mục Tour Du Lịch</h1>
+        <p style="color: #64748b;">Tìm kiếm và lựa chọn tour du lịch phù hợp nhất với kế hoạch của bạn.</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <div
+        style="background: #ffffff; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+        <form action="{{ url_for('tour.catalog') }}" method="GET"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: flex-end;">
+            <div>
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Từ
+                    khóa</label>
+                <input type="text" name="keyword" value="{{ keyword }}" placeholder="Tên tour, vịnh, đảo..."
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+            </div>
+
+            <div>
+                <label
+                    style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Điểm
+                    đến</label>
+                <select name="destination_id"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                    <option value="">Tất cả điểm đến</option>
+                    {% for d in destinations %}
+                    <option value="{{ d.id }}" {% if selected_dest==d.id %}selected{% endif %}>{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label
+                    style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Ngân
+                    sách tối đa</label>
+                <select name="max_price"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                    <option value="">Tất cả mức giá</option>
+                    <option value="3000000" {% if selected_max_price==3000000 %}selected{% endif %}>Dưới 3 triệu
+                    </option>
+                    <option value="4000000" {% if selected_max_price==4000000 %}selected{% endif %}>Dưới 4 triệu
+                    </option>
+                    <option value="6000000" {% if selected_max_price==6000000 %}selected{% endif %}>Dưới 6 triệu
+                    </option>
+                </select>
+            </div>
+
+            <div>
+                <label
+                    style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Thời
+                    lượng</label>
+                <select name="duration"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                    <option value="">Tất cả thời lượng</option>
+                    <option value="2" {% if selected_duration==2 %}selected{% endif %}>2 ngày</option>
+                    <option value="3" {% if selected_duration==3 %}selected{% endif %}>3 ngày</option>
+                    <option value="4" {% if selected_duration==4 %}selected{% endif %}>4 ngày trở lên</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 10px;">Lọc kết quả</button>
+                <a href="{{ url_for('tour.catalog') }}" class="btn btn-outline" style="padding: 10px;">Đặt lại</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tours Grid -->
+    {% if tours %}
+    <div style="margin-bottom: 20px; font-size: 14px; color: #64748b;">
+        Tìm thấy <strong>{{ tours | length }}</strong> tour phù hợp.
+    </div>
+    <div class="tour-grid">
+        {% for tour in tours %}
+        <div class="tour-card">
+            <img src="{{ tour.image_url }}" alt="{{ tour.title }}" class="tour-card-img" loading="lazy">
+            <div class="tour-card-body">
+                <span class="tour-badge">📍 {{ tour.destination_name }}</span>
+                <h3 class="tour-card-title">{{ tour.title }}</h3>
+                <p class="tour-card-desc">{{ tour.description }}</p>
+
+                <div class="tour-meta">
+                    <span>⏱️ {{ tour.duration_days }} ngày {{ tour.duration_nights }} đêm</span>
+                    <span>🚌 {{ tour.transportation }}</span>
+                </div>
+
+                {% if tour.next_departure %}
+                <div
+                    style="font-size: 13px; color: #0369a1; background: #f0f9ff; padding: 6px 10px; border-radius: 6px; margin-bottom: 12px;">
+                    📅 Khởi hành: <strong>{{ tour.next_departure }}</strong>
+                    <span style="color: #10b981; font-weight: 600;">(Còn {{ tour.total_available_seats }} chỗ)</span>
+                </div>
+                {% else %}
+                <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;">
+                    📅 Đang cập nhật lịch mới
+                </div>
+                {% endif %}
+
+                <div class="tour-price-row">
+                    <div>
+                        <span style="font-size: 12px; color: #64748b; display: block;">Giá từ</span>
+                        <span class="tour-price">{{ tour.base_price | format_currency }}</span>
+                    </div>
+                    <a href="{{ url_for('tour.detail', slug=tour.slug) }}" class="btn btn-primary">Xem chi tiết</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div
+        style="text-align: center; padding: 60px 20px; background: #fff; border-radius: 14px; border: 1px dashed #cbd5e1;">
+        <div style="font-size: 48px; margin-bottom: 15px;">🏖️</div>
+        <h3 style="font-size: 20px; font-weight: 700; color: #334155; margin-bottom: 8px;">Không tìm thấy tour phù hợp
+        </h3>
+        <p style="color: #64748b; margin-bottom: 20px;">Hãy thử điều chỉnh bộ lọc hoặc nhờ Chatbot AI tư vấn gợi ý tour
+            tương tự nhé!</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <a href="{{ url_for('tour.catalog') }}" class="btn btn-outline">Xem tất cả tour</a>
+            <a href="{{ url_for('chat.chatbot_page') }}" class="btn btn-primary">💬 Hỏi Chatbot AI</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch Sử Đặt Tour - TourAI{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 40px 20px 60px;">
+    <div style="margin-bottom: 30px;">
+        <h1 style="font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Đơn Đặt Tour Của Tôi</h1>
+        <p style="color: #64748b;">Quản lý danh sách các chuyến du lịch bạn đã đặt chỗ</p>
+    </div>
+
+    {% if bookings %}
+    <div
+        style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14.5px;">
+            <thead>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                    <th style="padding: 14px 18px;">Mã đơn</th>
+                    <th style="padding: 14px 18px;">Tên tour</th>
+                    <th style="padding: 14px 18px;">Ngày khởi hành</th>
+                    <th style="padding: 14px 18px;">Số khách</th>
+                    <th style="padding: 14px 18px;">Tổng tiền</th>
+                    <th style="padding: 14px 18px;">Trạng thái</th>
+                    <th style="padding: 14px 18px; text-align: center;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in bookings %}
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 16px 18px; font-weight: 700; color: #0284c7;">{{ b.booking_code }}</td>
+                    <td style="padding: 16px 18px; font-weight: 600;">{{ b.tour_title }}</td>
+                    <td style="padding: 16px 18px; color: #475569;">{{ b.departure_date }}</td>
+                    <td style="padding: 16px 18px;">{{ b.num_adults }} Lớn{% if b.num_children > 0 %}, {{ b.num_children
+                        }} Trẻ{% endif %}</td>
+                    <td style="padding: 16px 18px; font-weight: 700; color: #e11d48;">{{ b.total_amount |
+                        format_currency }}</td>
+                    <td style="padding: 16px 18px;">
+                        {% if b.status == 'CONFIRMED' %}
+                        <span
+                            style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">ĐÃ
+                            XÁC NHẬN</span>
+                        {% elif b.status == 'PENDING' %}
+                        <span
+                            style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">CHỜ
+                            THANH TOÁN</span>
+                        {% elif b.status == 'CANCELLED' %}
+                        <span
+                            style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">ĐÃ
+                            HỦY</span>
+                        {% else %}
+                        <span
+                            style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">{{
+                            b.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px 18px; text-align: center;">
+                        <a href="{{ url_for('booking.booking_success', booking_code=b.booking_code) }}"
+                            class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; margin-right: 6px;">Chi
+                            tiết</a>
+                        {% if b.status in ['PENDING', 'CONFIRMED'] %}
+                        <form action="{{ url_for('booking.cancel_booking', booking_id=b.id) }}" method="POST"
+                            style="display: inline;"
+                            onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn đặt tour này? Số chỗ sẽ được hoàn trả về hệ thống.');">
+                            <button type="submit" class="btn"
+                                style="background: #ef4444; color: #fff; padding: 4px 10px; font-size: 12px;">Hủy
+                                tour</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div
+        style="background: #ffffff; padding: 60px 20px; border-radius: 16px; text-align: center; border: 1px dashed #cbd5e1;">
+        <div style="font-size: 48px; margin-bottom: 12px;">🎒</div>
+        <h3 style="font-size: 18px; font-weight: 700; color: #334155; margin-bottom: 8px;">Bạn chưa đặt tour nào</h3>
+        <p style="color: #64748b; margin-bottom: 20px;">Hãy khám phá các chuyến đi hấp dẫn hoặc nhờ trợ lý AI gợi ý ngay
+            nhé!</p>
+        <a href="{{ url_for('tour.catalog') }}" class="btn btn-primary">Khám phá tour ngay</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

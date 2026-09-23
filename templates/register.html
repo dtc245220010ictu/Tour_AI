@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Đăng Ký Tài Khoản - TourAI{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 480px; padding: 50px 20px 70px;">
+    <div
+        style="background: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; padding: 35px 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 36px; margin-bottom: 10px;">👋</div>
+            <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Tạo Tài Khoản Mới</h1>
+            <p style="font-size: 14px; color: #64748b;">Đăng ký để đặt tour và nhận tư vấn thông minh</p>
+        </div>
+
+        <form method="POST">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Họ
+                    và tên *</label>
+                <input type="text" name="full_name" required placeholder="Nguyễn Văn A"
+                    style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px;">
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Số
+                    điện thoại *</label>
+                <input type="tel" name="phone" required placeholder="0901234567"
+                    style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px;">
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <label
+                    style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Email
+                    đăng nhập *</label>
+                <input type="email" name="email" required placeholder="name@example.com"
+                    style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px;">
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <label
+                    style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Mật
+                    khẩu (tối thiểu 6 ký tự) *</label>
+                <input type="password" name="password" minlength="6" required placeholder="••••••••"
+                    style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px;">
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; padding: 12px; font-size: 16px; border-radius: 8px;">Đăng Ký Tài Khoản</button>
+        </form>
+
+        <div
+            style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #f1f5f9; text-align: center; font-size: 14px; color: #64748b;">
+            Đã có tài khoản? <a href="{{ url_for('auth.login') }}" style="font-weight: 600; color: #0284c7;">Đăng nhập
+                ngay</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

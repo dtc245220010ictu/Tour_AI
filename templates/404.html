@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Không Tìm Thấy Trang (404) - TourAI{% endblock %}
+
+{% block content %}
+<div class="container" style="text-align: center; padding: 100px 20px 120px;">
+    <div style="font-size: 72px; margin-bottom: 20px;">🏝️</div>
+    <h1 style="font-size: 36px; font-weight: 800; color: #0f172a; margin-bottom: 12px;">404 - Trang Không Tồn Tại</h1>
+    <p style="color: #64748b; font-size: 16px; margin-bottom: 30px;">
+        Đường dẫn bạn yêu cầu không tìm thấy hoặc đã được di chuyển.
+    </p>
+    <div style="display: flex; gap: 15px; justify-content: center;">
+        <a href="{{ url_for('tour.index') }}" class="btn btn-primary">Về trang chủ</a>
+        <a href="{{ url_for('tour.catalog') }}" class="btn btn-outline">Khám phá tour</a>
+    </div>
+</div>
+{% endblock %}

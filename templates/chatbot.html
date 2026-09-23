@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Trợ Lý AI Tư Vấn Tour Du Lịch - TourAI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="chat-page-wrapper">
+    <div class="chat-card">
+        <!-- Header Gradient -->
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="chat-avatar-header">🤖</div>
+                <div class="chat-header-text">
+                    <h3>AI Tour Assistant</h3>
+                    <p><span class="status-dot"></span> Sẵn sàng tư vấn theo cơ sở dữ liệu thực tế</p>
+                </div>
+            </div>
+            <div>
+                <a href="{{ url_for('tour.catalog') }}" class="btn btn-outline"
+                    style="color: #ffffff; border-color: rgba(255,255,255,0.4); font-size: 12px; padding: 4px 10px;">Xem
+                    tất cả tour</a>
+            </div>
+        </div>
+
+        <!-- Quick Prompts Chips -->
+        <div class="quick-prompts">
+            <div class="prompt-chip" data-prompt="Có tour Hạ Long nào dưới 4 triệu không?">🌊 Tour Hạ Long dưới 4tr
+            </div>
+            <div class="prompt-chip" data-prompt="Tôi có khoảng 5 triệu, muốn đi biển 3-4 ngày thì có tour nào?">🏖️ Đi
+                biển 3-4 ngày tầm 5 triệu</div>
+            <div class="prompt-chip" data-prompt="Tour Sa Pa leo núi Fansipan còn chỗ không?">⛰️ Sa Pa Fansipan</div>
+            <div class="prompt-chip" data-prompt="Tour nào có giá rẻ nhất hiện tại?">💰 Tour rẻ nhất hiện có</div>
+            <div class="prompt-chip" data-prompt="Có tour Đà Lạt ngắm hoa săn mây không?">🌸 Tour Đà Lạt săn mây</div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="chat-messages" id="chat-messages">
+            <!-- Initial Bot Welcome Message -->
+            <div class="message-row bot">
+                <div class="msg-avatar">🤖</div>
+                <div class="msg-bubble">
+                    <p>Xin chào quý khách! Tôi là <strong>Trợ lý AI TourAI</strong>. ✈️</p>
+                    <p>Tôi có thể giúp bạn tìm kiếm các tour du lịch phù hợp nhất dựa trên <strong>ngân sách, thời gian,
+                            điểm đến hoặc sở thích</strong> của bạn.</p>
+                    <p>Tất cả thông tin tư vấn đều được truy vấn trực tiếp và bảo đảm <strong>còn chỗ thực tế trong hệ
+                            thống</strong>. Bạn đang dự định đi du lịch ở đâu?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-area">
+            <form class="chat-form" id="chat-form">
+                <input type="text" id="chat-input" class="chat-input"
+                    placeholder="Nhập câu hỏi của bạn (ví dụ: Có tour nào dưới 4 triệu đi Hạ Long không?)..."
+                    autocomplete="off" required>
+                <button type="submit" id="send-btn" class="chat-send-btn" title="Gửi câu hỏi">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

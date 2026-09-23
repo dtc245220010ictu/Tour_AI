@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Quản Lý Phản Hồi & Phân Tích AI - TourAI Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 30px 20px 60px;">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Đánh Giá & Phản Hồi Khách
+                Hàng</h1>
+            <p style="color: #64748b;">Theo dõi trải nghiệm du khách và sử dụng AI để tổng hợp điểm khen/chê</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" id="btn-ai-sum" class="btn btn-primary"
+                style="background: linear-gradient(135deg, #7c3aed, #4f46e5);">
+                🤖 AI Phân Tích & Tóm Tắt Toàn Bộ Phản Hồi
+            </button>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline">&larr; Về Dashboard</a>
+        </div>
+    </div>
+
+    <!-- AI Summary Result Container (Hidden until clicked) -->
+    <div id="ai-summary-box"
+        style="display: none; background: #faf5ff; border: 2px solid #d8b4fe; border-radius: 16px; padding: 25px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.08);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <span style="font-size: 24px;">✨</span>
+            <h3 style="font-size: 18px; font-weight: 700; color: #6b21a8; margin: 0;">Báo Cáo Phân Tích Chất Lượng Dịch
+                Vụ Từ AI</h3>
+        </div>
+        <div id="ai-summary-content" style="font-size: 15px; line-height: 1.8; color: #3b0764; white-space: pre-line;">
+        </div>
+    </div>
+
+    <!-- Feedbacks List -->
+    <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px;">
+        <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 18px;">Danh Sách Nhận Xét Chi Tiết
+            ({{ feedbacks | length }})</h3>
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+            {% for f in feedbacks %}
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div>
+                        <strong style="color: #0f172a; font-size: 15px;">👤 {{ f.user_name }}</strong>
+                        <span style="color: #64748b; font-size: 13px;">đã đánh giá tour:</span>
+                        <span style="color: #0284c7; font-weight: 600; font-size: 14px;">{{ f.tour_title }}</span>
+                    </div>
+                    <span style="font-size: 14px; color: #d97706; font-weight: 700;">{{ "⭐" * f.rating }} ({{ f.rating
+                        }}/5)</span>
+                </div>
+                <p style="font-size: 14.5px; color: #334155; line-height: 1.6; margin-bottom: 6px;">"{{ f.comment }}"
+                </p>
+                <div style="font-size: 12px; color: #94a3b8;">Thời gian: {{ f.created_at }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("btn-ai-sum").addEventListener("click", async () => {
+        const btn = document.getElementById("btn-ai-sum");
+        const box = document.getElementById("ai-summary-box");
+        const content = document.getElementById("ai-summary-content");
+
+        btn.disabled = true;
+        btn.innerText = "⏳ AI đang tổng hợp đánh giá...";
+
+        try {
+            const res = await fetch("/api/ai/summarize-feedbacks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            });
+            const data = await res.json();
+            if (data.summary) {
+                content.innerText = data.summary;
+                box.style.display = "block";
+                box.scrollIntoView({ behavior: "smooth" });
+            } else {
+                alert("Lỗi: " + (data.error || "Không thể phân tích phản hồi"));
+            }
+        } catch (e) {
+            alert("Lỗi kết nối tới AI API!");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "🤖 AI Phân Tích & Tóm Tắt Toàn Bộ Phản Hồi";
+        }
+    });
+</script>
+{% endblock %}

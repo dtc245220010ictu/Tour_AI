@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Lỗi Hệ Thống (500) - TourAI{% endblock %}
+
+{% block content %}
+<div class="container" style="text-align: center; padding: 100px 20px 120px;">
+    <div style="font-size: 72px; margin-bottom: 20px;">⚠️</div>
+    <h1 style="font-size: 36px; font-weight: 800; color: #0f172a; margin-bottom: 12px;">500 - Sự Cố Máy Chủ</h1>
+    <p style="color: #64748b; font-size: 16px; margin-bottom: 30px;">
+        Hệ thống đang gặp sự cố kỹ thuật tạm thời. Đội ngũ kỹ thuật đã được thông báo.
+    </p>
+    <a href="{{ url_for('tour.index') }}" class="btn btn-primary">Quay về trang chủ</a>
+</div>
+{% endblock %}
