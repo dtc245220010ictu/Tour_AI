@@ -22,8 +22,8 @@
             class="btn {% if not current_status %}btn-primary{% else %}btn-outline{% endif %}"
             style="padding: 6px 14px; font-size: 13px;">Tất cả giao dịch</a>
         <a href="{{ url_for('accounting.transactions', status='PENDING') }}"
-            class="btn {% if current_status == 'PENDING' %}btn-primary{% else %}btn-outline{% endif %}"
-            style="padding: 6px 14px; font-size: 13px; background: {% if current_status == 'PENDING' %}#d97706{% endif %}; border-color: #d97706;">Chờ
+            class="btn btn-filter-amber {% if current_status == 'PENDING' %}btn-filter-amber-active{% else %}btn-outline{% endif %}"
+            style="padding: 6px 14px; font-size: 13px;">Chờ
             kế toán duyệt (PENDING)</a>
         <a href="{{ url_for('accounting.transactions', status='SUCCESS') }}"
             class="btn {% if current_status == 'SUCCESS' %}btn-primary{% else %}btn-outline{% endif %}"
@@ -85,8 +85,8 @@
                     <td style="padding: 14px 16px; font-size: 13px;">
                         {{ p.payment_method }}
                     </td>
-                    <td
-                        style="padding: 14px 16px; text-align: right; font-weight: 800; color: {% if p.payment_type == 'REFUND' %}#dc2626{% else %}#16a34a{% endif %};">
+                    <td class="{% if p.payment_type == 'REFUND' %}text-danger-dark{% else %}text-success{% endif %}"
+                        style="padding: 14px 16px; text-align: right; font-weight: 800;">
                         {% if p.payment_type == 'REFUND' %}-{% endif %}{{ p.amount | format_currency }}
                     </td>
                     <td style="padding: 14px 16px;">

@@ -74,8 +74,8 @@
         <div
             style="background: #ffffff; padding: 20px; border-radius: 14px; border: 1px solid #e2e8f0; border-left: 4px solid #0284c7;">
             <div style="font-size: 13px; color: #64748b; font-weight: 600;">LỢI NHUẬN GỘP (P&L)</div>
-            <div
-                style="font-size: 22px; font-weight: 800; color: {% if ns.tot_profit >= 0 %}#0284c7{% else %}#dc2626{% endif %}; margin-top: 6px;">
+            <div class="{% if ns.tot_profit >= 0 %}text-info{% else %}text-danger-dark{% endif %}"
+                style="font-size: 22px; font-weight: 800; margin-top: 6px;">
                 {{ ns.tot_profit | format_currency }}
             </div>
             <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Doanh thu trừ Chi phí</div>
@@ -154,19 +154,13 @@
                         <span style="color: #94a3b8; font-style: italic;">Chưa ghi nhận chi phí</span>
                         {% endif %}
                     </td>
-                    <td
-                        style="padding: 14px 12px; text-align: right; font-weight: 800; font-size: 15px; color: {% if r.gross_profit >= 0 %}#0284c7{% else %}#ef4444{% endif %};">
+                    <td class="{% if r.gross_profit >= 0 %}text-info{% else %}text-danger{% endif %}"
+                        style="padding: 14px 12px; text-align: right; font-weight: 800; font-size: 15px;">
                         {{ r.gross_profit | format_currency }}
                     </td>
                     <td style="padding: 14px 12px; text-align: center;">
-                        <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; font-weight: 700; font-size: 12px;
-                            {% if r.profit_margin >= 20 %}
-                                background: #dcfce7; color: #15803d;
-                            {% elif r.profit_margin > 0 %}
-                                background: #fef3c7; color: #b45309;
-                            {% else %}
-                                background: #fee2e2; color: #b91c1c;
-                            {% endif %}">
+                        <span
+                            class="margin-badge {% if r.profit_margin >= 20 %}margin-badge-high{% elif r.profit_margin > 0 %}margin-badge-medium{% else %}margin-badge-low{% endif %}">
                             {{ r.profit_margin }}%
                         </span>
                     </td>
