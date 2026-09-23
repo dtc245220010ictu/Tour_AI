@@ -288,3 +288,81 @@ a:hover {
     padding-top: 20px;
     border-top: 1px solid #1e293b;
 }
+
+/* ==========================================================
+   Accounting Module Utility Classes
+   Dùng lớp CSS thay cho biểu thức Jinja {% if %} nằm trong
+   thuộc tính style=, giúp tránh cảnh báo sai của CSS linter
+   và tách biệt phần trình bày khỏi logic template.
+   ========================================================== */
+.text-info {
+    color: #0284c7;
+}
+
+.text-teal {
+    color: #0f766e;
+}
+
+.text-danger {
+    color: #ef4444;
+}
+
+.text-danger-dark {
+    color: #dc2626;
+}
+
+.text-success {
+    color: #16a34a;
+}
+
+.margin-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.margin-badge-high {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+
+/* Buttons & bars (conditional colors via class, not inline style) */
+.btn-filter-amber {
+    border-color: #d97706;
+}
+
+.btn-filter-amber-active {
+    background: #d97706;
+    color: #ffffff;
+    border-color: #d97706;
+}
+
+.occupancy-high {
+    background: #ef4444;
+}
+
+.occupancy-mid {
+    background: #3b82f6;
+}
+
+.occupancy-low {
+    background: #10b981;
+}
+
+.text-crimson {
+    color: #991b1b;
+}
+
+
+.margin-badge-medium {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.margin-badge-low {
+    background: #fee2e2;
+    color: #b91c1c;
+}

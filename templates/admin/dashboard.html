@@ -96,7 +96,8 @@
                     </div>
                     <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
                         <div
-                            style="height: 100%; width: {{ s.occupancy_rate }}%; background: {% if s.occupancy_rate >= 80 %}#ef4444{% elif s.occupancy_rate >= 50 %}#3b82f6{% else %}#10b981{% endif %}; border-radius: 4px;">
+                            class="{% if s.occupancy_rate >= 80 %}occupancy-high{% elif s.occupancy_rate >= 50 %}occupancy-mid{% else %}occupancy-low{% endif %}"
+                            style="height: 100%; width: {{ s.occupancy_rate }}%; border-radius: 4px;">
                         </div>
                     </div>
                 </div>

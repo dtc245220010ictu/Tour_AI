@@ -100,8 +100,8 @@
                     <td style="padding: 12px;">{{ s.departure_date }}</td>
                     <td style="padding: 12px; color: #64748b;">{{ s.return_date }}</td>
                     <td style="padding: 12px;">{{ s.booked_seats }} / {{ s.total_seats }} chỗ</td>
-                    <td
-                        style="padding: 12px; font-weight: 700; color: {% if s.available_seats == 0 %}#991b1b{% else %}#16a34a{% endif %};">
+                    <td class="{% if s.available_seats == 0 %}text-crimson{% else %}text-success{% endif %}"
+                        style="padding: 12px; font-weight: 700;">
                         {{ s.available_seats }} chỗ
                     </td>
                     <td style="padding: 12px;">
