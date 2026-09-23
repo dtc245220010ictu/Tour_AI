@@ -12,12 +12,12 @@
             <p style="font-size: 14px; color: #64748b;">Truy cập tài khoản TourAI của bạn</p>
         </div>
 
-        <form method="POST">
+        <form method="POST" id="loginForm">
             <div style="margin-bottom: 18px;">
                 <label
                     style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Email
                     đăng nhập</label>
-                <input type="email" name="email" required placeholder="name@example.com"
+                <input type="email" name="email" id="emailInput" required placeholder="name@example.com"
                     style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px;">
             </div>
 
@@ -25,7 +25,7 @@
                 <label
                     style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">Mật
                     khẩu</label>
-                <input type="password" name="password" required placeholder="••••••••"
+                <input type="password" name="password" id="passwordInput" required placeholder="••••••••"
                     style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14.5px;">
             </div>
 
@@ -39,14 +39,54 @@
                 ký ngay</a>
         </div>
 
-        <!-- Demo accounts quick note -->
+        {% if enable_demo_login %}
+        <!-- Quick login (demo accounts) -->
         <div
-            style="margin-top: 20px; background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 12px; color: #64748b;">
-            💡 <strong>Tài khoản thử nghiệm có sẵn:</strong><br>
-            • Quản trị: <code>admin@tourai.vn</code> / <code>admin123</code><br>
-            • Nhân viên: <code>staff@tourai.vn</code> / <code>staff123</code><br>
-            • Khách hàng: <code>customer@tourai.vn</code> / <code>customer123</code>
+            style="margin-top: 22px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px;">
+            <div style="font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 4px;">⚡ Đăng nhập nhanh
+                (Demo)</div>
+            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Bấm vào vai trò để đăng nhập ngay, không cần
+                nhập tài khoản/mật khẩu.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button type="button" class="btn btn-outline quick-login-btn" data-email="admin@tourai.vn"
+                    data-password="admin123" style="font-size: 13px; padding: 8px 10px; justify-content: flex-start;">👑
+                    Quản trị</button>
+                <button type="button" class="btn btn-outline quick-login-btn" data-email="staff@tourai.vn"
+                    data-password="staff123" style="font-size: 13px; padding: 8px 10px; justify-content: flex-start;">🧑‍💼
+                    Nhân viên</button>
+                <button type="button" class="btn btn-outline quick-login-btn" data-email="accountant@tourai.vn"
+                    data-password="accountant123"
+                    style="font-size: 13px; padding: 8px 10px; justify-content: flex-start; border-color: #86efac; color: #047857;">💼
+                    Kế toán</button>
+                <button type="button" class="btn btn-outline quick-login-btn" data-email="guide@tourai.vn"
+                    data-password="guide123" style="font-size: 13px; padding: 8px 10px; justify-content: flex-start;">🧭
+                    Hướng dẫn viên</button>
+                <button type="button" class="btn btn-outline quick-login-btn" data-email="customer@tourai.vn"
+                    data-password="customer123"
+                    style="font-size: 13px; padding: 8px 10px; justify-content: flex-start; grid-column: 1 / -1;">🙋
+                    Khách hàng</button>
+            </div>
+
+            <p style="font-size: 11.5px; color: #94a3b8; margin-top: 12px; margin-bottom: 0;">
+                Ghi chú: các tài khoản demo chỉ dùng cho mục đích kiểm thử/học tập.
+            </p>
         </div>
+        {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if enable_demo_login %}
+<script>
+    document.querySelectorAll('.quick-login-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('emailInput').value = btn.dataset.email;
+            document.getElementById('passwordInput').value = btn.dataset.password;
+            document.getElementById('loginForm').submit();
+        });
+    });
+</script>
+{% endif %}
 {% endblock %}

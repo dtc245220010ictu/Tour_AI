@@ -25,6 +25,10 @@ from routes.accounting_routes import accounting_bp
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "tour_ai_production_secret_key_2026")
+
+    # Demo quick-login buttons on the login page.
+    # Enabled by default for local demo/testing; set ENABLE_DEMO_QUICK_LOGIN=0 to disable in production.
+    app.config["ENABLE_DEMO_QUICK_LOGIN"] = os.environ.get("ENABLE_DEMO_QUICK_LOGIN", "1").lower() in ["1", "true", "yes"]
     
     # Initialize and seed database if not already done
     try:
@@ -50,6 +54,11 @@ def create_app():
             return f"{int(value):,}".replace(",", ".") + " ₫"
         except (ValueError, TypeError):
             return str(value)
+
+    # Inject demo quick-login flag into all templates
+    @app.context_processor
+    def inject_demo_login_flag():
+        return {"enable_demo_login": app.config.get("ENABLE_DEMO_QUICK_LOGIN", False)}
 
     # Error handlers
     @app.errorhandler(404)

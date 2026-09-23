@@ -38,3 +38,52 @@ def test_register_duplicate_email_fails():
         )
     assert "đã được sử dụng" in str(exc.value)
 
+def test_login_page_has_quick_login_for_all_roles(client):
+    """Trang đăng nhập hiển thị khu vực đăng nhập nhanh cho đủ 5 vai trò demo."""
+    resp = client.get("/login")
+    assert resp.status_code == 200
+    html = resp.data.decode("utf-8")
+
+    assert "Đăng nhập nhanh" in html
+    assert "quick-login-btn" in html
+    for email in [
+        "admin@tourai.vn",
+        "staff@tourai.vn",
+        "accountant@tourai.vn",
+        "guide@tourai.vn",
+        "customer@tourai.vn",
+    ]:
+        assert email in html
+
+def test_quick_login_accountant_flow(client):
+    """
+    Mô phỏng thao tác của nút đăng nhập nhanh: submit form /login với tài khoản kế toán.
+    Đảm bảo đăng nhập thành công và truy cập được phân hệ kế toán.
+    """
+    resp = client.post(
+        "/login",
+        data={"email": "accountant@tourai.vn", "password": "accountant123"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+
+    with client.session_transaction() as sess:
+        assert sess["role"] == "ACCOUNTANT"
+
+    resp = client.get("/accounting/dashboard")
+    assert resp.status_code == 200
+
+def test_quick_login_hidden_when_disabled(monkeypatch):
+    """Khi ENABLE_DEMO_QUICK_LOGIN=0, khu vực đăng nhập nhanh không được hiển thị."""
+    monkeypatch.setenv("ENABLE_DEMO_QUICK_LOGIN", "0")
+
+    from app import create_app
+    local_app = create_app()
+    local_app.config.update({"TESTING": True, "SECRET_KEY": "test_secret_key_123"})
+    local_client = local_app.test_client()
+
+    resp = local_client.get("/login")
+    assert resp.status_code == 200
+    assert "Đăng nhập nhanh" not in resp.data.decode("utf-8")
+
+

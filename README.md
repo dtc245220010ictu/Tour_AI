@@ -4,7 +4,7 @@
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-orange.svg)](https://www.sqlite.org/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-26%2F26%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-29%2F29%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -64,7 +64,7 @@ TourAI/
 │   ├── architecture-decisions.md       # Các quyết định kiến trúc quan trọng (ADR-001..005)
 │   ├── database-design.md              # Thiết kế CSDL chi tiết chuẩn 3NF
 │   ├── test-plan.md                    # Kế hoạch kiểm thử toàn diện
-│   ├── test-report.md                  # Báo cáo kết quả kiểm thử tự động (26/26 PASS)
+│   ├── test-report.md                  # Báo cáo kết quả kiểm thử tự động (29/29 PASS)
 │   ├── code-review.md                  # Báo cáo đánh giá mã nguồn & phân loại lỗi
 │   ├── security-review.md              # Báo cáo đánh giá an toàn thông tin & lỗ hổng
 │   ├── chatbot-requirements.md         # Yêu cầu chuyên biệt cho Chatbot AI
@@ -147,7 +147,7 @@ TourAI/
 │
 ├── tests/                              # Bộ kiểm thử tự động (Pytest)
 │   ├── conftest.py                     # Cấu hình test database cô lập
-│   ├── test_auth.py                    # Kiểm thử xác thực & băm mật khẩu
+│   ├── test_auth.py                    # Kiểm thử xác thực, băm mật khẩu & đăng nhập nhanh
 │   ├── test_booking_capacity.py        # Kiểm thử chống Overbooking & hoàn trả chỗ
 │   ├── test_question_analyzer.py       # Kiểm thử bóc tách ngân sách & điểm đến
 │   ├── test_tour_retrieval.py          # Kiểm thử truy xuất tour & không bịa dữ liệu
@@ -200,8 +200,8 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả mong đợi:** 26/26 tests `PASSED` 100%.
-*(Bao gồm 6 test phân hệ kế toán: duyệt thanh toán, tính công nợ, chi phí & P&L, chính sách hoàn tiền, sổ quỹ và phân quyền truy cập).*
+**Kết quả mong đợi:** 29/29 tests `PASSED` 100%.
+*(Bao gồm 6 test phân hệ kế toán và 3 test cho tính năng đăng nhập nhanh (quick login)).*
 
 ---
 
@@ -224,6 +224,8 @@ Mở trình duyệt và truy cập:
 | **Kế toán (Accountant)** | `accountant@tourai.vn` | `accountant123` | Duyệt thanh toán, theo dõi công nợ, ghi chi phí tour, xem báo cáo P&L, lập phiếu chi hoàn tiền |
 | **Hướng dẫn viên (Guide)** | `guide@tourai.vn` | `guide123` | Xem lịch trình dẫn tour được phân công |
 | **Khách hàng (Customer)** | `customer@tourai.vn` | `customer123` | Tìm kiếm tour, đặt tour, trò chuyện với Chatbot, hủy đơn, gửi đánh giá |
+
+> ⚡ **Đăng nhập nhanh (Quick Login):** Tại trang **http://127.0.0.1:5000/login** có sẵn khu vực **"Đăng nhập nhanh (Demo)"** — chỉ cần bấm vào vai trò (Quản trị / Nhân viên / **Kế toán** / Hướng dẫn viên / Khách hàng) là đăng nhập ngay, không cần gõ tài khoản & mật khẩu. Tính năng này phục vụ kiểm thử/học tập và có thể tắt bằng biến môi trường `ENABLE_DEMO_QUICK_LOGIN=0`.
 
 ---
 
@@ -268,7 +270,7 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 - Bảng **`payments`**: hỗ trợ `payment_type` ∈ {DEPOSIT, FULL, REMAINING, REFUND} cùng các trường xác nhận `verified_by`, `verified_at`.
 
 ### Kiểm thử phân hệ kế toán
-Các test trong `tests/test_accounting.py` (nằm trong bộ 26 test):
+Các test trong `tests/test_accounting.py` (nằm trong bộ 29 test):
 - `test_record_and_verify_payment` — quy trình kế toán duyệt thanh toán chuyển khoản.
 - `test_debt_calculation` — tính công nợ khi khách mới đặt cọc một phần.
 - `test_tour_expense_and_pnl` — ghi nhận chi phí tour & kiểm tra công thức Lợi nhuận = Doanh thu − Chi phí.
