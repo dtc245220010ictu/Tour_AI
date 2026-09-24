@@ -9,7 +9,7 @@ Tests the 4 accounting pillars:
 
 import re
 import pytest
-from datetime import date, datetime
+from datetime import date
 from database.db import execute_query, get_db
 from services.accounting_service import AccountingService
 from services.booking_service import BookingService
@@ -42,6 +42,7 @@ def test_record_and_verify_payment():
         num_adults=1,
         num_children=0
     )
+    assert booking is not None
     booking_id = booking["id"]
     total_amount = booking["total_amount"]
 
@@ -54,6 +55,7 @@ def test_record_and_verify_payment():
             (booking_id, total_amount)
         )
         payment_id = cursor.lastrowid
+    assert payment_id is not None
 
     # Payment appears in the pending reconciliation list
     pending_list = AccountingService.get_payment_reconciliation_list(status="PENDING")
@@ -66,12 +68,14 @@ def test_record_and_verify_payment():
 
     # Payment is now SUCCESS and verified
     payment = execute_query("SELECT * FROM payments WHERE id = ?;", (payment_id,), fetch_one=True)
+    assert payment is not None
     assert payment["payment_status"] == "SUCCESS"
     assert payment["verified_by"] == 3
     assert payment["verified_at"] is not None
 
     # Booking status was updated to CONFIRMED
     updated_booking = BookingService.get_booking_by_id(booking_id)
+    assert updated_booking is not None
     assert updated_booking["status"] == "CONFIRMED"
 
     # Confirming again should raise ValueError
@@ -182,7 +186,7 @@ def test_tour_expense_and_pnl():
 
     # --- P&L math consistency for schedule 1 ---
     pnl = AccountingService.get_schedule_pnl(schedule_id=1)
-    assert pnl is not None
+    assert isinstance(pnl, dict)
     assert {"revenue", "expenses", "gross_profit", "profit_margin", "expenses_breakdown"} <= set(pnl.keys())
 
     assert pnl["gross_profit"] == pnl["revenue"] - pnl["expenses"]
@@ -302,7 +306,7 @@ def test_unauthorized_access(client):
     # 4. Accountant access (user_id=3, role=ACCOUNTANT)
     with client.session_transaction() as sess:
         sess["user_id"] = 3
-        sess["user_name"] = "Kế Toán Viên"
+        sess["user_name"] = "Kế Toán"
         sess["role"] = "ACCOUNTANT"
 
     resp = client.get("/accounting/dashboard")

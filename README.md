@@ -220,7 +220,7 @@ Mở trình duyệt và truy cập:
 | Vai trò | Email đăng nhập | Mật khẩu | Quyền hạn |
 |---|---|---|---|
 | **Quản trị viên (Admin)** | `admin@tourai.vn` | `admin123` | Toàn quyền quản trị, xem doanh thu, xóa tour, quản lý lịch khởi hành |
-| **Nhân viên tư vấn (Staff)** | `staff@tourai.vn` | `staff123` | Quản lý tour, mở lịch khởi hành, dùng AI sinh mô tả & tóm tắt phản hồi |
+| **Nhân viên tư vấn (Staff)** | `staff@tourai.vn` | `staff123` | Quản lý tour, điểm đến, lịch khởi hành, khách hàng & đặt chỗ, dùng AI sinh mô tả (không có quyền xóa tour, thống kê, tài chính, phản hồi) |
 | **Kế toán (Accountant)** | `accountant@tourai.vn` | `accountant123` | Duyệt thanh toán, theo dõi công nợ, ghi chi phí tour, xem báo cáo P&L, lập phiếu chi hoàn tiền |
 | **Hướng dẫn viên (Guide)** | `guide@tourai.vn` | `guide123` | Xem lịch trình dẫn tour được phân công |
 | **Khách hàng (Customer)** | `customer@tourai.vn` | `customer123` | Tìm kiếm tour, đặt tour, trò chuyện với Chatbot, hủy đơn, gửi đánh giá |

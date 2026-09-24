@@ -68,6 +68,8 @@ class BookingService:
                  customer_phone.strip(), num_adults, num_children, total_amount, notes.strip())
             )
             booking_id = cursor.lastrowid
+            if booking_id is None:
+                raise ValueError("Không tạo được đơn đặt chỗ. Vui lòng thử lại.")
 
             # 5. Check if schedule is now full
             cursor.execute(
@@ -124,7 +126,7 @@ class BookingService:
         )
 
     @staticmethod
-    def get_all_bookings(status: str = None):
+    def get_all_bookings(status: str | None = None):
         query = """
             SELECT b.*, s.departure_date, s.return_date,
                    t.title AS tour_title, d.name AS destination_name
@@ -141,7 +143,7 @@ class BookingService:
         return execute_query(query, params, fetch_all=True)
 
     @staticmethod
-    def cancel_booking(booking_id: int, user_id: int = None):
+    def cancel_booking(booking_id: int, user_id: int | None = None):
         """Cancels a booking and automatically restores seats."""
         with get_db() as conn:
             cursor = conn.cursor()
@@ -157,6 +159,9 @@ class BookingService:
 
             if booking["status"] == "CANCELLED":
                 return True
+
+            if booking["status"] == "COMPLETED":
+                raise ValueError("Tour đã hoàn thành. Không thể hủy đơn.")
 
             total_passengers = booking["num_adults"] + booking["num_children"]
 

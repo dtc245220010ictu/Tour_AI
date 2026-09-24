@@ -7,7 +7,7 @@ from database.db import execute_query
 
 class FeedbackService:
     @staticmethod
-    def create_feedback(user_id: int, tour_id: int, rating: int, comment: str, booking_id: int = None):
+    def create_feedback(user_id: int, tour_id: int, rating: int, comment: str, booking_id: int | None = None):
         rating = int(rating)
         if rating < 1 or rating > 5:
             raise ValueError("Đánh giá sao phải nằm trong khoảng từ 1 đến 5.")

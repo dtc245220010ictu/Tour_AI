@@ -4,7 +4,6 @@ Hệ thống Quản lý Tour Du lịch Tích hợp Trí tuệ Nhân tạo (Đề
 """
 
 import os
-from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, render_template
 
@@ -18,6 +17,7 @@ from routes.tour_routes import tour_bp
 from routes.booking_routes import booking_bp
 from routes.feedback_routes import feedback_bp
 from routes.admin_routes import admin_bp
+from routes.guide_routes import guide_bp
 from routes.chat_routes import chat_bp
 from routes.ai_tools_routes import ai_tools_bp
 from routes.accounting_routes import accounting_bp
@@ -43,6 +43,7 @@ def create_app():
     app.register_blueprint(booking_bp)
     app.register_blueprint(feedback_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(guide_bp)
     app.register_blueprint(chat_bp)
     app.register_blueprint(ai_tools_bp)
     app.register_blueprint(accounting_bp)

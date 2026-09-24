@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container" style="padding: 40px 20px 60px;">
+    {% include "partials/manage_menu.html" %}
     <div style="margin-bottom: 30px;">
         <h1 style="font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">Đơn Đặt Tour Của Tôi</h1>
         <p style="color: #64748b;">Quản lý danh sách các chuyến du lịch bạn đã đặt chỗ</p>
@@ -60,7 +61,7 @@
                         {% if b.status in ['PENDING', 'CONFIRMED'] %}
                         <form action="{{ url_for('booking.cancel_booking', booking_id=b.id) }}" method="POST"
                             style="display: inline;"
-                            onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn đặt tour này? Số chỗ sẽ được hoàn trả về hệ thống.');">
+                            onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn đặt tour này? Số chỗ sẽ được hoàn trả về hệ thống. Nếu đã thanh toán, phí hoàn tiền áp dụng theo chính sách hủy tour.');">
                             <button type="submit" class="btn"
                                 style="background: #ef4444; color: #fff; padding: 4px 10px; font-size: 12px;">Hủy
                                 tour</button>

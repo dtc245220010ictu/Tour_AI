@@ -9,7 +9,6 @@ Populates initial rich sample data:
 - Bookings, Payments, Feedbacks
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -103,11 +102,11 @@ def seed_all(force=False):
 
         print("Seeding Users...")
         users = [
-            ("admin@tourai.vn", generate_password_hash("admin123"), "Nguyễn Quản Trị", "0901234567", "ADMIN"),
-            ("staff@tourai.vn", generate_password_hash("staff123"), "Trần Tư Vấn", "0902345678", "STAFF"),
-            ("accountant@tourai.vn", generate_password_hash("accountant123"), "Lê Kế Toán", "0903456789", "ACCOUNTANT"),
-            ("guide@tourai.vn", generate_password_hash("guide123"), "Phạm Hướng Dẫn", "0904567890", "GUIDE"),
-            ("customer@tourai.vn", generate_password_hash("customer123"), "Đỗ Khách Hàng", "0905678901", "CUSTOMER"),
+            ("admin@tourai.vn", generate_password_hash("admin123"), "Quản Trị Viên", "0901234567", "ADMIN"),
+            ("staff@tourai.vn", generate_password_hash("staff123"), "Tư Vấn Viên", "0902345678", "STAFF"),
+            ("accountant@tourai.vn", generate_password_hash("accountant123"), "Kế Toán", "0903456789", "ACCOUNTANT"),
+            ("guide@tourai.vn", generate_password_hash("guide123"), "Hướng Dẫn Viên", "0904567890", "GUIDE"),
+            ("customer@tourai.vn", generate_password_hash("customer123"), "Khách Hàng", "0905678901", "CUSTOMER"),
         ]
         cursor.executemany(
             "INSERT INTO users (email, password_hash, full_name, phone, role) VALUES (?, ?, ?, ?, ?);",
@@ -234,7 +233,7 @@ def seed_all(force=False):
             """INSERT INTO bookings 
             (booking_code, user_id, schedule_id, customer_name, customer_email, customer_phone, num_adults, num_children, total_amount, status, notes)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);""",
-            ("BK-20261001", 5, 1, "Đỗ Khách Hàng", "customer@tourai.vn", "0905678901", 2, 1, 8640000, "CONFIRMED", "Yêu cầu phòng tầng cao ngắm vịnh")
+            ("BK-20261001", 5, 1, "Khách Hàng", "customer@tourai.vn", "0905678901", 2, 1, 8640000, "CONFIRMED", "Yêu cầu phòng tầng cao ngắm vịnh")
         )
         booking_id = cursor.lastrowid
         cursor.execute(

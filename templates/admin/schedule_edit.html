@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Sửa Lịch Khởi Hành - TourAI Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 30px 20px 60px;">
+    {% include "partials/manage_menu.html" %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">📅 Sửa Lịch Khởi Hành &amp;
+                Số Chỗ</h1>
+            <p style="color: #64748b;">{{ schedule.tour_title }} - {{ schedule.departure_date }} &rarr; {{
+                schedule.return_date }}</p>
+        </div>
+        <a href="{{ url_for('admin.manage_schedules') }}" class="btn btn-outline">&larr; Về danh sách Lịch khởi hành</a>
+    </div>
+
+    <div
+        style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+        <form method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Ngày
+                        khởi hành *</label>
+                    <input type="date" name="departure_date" value="{{ schedule.departure_date }}" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Ngày
+                        về *</label>
+                    <input type="date" name="return_date" value="{{ schedule.return_date }}" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Giá
+                        người lớn (VNĐ) *</label>
+                    <input type="number" name="adult_price" value="{{ schedule.adult_price }}" step="50000" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Giá
+                        trẻ em (VNĐ) *</label>
+                    <input type="number" name="child_price" value="{{ schedule.child_price }}" step="50000" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Tổng
+                        số chỗ *</label>
+                    <input type="number" name="total_seats" value="{{ schedule.total_seats }}" min="1" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Số
+                        chỗ còn lại (cập nhật số chỗ) *</label>
+                    <input type="number" name="available_seats" value="{{ schedule.available_seats }}" min="0"
+                        required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Trạng
+                        thái</label>
+                    <select name="status"
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                        {% for st in ['OPEN', 'FULL', 'CLOSED', 'CANCELLED'] %}
+                        <option value="{{ st }}" {% if schedule.status == st %}selected{% endif %}>{{ st }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <p style="font-size: 12.5px; color: #94a3b8; margin-bottom: 15px;">Đã đặt: {{ schedule.total_seats -
+                schedule.available_seats }}/{{ schedule.total_seats }} chỗ. Số chỗ còn lại không được nhỏ hơn 0 và không
+                vượt tổng số chỗ.</p>
+
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-size: 15px;">💾 Lưu thay
+                đổi</button>
+            <a href="{{ url_for('admin.manage_schedules') }}" class="btn btn-outline"
+                style="padding: 10px 24px; font-size: 15px; margin-left: 8px;">Hủy</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

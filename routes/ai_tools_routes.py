@@ -29,7 +29,7 @@ def generate_tour_description():
         return jsonify({"error": f"Lỗi khi sinh nội dung: {str(e)}"}), 500
 
 @ai_tools_bp.route("/summarize-feedbacks", methods=["POST"])
-@roles_required("ADMIN", "STAFF")
+@roles_required("ADMIN")
 def summarize_feedbacks():
     try:
         feedbacks = FeedbackService.get_all_feedbacks(limit=50)

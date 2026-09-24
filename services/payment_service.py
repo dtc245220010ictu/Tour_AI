@@ -8,7 +8,7 @@ from database.db import execute_query, get_db
 class PaymentService:
     @staticmethod
     def record_payment(booking_id: int, amount: float, payment_method: str = "BANK_TRANSFER",
-                       transaction_id: str = None, payment_type: str = "FULL",
+                       transaction_id: str | None = None, payment_type: str = "FULL",
                        payment_status: str = "SUCCESS", notes: str = ""):
         if amount <= 0:
             raise ValueError("Số tiền thanh toán phải lớn hơn 0.")

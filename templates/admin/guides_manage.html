@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Quản Lý Hướng Dẫn Viên - TourAI Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 30px 20px 60px;">
+    {% include "partials/manage_menu.html" %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">🧭 Quản Lý Hướng Dẫn Viên</h1>
+            <p style="color: #64748b;">Hồ sơ HDV &amp; phân công cho từng đợt khởi hành (chống trùng lịch tự động)</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline">&larr; Về Dashboard</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
+        <!-- Thêm HDV -->
+        <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px;">
+            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">➕ Thêm Hồ Sơ Hướng Dẫn Viên</h3>
+            <form method="POST" action="{{ url_for('admin.manage_guides') }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Họ tên *</label>
+                        <input type="text" name="full_name" required placeholder="Nguyễn Văn A"
+                            style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Số điện thoại *</label>
+                        <input type="text" name="phone" required placeholder="0912345678"
+                            style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Email *</label>
+                        <input type="email" name="email" required placeholder="hdv@tourai.vn"
+                            style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Số năm kinh nghiệm</label>
+                        <input type="number" name="experience_years" value="1" min="0" max="50"
+                            style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                    </div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Ngôn ngữ (cách nhau dấu phẩy)</label>
+                    <input type="text" name="languages" placeholder="Tiếng Việt, Tiếng Anh"
+                        style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Giới thiệu</label>
+                    <textarea name="bio" rows="2" placeholder="Điểm mạnh, khu vực phụ trách..."
+                        style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Thêm hướng dẫn viên</button>
+            </form>
+        </div>
+        <!-- Phân công -->
+        <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px;">
+            <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">📅 Phân Công Cho Đợt Khởi Hành</h3>
+            <form method="POST" action="{{ url_for('admin.assign_guide') }}">
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Đợt khởi hành *</label>
+                    <select name="schedule_id" required
+                        style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                        {% for s in schedules %}
+                        <option value="{{ s.id }}">{{ s.tour_title }} - {{ s.departure_date }} &rarr; {{ s.return_date }} ({{ s.status }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Hướng dẫn viên *</label>
+                    <select name="guide_id" required
+                        style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                        {% for g in guides %}
+                        <option value="{{ g.id }}">{{ g.full_name }} ({{ g.languages }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 12px;">
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Vai trò</label>
+                        <select name="role_in_tour"
+                            style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                            <option value="LEAD_GUIDE">Trưởng đoàn</option>
+                            <option value="ASSISTANT">HDV đồng hành</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 5px;">Ghi chú</label>
+                        <input type="text" name="notes" placeholder="Nhiệm vụ cụ thể..."
+                            style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                    </div>
+                </div>
+                <p style="font-size: 12.5px; color: #64748b; margin-bottom: 12px;">⚠️ Hệ thống tự động từ chối nếu HDV đã có lịch dẫn trùng khoảng ngày.</p>
+                <button type="submit" class="btn btn-primary">Phân công</button>
+            </form>
+        </div>
+    </div>
+    <!-- Danh sách HDV -->
+    <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px; margin-bottom: 25px;">
+        <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">👤 Danh Sách Hồ Sơ Hướng Dẫn Viên ({{ guides | length }})</h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 12px;">Họ tên</th>
+                        <th style="padding: 12px;">Liên hệ</th>
+                        <th style="padding: 12px;">Ngôn ngữ</th>
+                        <th style="padding: 12px;">Kinh nghiệm</th>
+                        <th style="padding: 12px;">Giới thiệu</th>
+                        <th style="padding: 12px; text-align: center;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for g in guides %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px; font-weight: 700; color: #0f172a;">🧭 {{ g.full_name }}</td>
+                        <td style="padding: 12px; color: #475569;">{{ g.phone }}<br><span style="font-size: 12px; color: #94a3b8;">{{ g.email }}</span></td>
+                        <td style="padding: 12px; color: #475569;">{{ g.languages }}</td>
+                        <td style="padding: 12px;">{{ g.experience_years }} năm</td>
+                        <td style="padding: 12px; color: #64748b; font-size: 13px; max-width: 260px;">{{ g.bio or "—" }}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <form action="{{ url_for('admin.delete_guide', guide_id=g.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Xóa hồ sơ hướng dẫn viên này?');">
+                                <button type="submit" class="btn" style="background: #fee2e2; color: #991b1b; padding: 4px 10px; font-size: 12px;">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" style="padding: 20px; text-align: center; color: #94a3b8;">Chưa có hồ sơ hướng dẫn viên nào.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Bảng phân công -->
+    <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px;">
+        <h3 style="font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">📋 Bảng Phân Công Hiện Tại ({{ assignments | length }})</h3>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                        <th style="padding: 12px;">Lịch khởi hành</th>
+                        <th style="padding: 12px;">Tour</th>
+                        <th style="padding: 12px;">HDV</th>
+                        <th style="padding: 12px;">Vai trò</th>
+                        <th style="padding: 12px;">Ghi chú</th>
+                        <th style="padding: 12px; text-align: center;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in assignments %}
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px; font-weight: 600; color: #0284c7; white-space: nowrap;">{{ a.departure_date }} &rarr; {{ a.return_date }}</td>
+                        <td style="padding: 12px;">{{ a.tour_title }}<br><span style="font-size: 12px; color: #94a3b8;">📍 {{ a.destination_name }}</span></td>
+                        <td style="padding: 12px; font-weight: 600;">{{ a.guide_name }}</td>
+                        <td style="padding: 12px;">
+                            {% if a.role_in_tour == 'LEAD_GUIDE' %}
+                            <span style="background: #ccfbf1; color: #0f766e; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">Trưởng đoàn</span>
+                            {% else %}
+                            <span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">Đồng hành</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px; color: #64748b; font-size: 13px;">{{ a.notes or "—" }}</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <form action="{{ url_for('admin.delete_guide_assignment', assignment_id=a.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Hủy phân công này?');">
+                                <button type="submit" class="btn" style="background: #fef3c7; color: #92400e; padding: 4px 10px; font-size: 12px;">Hủy phân công</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" style="padding: 20px; text-align: center; color: #94a3b8;">Chưa có phân công nào.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

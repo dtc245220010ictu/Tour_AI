@@ -5,7 +5,6 @@ Strict isolation: Does NOT touch database.
 """
 
 import os
-import json
 import logging
 import requests
 

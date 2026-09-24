@@ -39,7 +39,9 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
 ### 4. Quản Lý Đơn & Hủy Tour
 1. Nhấn vào mục **Đơn của tôi** trên thanh menu để xem danh sách các chuyến đi đã đặt.
 2. Khách hàng có thể nhấn **Chi tiết** để xem lại biên nhận hoặc bấm **Hủy tour** khi có việc đột xuất.
-3. Khi bạn nhấn Hủy tour, hệ thống sẽ tự động giải phóng và cộng trả lại số chỗ trống vào lịch trình để khách hàng khác có thể đặt.
+3. Bạn được **tự hủy trực tiếp** các đơn ở trạng thái **Chờ thanh toán** hoặc **Đã xác nhận** mà không cần chờ nhân viên tư vấn phê duyệt. Đơn đã hoàn thành hoặc đã hủy trước đó sẽ không thể hủy thêm lần nữa.
+4. Khi bạn nhấn Hủy tour, hệ thống sẽ tự động giải phóng và cộng trả lại số chỗ trống vào lịch trình để khách hàng khác có thể đặt.
+5. Nếu đơn đã thanh toán, số tiền hoàn trả được áp dụng chính sách: hủy trước ≥ 7 ngày so với khởi hành: hoàn **90%**; từ 3–6 ngày: hoàn **50%**; dưới 3 ngày: không hoàn. Kế toán sẽ lập phiếu chi hoàn tiền sau khi bạn hủy.
 
 ---
 
@@ -65,8 +67,8 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
 2. Chọn Tour, ngày khởi hành, ngày kết thúc, giá vé người lớn, giá vé trẻ em và tổng số chỗ (ví dụ: 20 chỗ).
 3. Nhấn **Lưu Lịch Khởi Hành** để mở bán trên trang web.
 
-### 4. Phân Tích & Tóm Tắt Đánh Giá Bằng AI
-1. Truy cập mục **Đánh Giá AI**.
+### 4. Phân Tích & Tóm Tắt Đánh Giá Bằng AI (Chỉ dành cho Quản trị viên)
+1. Truy cập mục **Đánh Giá AI** (yêu cầu quyền Quản trị viên - ADMIN).
 2. Xem toàn bộ các nhận xét và chấm điểm sao của khách hàng sau các chuyến đi.
 3. Nhấn nút: **🤖 AI Phân Tích & Tóm Tắt Toàn Bộ Phản Hồi**:
    - Trợ lý AI sẽ đọc qua toàn bộ các đánh giá và xuất bản **Báo Cáo Chất Lượng Dịch Vụ**, chỉ rõ:

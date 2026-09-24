@@ -9,7 +9,7 @@ from database.db import get_db, execute_query
 
 class AccountingService:
     @staticmethod
-    def get_payment_reconciliation_list(status: str = None):
+    def get_payment_reconciliation_list(status: str | None = None):
         """
         Retrieves payment transactions for accountant review and reconciliation.
         Includes booking details, tour info, and verifier info.
@@ -190,7 +190,7 @@ class AccountingService:
         )
 
     @staticmethod
-    def get_tour_expenses(schedule_id: int = None):
+    def get_tour_expenses(schedule_id: int | None = None):
         """
         Retrieves list of tour expenses with schedule and creator info.
         """
@@ -211,7 +211,7 @@ class AccountingService:
         return execute_query(query, params, fetch_all=True)
 
     @staticmethod
-    def get_schedule_pnl(schedule_id: int = None):
+    def get_schedule_pnl(schedule_id: int | None = None):
         """
         Calculates Profit & Loss (P&L) statement per schedule.
         Revenue = Total confirmed successful payments for bookings in this schedule.
@@ -286,7 +286,7 @@ class AccountingService:
         return pnl_list if not schedule_id else (pnl_list[0] if pnl_list else None)
 
     @staticmethod
-    def get_cashflow_summary(from_date: str = None, to_date: str = None):
+    def get_cashflow_summary(from_date: str | None = None, to_date: str | None = None):
         """
         Summarizes Cashflow Journal (Sổ quỹ thu / chi):
         Total Inflow (Thực thu), Total Outflow (Thực chi: expenses + refunds), Net Cash.

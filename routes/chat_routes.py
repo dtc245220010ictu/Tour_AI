@@ -30,7 +30,7 @@ def api_chat():
             "answer": result["answer"],
             "tours": result["tours"]
         }), 200
-    except Exception as e:
+    except Exception:
         # Never leak exception stack trace or internal details to the client
         return jsonify({
             "error": "Hệ thống tư vấn hiện đang bận hoặc gặp sự cố xử lý. Vui lòng thử lại sau giây lát.",

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Sửa Thông Tin Tour - TourAI Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 30px 20px 60px;">
+    {% include "partials/manage_menu.html" %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">✏️ Sửa Thông Tin Tour
+            </h1>
+            <p style="color: #64748b;">#${{ tour.id }} - {{ tour.title }}</p>
+        </div>
+        <a href="{{ url_for('admin.manage_tours') }}" class="btn btn-outline">&larr; Về danh sách Tour</a>
+    </div>
+
+    <div
+        style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+        <form method="POST">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 15px;">
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Tên
+                        chuyến tour *</label>
+                    <input type="text" name="title" value="{{ tour.title }}" required
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Điểm
+                        đến *</label>
+                    <select name="destination_id" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                        {% for d in destinations %}
+                        <option value="{{ d.id }}" {% if tour.destination_id == d.id %}selected{% endif %}>{{ d.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Số
+                        ngày đi *</label>
+                    <input type="number" name="duration_days" value="{{ tour.duration_days }}" min="1" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Số
+                        ngày đêm *</label>
+                    <input type="number" name="duration_nights" value="{{ tour.duration_nights }}" min="0" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Giá
+                        tiêu chuẩn (VNĐ) *</label>
+                    <input type="number" name="base_price" value="{{ tour.base_price }}" step="50000" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Phương
+                        tiện</label>
+                    <input type="text" name="transportation" value="{{ tour.transportation }}"
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label
+                        style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Trạng
+                        thái hiển thị</label>
+                    <select name="is_active"
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                        <option value="1" {% if tour.is_active == 1 %}selected{% endif %}>Đang hiển thị</option>
+                        <option value="0" {% if tour.is_active != 1 %}selected{% endif %}>Ẩn (ngừng bán)</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div style="margin-bottom: 15px;">
+                <label
+                    style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Ảnh
+                    đại diện (URL)</label>
+                <input type="url" name="image_url" value="{{ tour.image_url }}"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label
+                    style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Mô
+                    tả tour</label>
+                <textarea name="description" rows="3" required
+                    style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit;">{{ tour.description }}</textarea>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Lịch
+                    trình chi tiết theo ngày</label>
+                <textarea name="itinerary_text" rows="6"
+                    style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit;">{{ tour.itinerary_text }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-size: 15px;">💾 Lưu thay
+                đổi</button>
+            <a href="{{ url_for('admin.manage_tours') }}" class="btn btn-outline"
+                style="padding: 10px 24px; font-size: 15px; margin-left: 8px;">Hủy</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

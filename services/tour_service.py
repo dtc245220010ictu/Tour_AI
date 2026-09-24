@@ -38,6 +38,53 @@ class TourService:
         )
 
     @staticmethod
+    def update_destination(dest_id: int, name: str, region: str, description: str, image_url: str):
+        """Cập nhật điểm đến (ADMIN / STAFF)."""
+        destination = TourService.get_destination_by_id(dest_id)
+        if not destination:
+            raise ValueError("Không tìm thấy điểm đến.")
+
+        name = (name or "").strip()
+        region = (region or "").strip()
+        if not name or not region:
+            raise ValueError("Tên điểm đến và khu vực là bắt buộc.")
+
+        duplicate = execute_query(
+            "SELECT id FROM destinations WHERE name = ? AND id != ?;",
+            (name, dest_id),
+            fetch_one=True
+        )
+        if duplicate:
+            raise ValueError("Tên điểm đến đã tồn tại. Vui lòng chọn tên khác.")
+
+        execute_query(
+            "UPDATE destinations SET name = ?, region = ?, description = ?, image_url = ? WHERE id = ?;",
+            (name, region, (description or "").strip(), (image_url or "").strip(), dest_id),
+            commit=True
+        )
+        return True
+
+    @staticmethod
+    def delete_destination(dest_id: int):
+        """Xóa điểm đến (ADMIN only - STAFF không có quyền Xóa theo CN2). Chặn xóa điểm đến đang có tour liên kết."""
+        destination = TourService.get_destination_by_id(dest_id)
+        if not destination:
+            raise ValueError("Không tìm thấy điểm đến.")
+
+        linked = execute_query(
+            "SELECT COUNT(*) AS c FROM tours WHERE destination_id = ?;",
+            (dest_id,),
+            fetch_one=True
+        )
+        if linked and linked["c"] > 0:
+            raise ValueError(
+                f"Điểm đến đang gắn với {linked['c']} tour. "
+                "Hãy xóa hoặc chuyển các tour đó sang điểm đến khác trước khi xóa."
+            )
+        execute_query("DELETE FROM destinations WHERE id = ?;", (dest_id,), commit=True)
+        return True
+
+    @staticmethod
     def get_tours(destination_id=None, min_price=None, max_price=None, duration=None, keyword=None, limit=50):
         query = """
             SELECT t.*, d.name AS destination_name, d.region AS destination_region,
@@ -178,4 +225,77 @@ class TourService:
             (tour_id, departure_date, return_date, adult_price, child_price, total_seats, total_seats),
             commit=True
         )
+
+    @staticmethod
+    def update_schedule(schedule_id: int, departure_date: str, return_date: str,
+                        adult_price: float, child_price: float, total_seats: int,
+                        available_seats: int, status: str = "OPEN"):
+        """Cập nhật lịch khởi hành & số chỗ (ADMIN / STAFF)."""
+        schedule = execute_query(
+            "SELECT * FROM tour_schedules WHERE id = ?;",
+            (schedule_id,),
+            fetch_one=True
+        )
+        if not schedule:
+            raise ValueError("Không tìm thấy lịch khởi hành.")
+
+        departure_date = (departure_date or "").strip()
+        return_date = (return_date or "").strip()
+        if not departure_date or not return_date:
+            raise ValueError("Ngày khởi hành và ngày về là bắt buộc.")
+        if return_date < departure_date:
+            raise ValueError("Ngày về phải lớn hơn hoặc bằng ngày khởi hành.")
+
+        adult_price = float(adult_price)
+        child_price = float(child_price)
+        if adult_price <= 0 or child_price <= 0:
+            raise ValueError("Giá vé phải lớn hơn 0.")
+
+        total_seats = int(total_seats)
+        available_seats = int(available_seats)
+        if total_seats < 1:
+            raise ValueError("Tổng số chỗ phải lớn hơn 0.")
+        if available_seats < 0 or available_seats > total_seats:
+            raise ValueError("Số chỗ còn lại phải nằm trong khoảng từ 0 đến tổng số chỗ.")
+
+        if status not in ("OPEN", "FULL", "CLOSED", "CANCELLED"):
+            status = "OPEN"
+        # Đồng bộ trạng thái với số chỗ (cập nhật số chỗ)
+        if available_seats == 0 and status == "OPEN":
+            status = "FULL"
+        elif available_seats > 0 and status == "FULL":
+            status = "OPEN"
+
+        execute_query(
+            """UPDATE tour_schedules SET
+               departure_date = ?, return_date = ?, adult_price = ?, child_price = ?,
+               total_seats = ?, available_seats = ?, status = ?
+               WHERE id = ?;""",
+            (departure_date, return_date, adult_price, child_price,
+             total_seats, available_seats, status, schedule_id),
+            commit=True
+        )
+        return True
+
+    @staticmethod
+    def delete_schedule(schedule_id: int):
+        """Xóa lịch khởi hành (ADMIN only - STAFF không có quyền Xóa theo CN3). Chặn xóa đợt đã có đơn đặt chỗ."""
+        schedule = execute_query(
+            "SELECT id FROM tour_schedules WHERE id = ?;",
+            (schedule_id,),
+            fetch_one=True
+        )
+        if not schedule:
+            raise ValueError("Không tìm thấy lịch khởi hành.")
+
+        linked = execute_query(
+            "SELECT COUNT(*) AS c FROM bookings WHERE schedule_id = ?;",
+            (schedule_id,),
+            fetch_one=True
+        )
+        if linked and linked["c"] > 0:
+            raise ValueError("Đợt khởi hành này đã có đơn đặt chỗ. Không thể xóa.")
+
+        execute_query("DELETE FROM tour_schedules WHERE id = ?;", (schedule_id,), commit=True)
+        return True
 
