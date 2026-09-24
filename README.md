@@ -175,7 +175,7 @@ TourAI/
 ├── scripts/
 │   ├── check_rbac_live.py              # Kiểm tra RBAC trực tiếp trên server đang chạy
 │   ├── purge_demo_data.py              # Xóa dữ liệu demo, giữ tài khoản & dữ liệu thật
-│   └── add_sample_data.py              # Thêm 10 điểm đến / 10 tour / 10 khách / 10 đặt tour (idempotent)
+│   └── add_sample_data.py              # Thêm 10 điểm đến/tour/khách/đặt tour + 8 HDV & phân công
 │
 ├── app.py                              # Entry Point & Application Factory
 ├── requirements.txt                    # Danh sách thư viện Python
@@ -258,7 +258,7 @@ Mở trình duyệt và truy cập:
 
 > 🧹 **Dữ liệu demo:** Hệ thống mặc định **không tự seed dữ liệu mẫu** (`SEED_DEMO_DATA=0`). Muốn nạp lại dữ liệu demo chạy `python database/seeder.py`; muốn xóa dữ liệu demo mà giữ nguyên 5 tài khoản ở trên và lịch sử chat thật, chạy `python scripts/purge_demo_data.py`.
 
-> 🌱 **Dữ liệu mẫu tùy chọn:** Chạy `python scripts/add_sample_data.py` để thêm nhanh 10 điểm đến, 10 tour (kèm lịch khởi hành), 10 khách hàng (mật khẩu `khachhang123`) và 10 đặt tour (5 xác nhận, 2 chờ thanh toán, 3 hủy kèm hoàn 90%). Script idempotent — chạy lại không nhân đôi dữ liệu, không đụng dữ liệu bạn tự tạo.
+> 🌱 **Dữ liệu mẫu tùy chọn:** Chạy `python scripts/add_sample_data.py` để thêm nhanh 10 điểm đến, 10 tour (kèm lịch khởi hành), 10 khách hàng (mật khẩu `khachhang123`), 10 đặt tour (5 xác nhận, 2 chờ thanh toán, 3 hủy kèm hoàn 90%) và **8 hướng dẫn viên + 10 phân công dẫn tour** (không trùng lịch). Script idempotent — chạy lại không nhân đôi dữ liệu, không đụng dữ liệu bạn tự tạo.
 
 ---
 
