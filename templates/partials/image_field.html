@@ -1,0 +1,96 @@
+{# Ô ảnh dùng chung cho form admin. Kỳ vọng biến: current_image (str) #}
+<div class="img-field" style="margin-bottom: 20px;">
+    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">
+        Ảnh đại diện — chọn file, dán ảnh (Ctrl+V) hoặc nhập URL
+    </label>
+    <div style="display: flex; gap: 14px; align-items: flex-start;">
+        <img class="img-preview" src="{{ current_image or '' }}" alt="Xem trước ảnh"
+            style="width: 140px; height: 92px; object-fit: cover; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc;{% if not current_image %} display: none;{% endif %}">
+        <div style="flex: 1;">
+            <input type="file" class="img-file" name="image_file"
+                accept="image/png,image/jpeg,image/gif,image/webp"
+                style="width: 100%; font-size: 13px; margin-bottom: 8px;">
+            <input type="url" class="img-url" name="image_url" value="{{ current_image or '' }}"
+                placeholder="https://... hoặc dán trực tiếp ảnh vào ô này (Ctrl+V)"
+                style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+            <p class="img-status" style="font-size: 12px; color: #64748b; margin: 6px 0 0;">
+                💡 Chọn file sẽ tải lên khi bấm Lưu; dán ảnh (Ctrl+V) vào ô URL thì tải lên ngay lập tức.
+                Hỗ trợ JPG, PNG, WEBP, GIF (tối đa 5MB).
+            </p>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        const root = document.currentScript.closest(".img-field");
+        if (!root) return;
+        const fileInput = root.querySelector(".img-file");
+        const urlInput = root.querySelector(".img-url");
+        const preview = root.querySelector(".img-preview");
+        const status = root.querySelector(".img-status");
+        const MAX_SIZE = 5 * 1024 * 1024;
+
+        function setStatus(msg, isError) {
+            status.textContent = msg;
+            status.style.color = isError ? "#dc2626" : "#64748b";
+        }
+
+        function setPreview(url) {
+            if (url) {
+                preview.src = url;
+                preview.style.display = "block";
+            }
+        }
+
+        fileInput.addEventListener("change", function () {
+            const f = fileInput.files[0];
+            if (!f) return;
+            if (f.size > MAX_SIZE) {
+                setStatus("❌ Ảnh vượt quá 5MB!", true);
+                fileInput.value = "";
+                return;
+            }
+            setPreview(URL.createObjectURL(f));
+            urlInput.value = "";
+            setStatus("✅ Đã chọn ảnh: " + f.name + " — sẽ tải lên khi bấm Lưu.", false);
+        });
+
+        urlInput.addEventListener("change", function () {
+            if (urlInput.value) setPreview(urlInput.value);
+        });
+
+        urlInput.addEventListener("paste", async function (e) {
+            const items = e.clipboardData && e.clipboardData.items;
+            if (!items) return;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf("image/") !== 0) continue;
+                e.preventDefault();
+                const blob = items[i].getAsFile();
+                if (!blob) return;
+                if (blob.size > MAX_SIZE) {
+                    setStatus("❌ Ảnh dán vượt quá 5MB!", true);
+                    return;
+                }
+                const ext = (blob.type.split("/")[1] || "png").replace("jpeg", "jpg");
+                const fd = new FormData();
+                fd.append("file", blob, "pasted-image." + ext);
+                setStatus("⏳ Đang tải ảnh dán lên...", false);
+                try {
+                    const res = await fetch("/admin/upload-image", { method: "POST", body: fd });
+                    const data = await res.json();
+                    if (data.ok) {
+                        urlInput.value = data.url;
+                        setPreview(data.url);
+                        fileInput.value = "";
+                        setStatus("✅ Ảnh dán đã tải lên: " + data.url, false);
+                    } else {
+                        setStatus("❌ " + (data.error || "Không tải được ảnh."), true);
+                    }
+                } catch (err) {
+                    setStatus("❌ Lỗi kết nối khi tải ảnh.", true);
+                }
+                return;
+            }
+        });
+    })();
+</script>
