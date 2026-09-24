@@ -84,7 +84,7 @@ TourAI/
 ├── database/
 │   ├── schema.sql                      # Schema DDL (MySQL 8 & SQLite), gồm bảng tour_expenses
 │   ├── db.py                           # Database Manager, execute_query & migration tương thích
-│   └── seeder.py                       # Seeder dữ liệu mẫu (tour, booking, chi phí, thanh toán)
+│   └── seeder.py                       # Seeder dữ liệu mẫu (chỉ chạy khi cần demo)
 │
 ├── routes/                             # Flask Blueprints (Controllers)
 │   ├── auth_routes.py                  # Đăng ký, đăng nhập, phân quyền RBAC
@@ -169,7 +169,8 @@ TourAI/
 │   └── test_accounting.py              # Kiểm thử kế toán: duyệt thu, công nợ, chi phí, P&L (6)
 │
 ├── scripts/
-│   └── check_rbac_live.py              # Kiểm tra RBAC trực tiếp trên server đang chạy
+│   ├── check_rbac_live.py              # Kiểm tra RBAC trực tiếp trên server đang chạy
+│   └── purge_demo_data.py              # Xóa dữ liệu demo, giữ tài khoản & dữ liệu thật
 │
 ├── app.py                              # Entry Point & Application Factory
 ├── requirements.txt                    # Danh sách thư viện Python
@@ -204,10 +205,17 @@ TourAI/
    ```
    *(Tùy chọn: Nhập `GEMINI_API_KEY` từ Google AI Studio nếu muốn gọi trực tiếp Google Gemini API. Nếu chưa có API key, hệ thống tự động kích hoạt chế độ Thông Minh Fallback để phục vụ đầy đủ mọi chức năng).*
 
-4. **Khởi tạo và Seed cơ sở dữ liệu mẫu:**
-   ```bash
-   python database/seeder.py
-   ```
+4. **Khởi tạo cơ sở dữ liệu:**
+   Bảng được tự tạo tự động khi chạy app (schema.sql). Hệ thống **không tự nạp dữ liệu demo** theo mặc định — chỉ có dữ liệu thật bạn tạo.
+   - *(Tùy chọn)* Nạp dữ liệu mẫu để demo/test:
+     ```bash
+     python database/seeder.py
+     ```
+   - *(Tùy chọn)* Xóa dữ liệu demo đã nạp, giữ nguyên tài khoản & dữ liệu thật:
+     ```bash
+     python scripts/purge_demo_data.py
+     ```
+   - Biến môi trường `SEED_DEMO_DATA=1` trong `.env` sẽ tự nạp dữ liệu demo khi khởi động app (mặc định `0`).
 
 ---
 
@@ -242,6 +250,8 @@ Mở trình duyệt và truy cập:
 | **Khách hàng (Customer)** | `customer@tourai.vn` | `customer123` | Tìm kiếm tour, đặt tour, trò chuyện với Chatbot, hủy đơn, gửi đánh giá |
 
 > ⚡ **Đăng nhập nhanh (Quick Login):** Tại trang **http://127.0.0.1:5000/login** có sẵn khu vực **"Đăng nhập nhanh (Demo)"** — chỉ cần bấm vào vai trò (Quản trị / Nhân viên / **Kế toán** / Hướng dẫn viên / Khách hàng) là đăng nhập ngay, không cần gõ tài khoản & mật khẩu. Tính năng này phục vụ kiểm thử/học tập và có thể tắt bằng biến môi trường `ENABLE_DEMO_QUICK_LOGIN=0`.
+
+> 🧹 **Dữ liệu demo:** Hệ thống mặc định **không tự seed dữ liệu mẫu** (`SEED_DEMO_DATA=0`). Muốn nạp lại dữ liệu demo chạy `python database/seeder.py`; muốn xóa dữ liệu demo mà giữ nguyên 5 tài khoản ở trên và lịch sử chat thật, chạy `python scripts/purge_demo_data.py`.
 
 ---
 

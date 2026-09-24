@@ -30,10 +30,13 @@ def create_app():
     # Enabled by default for local demo/testing; set ENABLE_DEMO_QUICK_LOGIN=0 to disable in production.
     app.config["ENABLE_DEMO_QUICK_LOGIN"] = os.environ.get("ENABLE_DEMO_QUICK_LOGIN", "1").lower() in ["1", "true", "yes"]
     
-    # Initialize and seed database if not already done
+    # Initialize database schema. Demo data is ONLY seeded when SEED_DEMO_DATA=1
+    # (disabled by default so the system keeps only real, user-created data).
+    # Use `python database/seeder.py` to load demo data manually if needed.
     try:
         init_db()
-        seed_all()
+        if os.environ.get("SEED_DEMO_DATA", "0").lower() in ["1", "true", "yes"]:
+            seed_all()
     except Exception as e:
         app.logger.warning(f"Database initialization notice: {e}")
 
