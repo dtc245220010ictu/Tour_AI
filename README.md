@@ -4,7 +4,7 @@
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-orange.svg)](https://www.sqlite.org/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-56%2F56%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-60%2F60%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -13,7 +13,7 @@
 
 ### Các Tính Năng Nổi Bật:
 1. **Quản Lý Tour & Điểm Đến:** Quản lý điểm đến, tour du lịch, lịch trình chi tiết và phương tiện di chuyển. Hỗ trợ thêm ảnh đại diện bằng cách **chọn file, dán ảnh trực tiếp (Ctrl+V)** hoặc nhập URL.
-2. **Lịch Khởi Hành & Chống Overbooking Tuyệt Đối:** Kiểm soát số chỗ khả dụng bằng giao dịch nguyên tử (Atomic Database Transaction), ngăn chặn hoàn toàn việc bán vượt quá số chỗ trống khi có nhiều khách cùng đặt. Tự động hoàn lại chỗ khi đơn tour bị hủy.
+2. **Lịch Khởi Hành & Chống Overbooking Tuyệt Đối:** Kiểm soát số chỗ khả dụng bằng giao dịch nguyên tử (Atomic Database Transaction), ngăn chặn hoàn toàn việc bán vượt quá số chỗ trống khi có nhiều khách cùng đặt. Tự động hoàn lại chỗ khi đơn tour bị hủy. **Giá vé đợt khởi hành được liên kết tự động với giá tour** (tự điền khi mở đợt, đồng bộ khi sửa giá tour) để tránh dữ liệu lệch.
 3. **Trợ Lý AI Tư Vấn Tour (RAG Chatbot):**
    - Phân tích câu hỏi tự nhiên bằng tiếng Việt (ngân sách, số ngày, điểm đến, sở thích đi biển, leo núi, nghỉ dưỡng).
    - Truy vấn CSDL thực tế bằng Parameterized SQL an toàn.
@@ -99,7 +99,7 @@ TourAI/
 │
 ├── services/                           # Business Logic & AI Services
 │   ├── auth_service.py                 # Xác thực & mã hóa mật khẩu
-│   ├── tour_service.py                 # Nghiệp vụ tour, điểm đến & lịch khởi hành
+│   ├── tour_service.py                 # Nghiệp vụ tour, điểm đến, lịch khởi hành & sync giá đợt theo giá tour
 │   ├── booking_service.py              # Xử lý đặt chỗ & khóa nguyên tử chống overbooking
 │   ├── payment_service.py              # Ghi nhận thanh toán & đặt cọc
 │   ├── accounting_service.py           # Nghiệp vụ kế toán: đối soát, công nợ, chi phí, P&L, sổ quỹ
@@ -169,6 +169,7 @@ TourAI/
 │   ├── test_tour_retrieval.py          # Kiểm thử truy xuất tour & không bịa dữ liệu (3)
 │   ├── test_context_builder.py         # Kiểm thử tạo ngữ cảnh CSDL (2)
 │   ├── test_image_upload.py            # Kiểm thử upload ảnh: hợp lệ, sai định dạng, RBAC (5)
+│   ├── test_price_consistency.py       # Kiểm thử liên kết giá vé & tên tour giữa các bảng (4)
 │   └── test_accounting.py              # Kiểm thử kế toán: duyệt thu, công nợ, chi phí, P&L (6)
 │
 ├── scripts/
@@ -227,8 +228,8 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả mong đợi:** 56/56 tests `PASSED` 100%.
-*(Phân bổ theo file: RBAC 20 · Auth 6 · Kế toán 6 · Chống overbooking 5 · Bóc tách câu hỏi 5 · RAG pipeline 4 · Truy xuất tour 3 · Upload ảnh 5 · Context builder 2.)*
+**Kết quả mong đợi:** 60/60 tests `PASSED` 100%.
+*(Phân bổ theo file: RBAC 20 · Auth 6 · Kế toán 6 · Chống overbooking 5 · Bóc tách câu hỏi 5 · RAG pipeline 4 · Truy xuất tour 3 · Upload ảnh 5 · Liên kết dữ liệu 4 · Context builder 2.)*
 
 ---
 
@@ -299,7 +300,7 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 - Bảng **`payments`**: hỗ trợ `payment_type` ∈ {DEPOSIT, FULL, REMAINING, REFUND} cùng các trường xác nhận `verified_by`, `verified_at`.
 
 ### Kiểm thử phân hệ kế toán
-Các test trong `tests/test_accounting.py` (nằm trong bộ 56 test):
+Các test trong `tests/test_accounting.py` (nằm trong bộ 60 test):
 - `test_record_and_verify_payment` — quy trình kế toán duyệt thanh toán chuyển khoản.
 - `test_debt_calculation` — tính công nợ khi khách mới đặt cọc một phần.
 - `test_tour_expense_and_pnl` — ghi nhận chi phí tour & kiểm tra công thức Lợi nhuận = Doanh thu − Chi phí.

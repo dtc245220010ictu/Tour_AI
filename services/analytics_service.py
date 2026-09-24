@@ -61,6 +61,7 @@ class AnalyticsService:
     def get_occupancy_rates():
         schedules = execute_query(
             """SELECT s.id, s.departure_date, s.return_date, s.total_seats, s.available_seats, s.status,
+                      s.adult_price, s.child_price,
                       t.title AS tour_title
                FROM tour_schedules s
                JOIN tours t ON s.tour_id = t.id

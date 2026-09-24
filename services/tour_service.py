@@ -5,7 +5,7 @@ Provides catalog searching, filtering, and schedule management.
 
 import re
 import unicodedata
-from database.db import execute_query
+from database.db import get_db, execute_query
 
 def generate_slug(text: str) -> str:
     """Generate a clean URL-friendly slug from Vietnamese text."""
@@ -188,6 +188,22 @@ class TourService:
              image_url.strip(), is_active, tour_id),
             commit=True
         )
+
+    @staticmethod
+    def sync_schedule_prices(tour_id: int, base_price: float) -> int:
+        """Đồng bộ giá vé của TẤT CẢ lịch khởi hành theo giá tour hiện tại.
+        Giá trẻ em = 70% giá người lớn (quy ước toàn hệ thống).
+        Trả về số lịch khởi hành đã cập nhật.
+        """
+        adult = float(base_price)
+        child = round(adult * 0.7)
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE tour_schedules SET adult_price = ?, child_price = ? WHERE tour_id = ?;",
+                (adult, child, tour_id),
+            )
+            return cursor.rowcount
 
     @staticmethod
     def delete_tour(tour_id: int):

@@ -141,7 +141,13 @@ def edit_tour(tour_id):
                     image_url=image_url,
                     is_active=is_active
                 )
-                flash("Đã cập nhật tour thành công!", "success")
+                synced = 0
+                if request.form.get("sync_schedule_prices") == "1":
+                    synced = TourService.sync_schedule_prices(tour_id, base_price)
+                if synced:
+                    flash(f"Đã cập nhật tour & đồng bộ giá cho {synced} lịch khởi hành!", "success")
+                else:
+                    flash("Đã cập nhật tour thành công!", "success")
                 return redirect(url_for("admin.manage_tours"))
             except ValueError as e:
                 flash(str(e), "danger")
