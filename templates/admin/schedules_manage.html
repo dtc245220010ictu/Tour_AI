@@ -32,7 +32,8 @@
                     <select name="tour_id" required
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
                         {% for t in tours %}
-                        <option value="{{ t.id }}">{{ t.title }} ({{ t.destination_name }})</option>
+                        <option value="{{ t.id }}" data-base-price="{{ t.base_price }}">{{ t.title }} ({{
+                            t.destination_name }})</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -52,19 +53,21 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 10px;">
                 <div>
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Giá
                         người lớn (VNĐ) *</label>
-                    <input type="number" name="adult_price" value="3200000" step="50000" required
+                    <input type="number" id="adult_price" name="adult_price" step="50000" required
+                        placeholder="Tự động theo giá tour"
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                 </div>
                 <div>
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Giá
                         trẻ em (VNĐ) *</label>
-                    <input type="number" name="child_price" value="2240000" step="50000" required
+                    <input type="number" id="child_price" name="child_price" step="50000" required
+                        placeholder="Tự động theo giá tour"
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                 </div>
                 <div>
@@ -75,6 +78,9 @@
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                 </div>
             </div>
+
+            <p id="tour-price-hint" style="font-size: 12.5px; color: #0369a1; margin-bottom: 20px;">💡 Chọn tour để
+                tự động điền giá vé theo giá tiêu chuẩn của tour.</p>
 
             <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">Lưu Lịch Khởi Hành</button>
         </form>
@@ -90,6 +96,8 @@
                     <th style="padding: 12px;">Tour</th>
                     <th style="padding: 12px;">Ngày đi</th>
                     <th style="padding: 12px;">Ngày về</th>
+                    <th style="padding: 12px;">Giá người lớn</th>
+                    <th style="padding: 12px;">Giá trẻ em</th>
                     <th style="padding: 12px;">Số chỗ đã đặt</th>
                     <th style="padding: 12px;">Số chỗ còn lại</th>
                     <th style="padding: 12px;">Tỷ lệ lấp đầy</th>
@@ -102,6 +110,9 @@
                     <td style="padding: 12px; font-weight: 700; color: #0284c7;">{{ s.tour_title }}</td>
                     <td style="padding: 12px;">{{ s.departure_date }}</td>
                     <td style="padding: 12px; color: #64748b;">{{ s.return_date }}</td>
+                    <td style="padding: 12px; font-weight: 700; color: #e11d48;">{{ s.adult_price | format_currency
+                        }}</td>
+                    <td style="padding: 12px; color: #475569;">{{ s.child_price | format_currency }}</td>
                     <td style="padding: 12px;">{{ s.booked_seats }} / {{ s.total_seats }} chỗ</td>
                     <td class="{% if s.available_seats == 0 %}text-crimson{% else %}text-success{% endif %}"
                         style="padding: 12px; font-weight: 700;">
@@ -120,9 +131,40 @@
                         {% endif %}
                     </td>
                 </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="padding: 20px; text-align: center; color: #94a3b8;">Chưa có lịch khởi hành
+                        nào.</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Liên kết giá vé đợt khởi hành với giá tour được chọn -->
+<script>
+    (function () {
+        const tourSelect = document.querySelector('select[name="tour_id"]');
+        const adultInput = document.getElementById("adult_price");
+        const childInput = document.getElementById("child_price");
+        const hint = document.getElementById("tour-price-hint");
+        if (!tourSelect || !adultInput || !childInput) return;
+
+        function applyTourPrice() {
+            const opt = tourSelect.options[tourSelect.selectedIndex];
+            const base = parseFloat(opt ? opt.getAttribute("data-base-price") : "0");
+            if (!base || base <= 0) return;
+            adultInput.value = Math.round(base);
+            childInput.value = Math.round(base * 0.7);
+            hint.textContent = "💡 Giá tiêu chuẩn của tour \"" + opt.text.trim() + "\": "
+                + base.toLocaleString("vi-VN") + " ₫/người lớn, "
+                + Math.round(base * 0.7).toLocaleString("vi-VN")
+                + " ₫/trẻ em (70%) — đã tự động điền, bạn vẫn chỉnh được trước khi Lưu.";
+        }
+
+        tourSelect.addEventListener("change", applyTourPrice);
+        applyTourPrice();
+    })();
+</script>
 {% endblock %}
