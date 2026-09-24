@@ -12,7 +12,7 @@ def format_currency(val: float) -> str:
 
 class ContextBuilder:
     @staticmethod
-    def build_context(tours: list, alternatives: list = None) -> str:
+    def build_context(tours: list, alternatives: list | None = None) -> str:
         """
         Builds a compact textual context grounded strictly in database records.
         """

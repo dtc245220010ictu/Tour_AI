@@ -4,13 +4,16 @@
 
 {% block content %}
 <div class="container" style="padding: 30px 20px 60px;">
+    {% include "partials/manage_menu.html" %}
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
         <div>
             <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Quản Lý Sản Phẩm Tour
             </h1>
             <p style="color: #64748b;">Thêm mới, sửa đổi thông tin tour và sử dụng AI sinh mô tả</p>
         </div>
+        {% if session.get('role') == 'ADMIN' %}
         <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline">&larr; Về Dashboard</a>
+        {% endif %}
     </div>
 
     <!-- AI Generator Tool + New Tour Form -->
@@ -136,11 +139,15 @@
                     <td style="padding: 12px; font-weight: 700; color: #e11d48;">{{ t.base_price | format_currency }}
                     </td>
                     <td style="padding: 12px; text-align: center;">
+                        {% if session.get('role') == 'ADMIN' %}
                         <form action="{{ url_for('admin.delete_tour', tour_id=t.id) }}" method="POST"
                             style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa mềm tour này?');">
                             <button type="submit" class="btn"
                                 style="background: #fee2e2; color: #991b1b; padding: 4px 10px; font-size: 12px;">Xóa</button>
                         </form>
+                        {% else %}
+                        <span style="font-size: 12px; color: #94a3b8;">Không có quyền xóa</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

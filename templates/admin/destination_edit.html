@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Sửa Điểm Đến - TourAI Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 30px 20px 60px;">
+    {% include "partials/manage_menu.html" %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">✏️ Sửa Điểm Đến</h1>
+            <p style="color: #64748b;">#{{ destination.id }} - {{ destination.name }}</p>
+        </div>
+        <a href="{{ url_for('admin.manage_destinations') }}" class="btn btn-outline">&larr; Về danh sách Điểm đến</a>
+    </div>
+
+    <div
+        style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); max-width: 760px;">
+        <form method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Tên điểm đến *</label>
+                    <input type="text" name="name" value="{{ destination.name }}" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Khu vực *</label>
+                    <select name="region" required
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
+                        {% for r in ['Miền Bắc', 'Miền Trung', 'Miền Nam', 'Tây Nguyên', 'Quốc tế'] %}
+                        <option value="{{ r }}" {% if destination.region == r %}selected{% endif %}>{{ r }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Mô tả</label>
+                <textarea name="description" rows="3"
+                    style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit;">{{ destination.description or '' }}</textarea>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Ảnh đại diện (URL)</label>
+                <input type="url" name="image_url" value="{{ destination.image_url or '' }}"
+                    style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+            </div>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">💾 Lưu thay đổi</button>
+            <a href="{{ url_for('admin.manage_destinations') }}" class="btn btn-outline"
+                style="padding: 10px 24px; margin-left: 8px;">Hủy</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

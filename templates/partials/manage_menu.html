@@ -1,0 +1,47 @@
+{% macro mlink(endpoint, label) %}
+    <a href="{{ url_for(endpoint) }}" class="btn"
+        style="padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 8px; border: 1px solid #e2e8f0; {% if request.endpoint == endpoint %}background: #0284c7; border-color: #0284c7; color: #fff;{% else %}background: #f8fafc; color: #475569;{% endif %}">{{ label }}</a>
+{% endmacro %}
+{% set role = session.get('role') %}
+{% if role %}
+<!-- Menu quản trị theo VAI TRÒ (chỉ hiển thị chức năng đúng quyền) -->
+<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px 14px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        {% if role == 'ADMIN' %}
+        {{ mlink('admin.dashboard', '📊 Dashboard') }}
+        {{ mlink('admin.manage_tours', '🎫 Quản lý Tour') }}
+        {{ mlink('admin.manage_destinations', '📍 Điểm đến') }}
+        {{ mlink('admin.manage_schedules', '📅 Lịch khởi hành') }}
+        {{ mlink('admin.manage_bookings', '🧾 Duyệt đơn đặt chỗ') }}
+        {{ mlink('admin.manage_customers', '👥 Quản lý Khách hàng') }}
+        {{ mlink('admin.manage_guides', '🧭 Hướng dẫn viên') }}
+        {{ mlink('admin.manage_feedbacks', '⭐ Đánh giá AI') }}
+        {{ mlink('accounting.dashboard', '💼 Kế toán') }}
+        {% elif role == 'STAFF' %}
+        {{ mlink('admin.manage_tours', '🎫 Quản lý Tour') }}
+        {{ mlink('admin.manage_destinations', '📍 Điểm đến') }}
+        {{ mlink('admin.manage_schedules', '📅 Lịch khởi hành') }}
+        {{ mlink('admin.manage_bookings', '🧾 Duyệt đơn đặt chỗ') }}
+        {{ mlink('admin.manage_customers', '👥 Khách hàng (chỉ xem)') }}
+        {% elif role == 'ACCOUNTANT' %}
+        {{ mlink('admin.dashboard', '📊 Thống kê') }}
+        {{ mlink('accounting.dashboard', '💼 Kế toán') }}
+        {{ mlink('accounting.transactions', 'Phiếu thu & Đối soát') }}
+        {{ mlink('accounting.debts', 'Công nợ') }}
+        {{ mlink('accounting.expenses', '📈 Chi phí tour') }}
+        {{ mlink('accounting.tours_pnl', 'Báo cáo P&L') }}
+        {{ mlink('accounting.refunds', 'Hoàn tiền') }}
+        {% elif role == 'GUIDE' %}
+        {{ mlink('guide.schedule', '🧭 Bảng phân công (chỉ xem)') }}
+        {{ mlink('tour.catalog', '🎫 Danh sách Tour') }}
+        {{ mlink('chat.chatbot_page', '🤖 Trợ lý AI') }}
+        {% elif role == 'CUSTOMER' %}
+        {{ mlink('booking.my_bookings', '🎒 Tour của tôi') }}
+        {{ mlink('tour.catalog', '🎫 Khám phá Tour') }}
+        {{ mlink('chat.chatbot_page', '🤖 Trợ lý AI') }}
+        {% endif %}
+    </div>
+    <p style="font-size: 12px; color: #94a3b8; margin: 8px 0 0;">Bạn đang đăng nhập với vai trò
+        <strong>{{ role }}</strong> - hệ thống chỉ hiển thị các chức năng theo quyền của bạn.</p>
+</div>
+{% endif %}

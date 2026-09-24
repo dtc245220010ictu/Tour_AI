@@ -8,6 +8,7 @@ import os
 import sqlite3
 from pathlib import Path
 from contextlib import contextmanager
+from typing import Any, Literal, overload
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = os.environ.get("SQLITE_DB_PATH", str(BASE_DIR / "database" / "tour_ai.db"))
@@ -61,10 +62,71 @@ def init_db():
         except Exception:
             pass
 
+@overload
+def execute_query(
+    query: str,
+    params: Any = (),
+    *,
+    commit: Literal[True],
+    fetch_one: bool = False,
+    fetch_all: bool = False,
+) -> int: ...
+
+
+@overload
+def execute_query(
+    query: str,
+    params: Any = (),
+    *,
+    fetch_one: Literal[True],
+    fetch_all: bool = False,
+    commit: Literal[False] = False,
+) -> dict[str, Any] | None: ...
+
+
+@overload
+def execute_query(
+    query: str,
+    params: Any = (),
+    *,
+    fetch_all: Literal[True],
+    fetch_one: bool = False,
+    commit: Literal[False] = False,
+) -> list[dict[str, Any]]: ...
+
+
+@overload
+def execute_query(
+    query: str,
+    params: Any = (),
+    *,
+    fetch_one: Literal[False] = False,
+    fetch_all: Literal[False] = False,
+    commit: Literal[False] = False,
+) -> sqlite3.Cursor: ...
+
+
+@overload
+def execute_query(
+    query: str,
+    params: Any = (),
+    *,
+    fetch_one: bool = False,
+    fetch_all: bool = False,
+    commit: bool = False,
+) -> int | dict[str, Any] | None | list[dict[str, Any]] | sqlite3.Cursor: ...
+
+
 def execute_query(query, params=(), fetch_one=False, fetch_all=False, commit=False):
     """
     Executes a parameterized SQL query safely.
     Prevents SQL injection vulnerabilities.
+
+    Overloads let static type checkers (Pylance/Pyright) infer the return type:
+      - commit=True        -> int (lastrowid)
+      - fetch_one=True     -> dict | None
+      - fetch_all=True     -> list[dict]
+      - no flag            -> sqlite3.Cursor
     """
     with get_db() as conn:
         cursor = conn.cursor()

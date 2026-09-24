@@ -44,7 +44,7 @@ def register():
         phone = request.form.get("phone", "").strip()
 
         try:
-            user = AuthService.register_user(email, password, full_name, phone, role="CUSTOMER")
+            AuthService.register_user(email, password, full_name, phone, role="CUSTOMER")
             flash("Đăng ký tài khoản thành công! Hãy đăng nhập để bắt đầu.", "success")
             return redirect(url_for("auth.login"))
         except ValueError as e:
@@ -72,8 +72,14 @@ def login():
             next_url = request.args.get("next")
             if next_url:
                 return redirect(next_url)
-            if user["role"] in ["ADMIN", "STAFF", "ACCOUNTANT"]:
+            if user["role"] in ["ADMIN", "ACCOUNTANT"]:
                 return redirect(url_for("admin.dashboard"))
+            if user["role"] == "STAFF":
+                # STAFF has no access to the statistics dashboard (Chức năng 8)
+                return redirect(url_for("admin.manage_tours"))
+            if user["role"] == "GUIDE":
+                # GUIDE: trang riêng - bảng phân công nhiệm vụ (CN6, chỉ xem)
+                return redirect(url_for("guide.schedule"))
             return redirect(url_for("tour.index"))
         else:
             flash("Email hoặc mật khẩu không chính xác. Vui lòng thử lại.", "danger")

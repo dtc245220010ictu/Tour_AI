@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container" style="padding: 30px 20px 60px;">
+    {% include "partials/manage_menu.html" %}
     <!-- Admin Header -->
     <div
         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
@@ -12,14 +13,16 @@
                 Hoạt Động</h1>
             <p style="color: #64748b;">Tổng quan tình hình kinh doanh, số chỗ và phân tích tour</p>
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            {% if session.get('role') == 'ADMIN' %}
             <a href="{{ url_for('admin.manage_tours') }}" class="btn btn-primary">Quản lý Tour</a>
             <a href="{{ url_for('admin.manage_schedules') }}" class="btn btn-outline">Lịch Khởi Hành</a>
             <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-outline">Đơn Đặt Chỗ</a>
+            <a href="{{ url_for('admin.manage_guides') }}" class="btn btn-outline">🧭 Hướng Dẫn Viên</a>
             <a href="{{ url_for('admin.manage_feedbacks') }}" class="btn btn-outline">Đánh Giá AI</a>
+            {% endif %}
         </div>
     </div>
-
     <!-- 4 Stats Cards -->
     <div
         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 35px;">
@@ -106,7 +109,8 @@
         </div>
     </div>
 
-    <!-- Recent Bookings Table -->
+    <!-- Recent Bookings Table (Chỉ Admin - Kế toán không có quyền quản lý đặt chỗ) -->
+    {% if session.get('role') == 'ADMIN' %}
     <div style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px;">
         <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 18px;">🕒 Đơn Đặt Chỗ Gần Đây</h3>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -146,6 +150,7 @@
             </tbody>
         </table>
     </div>
+    {% endif %}
 </div>
 
 <script>

@@ -5,6 +5,7 @@ Public Tour Catalog and Detail Routes.
 from flask import Blueprint, render_template, request, abort
 from services.tour_service import TourService
 from services.feedback_service import FeedbackService
+from services.guide_service import GuideService
 
 tour_bp = Blueprint("tour", __name__)
 
@@ -51,6 +52,7 @@ def detail(slug):
 
     schedules = TourService.get_tour_schedules(tour["id"], only_open=True)
     feedbacks = FeedbackService.get_feedbacks_by_tour(tour["id"])
+    guides = GuideService.get_guides_for_tour(tour["id"])
 
     # Calculate average rating
     avg_rating = 0
@@ -62,6 +64,7 @@ def detail(slug):
         tour=tour,
         schedules=schedules,
         feedbacks=feedbacks,
-        avg_rating=avg_rating
+        avg_rating=avg_rating,
+        guides=guides
     )
 

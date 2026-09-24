@@ -8,7 +8,6 @@ Restricted to ADMIN and ACCOUNTANT roles.
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from routes.auth_routes import roles_required
 from services.accounting_service import AccountingService
-from services.tour_service import TourService
 
 accounting_bp = Blueprint("accounting", __name__, url_prefix="/accounting")
 
@@ -18,7 +17,8 @@ def dashboard():
     cashflow = AccountingService.get_cashflow_summary()
     pending_payments = AccountingService.get_payment_reconciliation_list(status="PENDING")[:5]
     top_debts = AccountingService.get_booking_debt_list()[:5]
-    recent_pnl = AccountingService.get_schedule_pnl()[:5]
+    recent_pnl_raw = AccountingService.get_schedule_pnl()
+    recent_pnl = recent_pnl_raw[:5] if isinstance(recent_pnl_raw, list) else []
 
     return render_template(
         "accounting/dashboard.html",
@@ -85,6 +85,10 @@ def expenses():
         expense_date = request.form.get("expense_date", "").strip()
         notes = request.form.get("notes", "").strip()
 
+        if schedule_id is None:
+            flash("Vui lòng chọn đợt khởi hành để gắn chi phí.", "danger")
+            return redirect(url_for("accounting.expenses"))
+
         try:
             AccountingService.record_tour_expense(
                 schedule_id=schedule_id,
@@ -104,7 +108,6 @@ def expenses():
 
     schedule_id_filter = request.args.get("schedule_id", type=int)
     expense_list = AccountingService.get_tour_expenses(schedule_id=schedule_id_filter)
-    schedules = TourService.get_tour_schedules(tour_id=None) if hasattr(TourService, "get_all_schedules") else []
 
     # Get available schedules for select dropdown
     from database.db import execute_query
@@ -128,7 +131,7 @@ def expenses():
 def tours_pnl():
     schedule_id = request.args.get("schedule_id", type=int)
     pnl_data = AccountingService.get_schedule_pnl(schedule_id=schedule_id)
-    pnl_records = [pnl_data] if schedule_id and pnl_data else (pnl_data if not schedule_id else [])
+    pnl_records = [pnl_data] if schedule_id and pnl_data else (pnl_data if isinstance(pnl_data, list) and not schedule_id else [])
 
     from database.db import execute_query
     schedules_dropdown = execute_query(
@@ -153,6 +156,10 @@ def refunds():
         booking_id = request.form.get("booking_id", type=int)
         refund_amount = request.form.get("refund_amount", 0, type=float)
         notes = request.form.get("notes", "").strip()
+
+        if booking_id is None:
+            flash("Không tìm thấy đơn cần hoàn tiền.", "danger")
+            return redirect(url_for("accounting.refunds"))
 
         try:
             AccountingService.process_refund(

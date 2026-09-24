@@ -78,7 +78,7 @@ Tài liệu này đặc tả toàn bộ các endpoints của hệ thống TourAI
 
 ### 2.2 Phân tích và tóm tắt phản hồi khách hàng
 - **Endpoint:** `POST /api/ai/summarize-feedbacks`
-- **Xác thực:** Yêu cầu quyền `ADMIN` hoặc `STAFF`.
+- **Xác thực:** Yêu cầu quyền `ADMIN` (xem và xử lý phản hồi là quyền quản trị - Nhân viên tư vấn không có quyền).
 - **Response Success (HTTP 200 OK):**
 ```json
 {
@@ -94,10 +94,10 @@ Tài liệu này đặc tả toàn bộ các endpoints của hệ thống TourAI
 |---|---|---|---|
 | `GET` | `/tours` | Lấy danh sách tour, hỗ trợ lọc theo `destination_id`, `max_price`, `duration`, `keyword` | Public |
 | `GET` | `/tours/<slug>` | Xem chi tiết tour, lịch trình, bảng lịch khởi hành còn chỗ | Public |
-| `POST` | `/booking/new/<schedule_id>` | Tạo đơn đặt tour mới, trừ chỗ khả dụng nguyên tử | `CUSTOMER`, `ADMIN` |
-| `POST` | `/booking/<id>/pay` | Xác nhận thanh toán (mô phỏng hoặc chuyển khoản) | `CUSTOMER`, `ACCOUNTANT` |
-| `POST` | `/booking/<id>/cancel` | Hủy đơn đặt tour, tự động hoàn trả số chỗ | `CUSTOMER`, `ADMIN` |
-| `POST` | `/feedback/new` | Gửi đánh giá sao (1-5) và nhận xét | `CUSTOMER` |
+| `POST` | `/booking/new/<schedule_id>` | Tạo đơn đặt tour mới, trừ chỗ khả dụng nguyên tử | `CUSTOMER`, `STAFF`, `ADMIN` |
+| `POST` | `/booking/<id>/pay` | Xác nhận thanh toán (mô phỏng hoặc chuyển khoản); `CUSTOMER` chỉ với đơn của chính mình | `CUSTOMER` (đơn của mình), `ACCOUNTANT`, `ADMIN` |
+| `POST` | `/booking/<id>/cancel` | Hủy đơn đặt tour (PENDING hoặc CONFIRMED), tự động hoàn trả số chỗ; `CUSTOMER` tự hủy đơn của chính mình không cần qua nhân viên; đơn COMPLETED bị chặn | `CUSTOMER` (đơn của mình), `ADMIN` |
+| `POST` | `/feedback/new` | Gửi đánh giá sao (1-5) và nhận xét | `CUSTOMER`, `ADMIN` |
 
 ---
 

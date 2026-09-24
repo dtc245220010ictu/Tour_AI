@@ -27,14 +27,26 @@
                         style="color: #0284c7; font-weight: 700;">🤖 Trợ lý AI</a></li>
 
                 {% if session.get('user_id') %}
-                <li><a href="{{ url_for('booking.my_bookings') }}" class="nav-link">Đơn của tôi</a></li>
+                {# "Tour của tôi" - CHỈ Khách hàng (CUSTOMER) mới được thấy menu này #}
+                {% if session.get('role') == 'CUSTOMER' %}
+                <li><a href="{{ url_for('booking.my_bookings') }}" class="nav-link">Tour của tôi</a></li>
+                {% endif %}
                 {% if session.get('role') in ['ADMIN', 'ACCOUNTANT'] %}
                 <li><a href="{{ url_for('accounting.dashboard') }}" class="nav-link"
                         style="color: #059669; font-weight: 600;">💼 Kế toán</a></li>
                 {% endif %}
-                {% if session.get('role') in ['ADMIN', 'STAFF'] %}
+                {% if session.get('role') == 'ADMIN' %}
                 <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"
                         style="color: #d97706; font-weight: 600;">📊 Quản trị</a></li>
+                {% elif session.get('role') == 'ACCOUNTANT' %}
+                <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"
+                        style="color: #d97706; font-weight: 600;">📊 Thống Kê</a></li>
+                {% elif session.get('role') == 'STAFF' %}
+                <li><a href="{{ url_for('admin.manage_tours') }}" class="nav-link"
+                        style="color: #d97706; font-weight: 600;">📊 Quản trị</a></li>
+                {% elif session.get('role') == 'GUIDE' %}
+                <li><a href="{{ url_for('guide.schedule') }}" class="nav-link"
+                        style="color: #0d9488; font-weight: 600;">🧭 Lịch Phân Công</a></li>
                 {% endif %}
                 <li style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 14px; color: #64748b;">👤 {{ session.get('user_name') }}</span>
