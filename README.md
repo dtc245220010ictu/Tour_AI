@@ -4,7 +4,7 @@
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-orange.svg)](https://www.sqlite.org/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-29%2F29%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-51%2F51%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -28,7 +28,8 @@
    - **Hoàn Tiền Hủy Tour:** Tính tỷ lệ hoàn tiền theo chính sách (90% / 50% / 0%) và lập phiếu chi hoàn tiền.
    - **Báo Cáo Tài Chính:** P&L từng đoàn tour (Doanh thu − Chi phí = Lợi nhuận gộp, kèm Margin %) và Sổ quỹ Thu/Chi.
 6. **Báo Cáo & Thống Kê:** Thống kê doanh thu, tỷ lệ lấp đầy chỗ (Occupancy Rate) của các đợt khởi hành và top tour bán chạy nhất.
-7. **Bảo Mật Cao Cấp:** Băm mật khẩu bằng PBKDF2:SHA256, phân quyền 5 vai trò (Admin, Staff, Accountant, Guide, Customer), cô lập tuyệt đối API key và không cho LLM truy cập trực tiếp CSDL.
+7. **Phân Hệ Quản Trị & Phân Công Hướng Dẫn Viên:** CRUD Điểm đến, Tour, Lịch khởi hành, Khách hàng và Hướng dẫn viên; phân công HDV theo từng lịch khởi hành; phân quyền chi tiết từng thao tác (ví dụ: STAFF chỉ xem khách hàng, chỉ ADMIN được xóa tour/điểm đến). HDV xem bảng phân công dẫn tour tại `/guide/schedule`.
+8. **Bảo Mật Cao Cấp:** Băm mật khẩu bằng PBKDF2:SHA256, phân quyền 5 vai trò (Admin, Staff, Accountant, Guide, Customer), cô lập tuyệt đối API key và không cho LLM truy cập trực tiếp CSDL.
 
 ---
 
@@ -37,7 +38,7 @@
 ```text
 TourAI/
 ├── .agents/
-│   └── skills/                         # Hệ thống 13 Skills quy trình chuyên môn chuẩn hóa
+│   └── skills/                         # Hệ thống 14 Skills quy trình chuyên môn chuẩn hóa
 │       ├── requirements-analysis/      # Skill 1: Phân tích yêu cầu phần mềm
 │       ├── uml-design/                 # Skill 2: Thiết kế biểu đồ UML & bảng
 │       ├── architecture-design/        # Skill 3: Thiết kế kiến trúc phân lớp & RAG
@@ -56,6 +57,7 @@ TourAI/
 ├── docs/                               # Toàn bộ tài liệu quy trình AI-Augmented SDLC
 │   ├── customer-requirement.md         # Yêu cầu khách hàng ban đầu (Đề tài 17)
 │   ├── requirements.md                 # Đặc tả yêu cầu FR-001..FR-025 & NFR-001..NFR-008
+│   ├── functional-requirements.md      # Yêu cầu chức năng chi tiết theo từng phân hệ
 │   ├── user-stories.md                 # Danh sách User Stories & Ma trận truy xuất
 │   ├── acceptance-criteria.md          # Tiêu chí chấp nhận Gherkin (Given-When-Then)
 │   ├── requirements-issues.md          # Phân tích điểm mơ hồ & Biên bản Human Gate 1
@@ -64,7 +66,7 @@ TourAI/
 │   ├── architecture-decisions.md       # Các quyết định kiến trúc quan trọng (ADR-001..005)
 │   ├── database-design.md              # Thiết kế CSDL chi tiết chuẩn 3NF
 │   ├── test-plan.md                    # Kế hoạch kiểm thử toàn diện
-│   ├── test-report.md                  # Báo cáo kết quả kiểm thử tự động (29/29 PASS)
+│   ├── test-report.md                  # Báo cáo kết quả kiểm thử tự động
 │   ├── code-review.md                  # Báo cáo đánh giá mã nguồn & phân loại lỗi
 │   ├── security-review.md              # Báo cáo đánh giá an toàn thông tin & lỗ hổng
 │   ├── chatbot-requirements.md         # Yêu cầu chuyên biệt cho Chatbot AI
@@ -84,13 +86,13 @@ TourAI/
 │   ├── db.py                           # Database Manager, execute_query & migration tương thích
 │   └── seeder.py                       # Seeder dữ liệu mẫu (tour, booking, chi phí, thanh toán)
 │
-├── models/                             # Data Access & Entity Definitions
 ├── routes/                             # Flask Blueprints (Controllers)
 │   ├── auth_routes.py                  # Đăng ký, đăng nhập, phân quyền RBAC
 │   ├── tour_routes.py                  # Trang chủ, danh mục, lọc & chi tiết tour
 │   ├── booking_routes.py               # Đặt chỗ, thanh toán, hủy đơn
 │   ├── feedback_routes.py              # Đánh giá sau chuyến đi
-│   ├── admin_routes.py                 # Dashboard thống kê, CRUD tour & lịch trình
+│   ├── admin_routes.py                 # Dashboard, CRUD tour, điểm đến, khách hàng, HDV
+│   ├── guide_routes.py                 # Phân hệ HDV: bảng phân công dẫn tour (/guide/schedule)
 │   ├── accounting_routes.py            # Phân hệ kế toán: thu/chi, công nợ, P&L, hoàn tiền
 │   ├── chat_routes.py                  # API Chatbot (POST /api/chat)
 │   └── ai_tools_routes.py              # Công cụ AI sinh nội dung & tóm tắt phản hồi
@@ -103,6 +105,7 @@ TourAI/
 │   ├── accounting_service.py           # Nghiệp vụ kế toán: đối soát, công nợ, chi phí, P&L, sổ quỹ
 │   ├── feedback_service.py             # Quản lý đánh giá sao & nhận xét
 │   ├── analytics_service.py            # Doanh thu, tỷ lệ lấp đầy, top tour
+│   ├── guide_service.py                # Phân công HDV theo lịch khởi hành
 │   ├── question_analyzer.py            # Bóc tách intent tiếng Việt
 │   ├── tour_retriever.py               # Truy vấn CSDL tour còn chỗ an toàn
 │   ├── context_builder.py              # Chuẩn hóa context ngắn gọn cho LLM
@@ -126,9 +129,19 @@ TourAI/
 │   ├── admin/                          # Giao diện Quản trị
 │   │   ├── dashboard.html              # Báo cáo thống kê, biểu đồ lấp đầy
 │   │   ├── tours_manage.html           # Quản lý tour kèm nút AI sinh mô tả
+│   │   ├── tour_edit.html              # Thêm/sửa chi tiết tour
 │   │   ├── schedules_manage.html       # Quản lý lịch khởi hành & chỗ trống
+│   │   ├── schedule_edit.html          # Thêm/sửa lịch khởi hành
+│   │   ├── destinations_manage.html    # Quản lý điểm đến
+│   │   ├── destination_edit.html       # Thêm/sửa điểm đến
 │   │   ├── bookings_manage.html        # Quản lý trạng thái đơn đặt chỗ
+│   │   ├── customers_manage.html       # Quản lý khách hàng (ADMIN thêm/sửa/xóa, STAFF chỉ xem)
+│   │   ├── guides_manage.html          # Quản lý HDV & phân công theo lịch khởi hành
 │   │   └── feedbacks_manage.html       # Quản lý đánh giá kèm nút AI tóm tắt
+│   ├── guide/
+│   │   └── schedule.html               # Bảng phân công dẫn tour của HDV
+│   ├── partials/
+│   │   └── manage_menu.html            # Menu điều khiển chung cho các trang quản trị
 │   └── accounting/                     # Giao diện Phân hệ Kế toán
 │       ├── dashboard.html              # Dashboard tài chính (thu, chi, tồn quỹ, công nợ)
 │       ├── transactions.html           # Sổ quỹ thu & đối soát chuyển khoản
@@ -142,18 +155,21 @@ TourAI/
 │   │   ├── style.css                   # Định kiểu giao diện toàn trang
 │   │   └── chat.css                    # Định kiểu Chatbot, gradient header, cards
 │   └── js/
-│       ├── main.js                     # Tiện ích chung
 │       └── chat.js                     # Xử lý fetch API chat, render cards, loading
 │
 ├── tests/                              # Bộ kiểm thử tự động (Pytest)
 │   ├── conftest.py                     # Cấu hình test database cô lập
-│   ├── test_auth.py                    # Kiểm thử xác thực, băm mật khẩu & đăng nhập nhanh
-│   ├── test_booking_capacity.py        # Kiểm thử chống Overbooking & hoàn trả chỗ
-│   ├── test_question_analyzer.py       # Kiểm thử bóc tách ngân sách & điểm đến
-│   ├── test_tour_retrieval.py          # Kiểm thử truy xuất tour & không bịa dữ liệu
-│   ├── test_context_builder.py         # Kiểm thử tạo ngữ cảnh CSDL
-│   ├── test_rag_pipeline.py            # Kiểm thử toàn trình RAG & API POST /api/chat
-│   └── test_accounting.py              # Kiểm thử kế toán: duyệt thu, công nợ, chi phí, P&L, RBAC
+│   ├── test_auth.py                    # Kiểm thử xác thực, băm mật khẩu & đăng nhập nhanh (6)
+│   ├── test_rbac.py                    # Kiểm thử phân quyền 5 vai trò trên mọi route (20)
+│   ├── test_booking_capacity.py        # Kiểm thử chống Overbooking & hoàn trả chỗ (5)
+│   ├── test_question_analyzer.py       # Kiểm thử bóc tách ngân sách & điểm đến (5)
+│   ├── test_rag_pipeline.py            # Kiểm thử toàn trình RAG & API POST /api/chat (4)
+│   ├── test_tour_retrieval.py          # Kiểm thử truy xuất tour & không bịa dữ liệu (3)
+│   ├── test_context_builder.py         # Kiểm thử tạo ngữ cảnh CSDL (2)
+│   └── test_accounting.py              # Kiểm thử kế toán: duyệt thu, công nợ, chi phí, P&L (6)
+│
+├── scripts/
+│   └── check_rbac_live.py              # Kiểm tra RBAC trực tiếp trên server đang chạy
 │
 ├── app.py                              # Entry Point & Application Factory
 ├── requirements.txt                    # Danh sách thư viện Python
@@ -200,8 +216,8 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả mong đợi:** 29/29 tests `PASSED` 100%.
-*(Bao gồm 6 test phân hệ kế toán và 3 test cho tính năng đăng nhập nhanh (quick login)).*
+**Kết quả mong đợi:** 51/51 tests `PASSED` 100%.
+*(Phân bổ theo file: RBAC 20 · Auth 6 · Kế toán 6 · Chống overbooking 5 · Bóc tách câu hỏi 5 · RAG pipeline 4 · Truy xuất tour 3 · Context builder 2.)*
 
 ---
 
@@ -270,7 +286,7 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 - Bảng **`payments`**: hỗ trợ `payment_type` ∈ {DEPOSIT, FULL, REMAINING, REFUND} cùng các trường xác nhận `verified_by`, `verified_at`.
 
 ### Kiểm thử phân hệ kế toán
-Các test trong `tests/test_accounting.py` (nằm trong bộ 29 test):
+Các test trong `tests/test_accounting.py` (nằm trong bộ 51 test):
 - `test_record_and_verify_payment` — quy trình kế toán duyệt thanh toán chuyển khoản.
 - `test_debt_calculation` — tính công nợ khi khách mới đặt cọc một phần.
 - `test_tour_expense_and_pnl` — ghi nhận chi phí tour & kiểm tra công thức Lợi nhuận = Doanh thu − Chi phí.
