@@ -7,6 +7,8 @@ Adds exactly 10 items per category:
 - 10 new CUSTOMER accounts (password: khachhang123)
 - 10 bookings: 5 CONFIRMED, 2 PENDING, 3 CANCELLED - with linked payments
   (verified deposits/full payments, one pending transfer, two 90% refunds)
+- 8 tour guides (biển, di sản, trekking...) + 10 LEAD_GUIDE assignments
+  (sample schedules are 7 days apart -> no overlapping dates)
 
 Idempotent: rows are detected by natural keys (name / slug / email / booking_code),
 so re-running never duplicates or overwrites your real data.
@@ -136,10 +138,57 @@ BOOKINGS = [
          a=2, c=1, status="CANCELLED", note="Khách hủy trước khi thanh toán", pays=[]),
 ]
 
+# 8 tour guides: (full_name, phone, email, languages, experience_years, bio)
+GUIDES = [
+    ("Lê Văn Hải", "0912111222", "hai.le@tourai.vn", "Tiếng Việt, Tiếng Anh", 5,
+     "Nhiệt tình, am hiểu văn hóa vùng biển và di sản miền Trung."),
+    ("Nguyễn Thị Mai", "0913333444", "mai.nguyen@tourai.vn", "Tiếng Việt, Tiếng Pháp", 4,
+     "Chuyên dẫn các tour biển đảo và nghỉ dưỡng cao cấp."),
+    ("Vàng A Súa", "0914555666", "sua.vang@tourai.vn", "Tiếng Việt, Tiếng Mông, Tiếng Anh", 6,
+     "Người bản địa am hiểu văn hóa vùng cao và trekking."),
+    ("Trần Đình Tuấn", "0915555777", "tuan.tran@tourai.vn", "Tiếng Việt, Tiếng Anh", 7,
+     "Kỹ năng tổ chức tốt, chuyên các tour đô thị - di tích lịch sử."),
+    ("Phạm Ngọc Lan", "0916666888", "lan.pham@tourai.vn", "Tiếng Việt, Tiếng Nhật", 3,
+     "Tươi trẻ, nhiệt huyết, phù hợp nhóm khách gia đình và giới trẻ."),
+    ("Đỗ Quang Huy", "0917777999", "huy.do@tourai.vn", "Tiếng Việt, Tiếng Hàn", 5,
+     "Am hiểu ẩm thực địa phương, dẫn tốt tour trải nghiệm văn hóa."),
+    ("Bùi Thị Kim Ngân", "0918888000", "ngan.bui@tourai.vn", "Tiếng Việt, Tiếng Anh", 4,
+     "Chăm sóc khách chu đáo, chuyên tour nghỉ dưỡng."),
+    ("Lý A Páo", "0919999111", "pao.ly@tourai.vn", "Tiếng Việt, Tiếng Tày, Tiếng Anh", 8,
+     "HDV kỳ cựu, thông thạo trekking và các tuyến đường núi."),
+]
+
+# 10 assignments: (tour_title, guide_email, role_in_tour, notes)
+# Sample schedules are 7 days apart -> no overlapping dates for any guide.
+ASSIGNMENTS = [
+    ("Nha Trang - Bien Xanh Vinpearl 4 Ngay 3 Dem", "hai.le@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn tour biển Nha Trang"),
+    ("Pho Co Ho An - Ngu Hanh Son 3 Ngay 2 Dem", "mai.nguyen@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn phố cổ Hội An"),
+    ("Co Do Hue - Dai Noi Thien Mu 3 Ngay 2 Dem", "tuan.tran@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn di tích Cố Đô Huế"),
+    ("Trang An - Tam Coc Bich Dong 2 Ngay 1 Dem", "lan.pham@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn Ninh Bình (nhóm gia đình)"),
+    ("Quy Nhon - Ky Co - Eo Gio 4 Ngay 3 Dem", "huy.do@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn Quy Nhơn - ẩm thực Bình Định"),
+    ("Phu Yen - Ganh Da Dia - Dai Lanh 3 Ngay 2 Dem", "ngan.bui@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn Phú Yên"),
+    ("Vung Tau - Bien Duong 2 Ngay 1 Dem", "lan.pham@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn Vũng Tàu (cuối tuần)"),
+    ("Con Dao - Vuon Quoc Gia 3 Ngay 2 Dem", "mai.nguyen@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn Côn Đảo"),
+    ("Moc Chau - Doi Tra & Thac Dai Yem 3 Ngay 2 Dem", "sua.vang@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn Mộc Châu - am hiểu người Mông"),
+    ("Tay Nguyen - Dray Nur - Ho Lak 4 Ngay 3 Dem", "pao.ly@tourai.vn", "LEAD_GUIDE",
+     "Dẫn đoàn Tây Nguyên - văn hóa cồng chiêng"),
+]
+
+
 def main():
     init_db()
     stats = {"destinations": 0, "tours": 0, "schedules": 0, "customers": 0,
-             "bookings": 0, "payments": 0, "refunds": 0}
+             "bookings": 0, "payments": 0, "refunds": 0,
+             "guides": 0, "assignments": 0}
 
     with get_db() as conn:
         cur = conn.cursor()
@@ -210,6 +259,48 @@ def main():
             )
             cust_ids[email] = cur.lastrowid
             stats["customers"] += 1
+
+        # --- 8 guides + 10 assignments to sample schedules ---
+        guide_ids = {}
+        for gname, gphone, gemail, glangs, gyears, gbio in GUIDES:
+            cur.execute("SELECT id FROM tour_guides WHERE email = ?;", (gemail,))
+            row = cur.fetchone()
+            if row:
+                guide_ids[gemail] = row["id"]
+                continue
+            cur.execute(
+                """INSERT INTO tour_guides
+                   (full_name, phone, email, languages, experience_years, bio, is_active)
+                   VALUES (?, ?, ?, ?, ?, ?, 1);""",
+                (gname, gphone, gemail, glangs, gyears, gbio),
+            )
+            guide_ids[gemail] = cur.lastrowid
+            stats["guides"] += 1
+
+        for title, gemail, role, note in ASSIGNMENTS:
+            if title not in tour_ids or gemail not in guide_ids:
+                print(f"SKIP assignment: {title} / {gemail}")
+                continue
+            cur.execute(
+                "SELECT id FROM tour_schedules WHERE tour_id = ? "
+                "ORDER BY departure_date ASC LIMIT 1;",
+                (tour_ids[title],),
+            )
+            sched = cur.fetchone()
+            if not sched:
+                continue
+            cur.execute(
+                "SELECT 1 FROM guide_assignments WHERE schedule_id = ? AND guide_id = ?;",
+                (sched["id"], guide_ids[gemail]),
+            )
+            if cur.fetchone():
+                continue
+            cur.execute(
+                """INSERT INTO guide_assignments (schedule_id, guide_id, role_in_tour, notes)
+                   VALUES (?, ?, ?, ?);""",
+                (sched["id"], guide_ids[gemail], role, note),
+            )
+            stats["assignments"] += 1
 
         # --- 10 bookings + linked payments/refunds ---
         seq = 0
