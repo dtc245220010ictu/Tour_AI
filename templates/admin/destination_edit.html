@@ -15,7 +15,7 @@
 
     <div
         style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); max-width: 760px;">
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                 <div>
                     <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Tên điểm đến *</label>
@@ -38,9 +38,8 @@
                     style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit;">{{ destination.description or '' }}</textarea>
             </div>
             <div style="margin-bottom: 20px;">
-                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Ảnh đại diện (URL)</label>
-                <input type="url" name="image_url" value="{{ destination.image_url or '' }}"
-                    style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                {% set current_image = destination.image_url or '' %}
+                {% include "partials/image_field.html" %}
             </div>
             <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">💾 Lưu thay đổi</button>
             <a href="{{ url_for('admin.manage_destinations') }}" class="btn btn-outline"

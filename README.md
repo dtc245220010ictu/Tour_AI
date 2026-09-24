@@ -4,7 +4,7 @@
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-orange.svg)](https://www.sqlite.org/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-51%2F51%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-56%2F56%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -12,7 +12,7 @@
 **TourAI** là giải pháp phần mềm quản trị du lịch lữ hành toàn diện kết hợp Trí tuệ Nhân tạo thế hệ mới (Đề tài 17). Hệ thống giải quyết trọn vẹn bài toán vận hành tour, đặt chỗ, kiểm soát số chỗ theo thời gian thực và tích hợp AI hỗ trợ khách hàng và nhân viên theo quy trình **AI-Augmented SDLC**.
 
 ### Các Tính Năng Nổi Bật:
-1. **Quản Lý Tour & Điểm Đến:** Quản lý điểm đến, tour du lịch, lịch trình chi tiết và phương tiện di chuyển.
+1. **Quản Lý Tour & Điểm Đến:** Quản lý điểm đến, tour du lịch, lịch trình chi tiết và phương tiện di chuyển. Hỗ trợ thêm ảnh đại diện bằng cách **chọn file, dán ảnh trực tiếp (Ctrl+V)** hoặc nhập URL.
 2. **Lịch Khởi Hành & Chống Overbooking Tuyệt Đối:** Kiểm soát số chỗ khả dụng bằng giao dịch nguyên tử (Atomic Database Transaction), ngăn chặn hoàn toàn việc bán vượt quá số chỗ trống khi có nhiều khách cùng đặt. Tự động hoàn lại chỗ khi đơn tour bị hủy.
 3. **Trợ Lý AI Tư Vấn Tour (RAG Chatbot):**
    - Phân tích câu hỏi tự nhiên bằng tiếng Việt (ngân sách, số ngày, điểm đến, sở thích đi biển, leo núi, nghỉ dưỡng).
@@ -106,6 +106,7 @@ TourAI/
 │   ├── feedback_service.py             # Quản lý đánh giá sao & nhận xét
 │   ├── analytics_service.py            # Doanh thu, tỷ lệ lấp đầy, top tour
 │   ├── guide_service.py                # Phân công HDV theo lịch khởi hành
+│   ├── image_upload_service.py         # Upload ảnh admin: validate & lưu static/uploads
 │   ├── question_analyzer.py            # Bóc tách intent tiếng Việt
 │   ├── tour_retriever.py               # Truy vấn CSDL tour còn chỗ an toàn
 │   ├── context_builder.py              # Chuẩn hóa context ngắn gọn cho LLM
@@ -141,7 +142,8 @@ TourAI/
 │   ├── guide/
 │   │   └── schedule.html               # Bảng phân công dẫn tour của HDV
 │   ├── partials/
-│   │   └── manage_menu.html            # Menu điều khiển chung cho các trang quản trị
+│   │   ├── manage_menu.html            # Menu điều khiển chung cho các trang quản trị
+│   │   └── image_field.html            # Ô upload/dán ảnh (Ctrl+V) dùng chung cho form admin
 │   └── accounting/                     # Giao diện Phân hệ Kế toán
 │       ├── dashboard.html              # Dashboard tài chính (thu, chi, tồn quỹ, công nợ)
 │       ├── transactions.html           # Sổ quỹ thu & đối soát chuyển khoản
@@ -166,6 +168,7 @@ TourAI/
 │   ├── test_rag_pipeline.py            # Kiểm thử toàn trình RAG & API POST /api/chat (4)
 │   ├── test_tour_retrieval.py          # Kiểm thử truy xuất tour & không bịa dữ liệu (3)
 │   ├── test_context_builder.py         # Kiểm thử tạo ngữ cảnh CSDL (2)
+│   ├── test_image_upload.py            # Kiểm thử upload ảnh: hợp lệ, sai định dạng, RBAC (5)
 │   └── test_accounting.py              # Kiểm thử kế toán: duyệt thu, công nợ, chi phí, P&L (6)
 │
 ├── scripts/
@@ -224,8 +227,8 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả mong đợi:** 51/51 tests `PASSED` 100%.
-*(Phân bổ theo file: RBAC 20 · Auth 6 · Kế toán 6 · Chống overbooking 5 · Bóc tách câu hỏi 5 · RAG pipeline 4 · Truy xuất tour 3 · Context builder 2.)*
+**Kết quả mong đợi:** 56/56 tests `PASSED` 100%.
+*(Phân bổ theo file: RBAC 20 · Auth 6 · Kế toán 6 · Chống overbooking 5 · Bóc tách câu hỏi 5 · RAG pipeline 4 · Truy xuất tour 3 · Upload ảnh 5 · Context builder 2.)*
 
 ---
 
@@ -296,7 +299,7 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 - Bảng **`payments`**: hỗ trợ `payment_type` ∈ {DEPOSIT, FULL, REMAINING, REFUND} cùng các trường xác nhận `verified_by`, `verified_at`.
 
 ### Kiểm thử phân hệ kế toán
-Các test trong `tests/test_accounting.py` (nằm trong bộ 51 test):
+Các test trong `tests/test_accounting.py` (nằm trong bộ 56 test):
 - `test_record_and_verify_payment` — quy trình kế toán duyệt thanh toán chuyển khoản.
 - `test_debt_calculation` — tính công nợ khi khách mới đặt cọc một phần.
 - `test_tour_expense_and_pnl` — ghi nhận chi phí tour & kiểm tra công thức Lợi nhuận = Doanh thu − Chi phí.

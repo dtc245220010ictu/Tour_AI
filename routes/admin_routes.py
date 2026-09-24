@@ -2,10 +2,11 @@
 Admin, Operations, and Staff Management Routes.
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from routes.auth_routes import roles_required
 from services.analytics_service import AnalyticsService
 from services.auth_service import AuthService
+from services.image_upload_service import ImageUploadService
 from services.tour_service import TourService
 from services.booking_service import BookingService
 from services.feedback_service import FeedbackService
@@ -29,6 +30,27 @@ def dashboard():
         recent_bookings=recent_bookings
     )
 
+def _resolve_image_url():
+    """Ưu tiên file ảnh upload (image_file); fallback sang ô URL (image_url)."""
+    file = request.files.get("image_file")
+    if file and file.filename:
+        return ImageUploadService.save(file)
+    return request.form.get("image_url", "").strip()
+
+
+@admin_bp.route("/upload-image", methods=["POST"])
+@roles_required("ADMIN", "STAFF")
+def upload_image():
+    """AJAX endpoint: nhận ảnh dán (Ctrl+V) hoặc chọn file từ form admin."""
+    file = request.files.get("file") or request.files.get("image_file")
+    if not file or not file.filename:
+        return jsonify({"ok": False, "error": "Không có file ảnh được chọn."}), 400
+    try:
+        return jsonify({"ok": True, "url": ImageUploadService.save(file)})
+    except ValueError as e:
+        return jsonify({"ok": False, "error": str(e)}), 400
+
+
 @admin_bp.route("/tours", methods=["GET", "POST"])
 @roles_required("ADMIN", "STAFF")
 def manage_tours():
@@ -41,7 +63,12 @@ def manage_tours():
         base_price = request.form.get("base_price", 0, type=float)
         transportation = request.form.get("transportation", "Xe du lịch").strip()
         itinerary_text = request.form.get("itinerary_text", "").strip()
-        image_url = request.form.get("image_url", "").strip()
+
+        try:
+            image_url = _resolve_image_url()
+        except ValueError as e:
+            flash(str(e), "danger")
+            return redirect(url_for("admin.manage_tours"))
 
         if destination_id is None:
             flash("Vui lòng chọn điểm đến cho tour.", "danger")
@@ -94,13 +121,13 @@ def edit_tour(tour_id):
         base_price = request.form.get("base_price", 0, type=float)
         transportation = request.form.get("transportation", "Xe du lịch").strip()
         itinerary_text = request.form.get("itinerary_text", "").strip()
-        image_url = request.form.get("image_url", "").strip()
         is_active = 1 if request.form.get("is_active") == "1" else 0
 
         if not title or not description or not destination_id:
             flash("Vui lòng điền đầy đủ các trường bắt buộc.", "danger")
         else:
             try:
+                image_url = _resolve_image_url()
                 TourService.update_tour(
                     tour_id=tour_id,
                     destination_id=destination_id,
@@ -116,6 +143,8 @@ def edit_tour(tour_id):
                 )
                 flash("Đã cập nhật tour thành công!", "success")
                 return redirect(url_for("admin.manage_tours"))
+            except ValueError as e:
+                flash(str(e), "danger")
             except Exception as e:
                 flash(f"Lỗi khi cập nhật tour: {str(e)}", "danger")
 
@@ -201,8 +230,8 @@ def manage_destinations():
         name = request.form.get("name", "").strip()
         region = request.form.get("region", "").strip()
         description = request.form.get("description", "").strip()
-        image_url = request.form.get("image_url", "").strip()
         try:
+            image_url = _resolve_image_url()
             if not name or not region:
                 raise ValueError("Tên điểm đến và khu vực là bắt buộc.")
             TourService.create_destination(name, region, description, image_url)
@@ -230,7 +259,7 @@ def edit_destination(dest_id):
                 name=request.form.get("name", ""),
                 region=request.form.get("region", ""),
                 description=request.form.get("description", ""),
-                image_url=request.form.get("image_url", "")
+                image_url=_resolve_image_url()
             )
             flash("Đã cập nhật điểm đến thành công!", "success")
             return redirect(url_for("admin.manage_destinations"))

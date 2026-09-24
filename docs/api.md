@@ -118,4 +118,27 @@ Tất cả các endpoints kế toán đều được bảo vệ bằng cơ chế
 | `GET` | `/accounting/refunds` | Danh sách đơn hủy tour, đối soát theo chính sách hoàn tiền 3 mốc (>=7 ngày: 90%, 3-6 ngày: 50%, <3 ngày: 0%) | Không |
 | `POST` | `/accounting/refunds` | Lập phiếu chi xuất quỹ hoàn tiền hủy tour cho khách hàng | Form: `booking_id`, `refund_amount`, `notes` |
 
+---
+
+## 5. Upload Ảnh Cho Form Admin
+
+### 5.1 Tải ảnh đại diện (tour / điểm đến)
+- **Endpoint:** `POST /admin/upload-image`
+- **Xác thực:** Yêu cầu quyền `ADMIN` hoặc `STAFF`.
+- **Headers:** `Content-Type: multipart/form-data`
+- **Body:** trường `file` — file ảnh (JPG, PNG, WEBP, GIF; tối đa 5MB).
+- **Mô tả:** Được form admin gọi AJAX khi người dùng dán ảnh (Ctrl+V) vào ô URL hoặc chọn file. Ảnh được validate và lưu vào `static/uploads/` với tên duy nhất (UUID).
+
+#### Response Success (HTTP 200 OK)
+```json
+{ "ok": true, "url": "/static/uploads/3f9c8a...b1.png" }
+```
+
+#### Response Error (HTTP 400 Bad Request)
+```json
+{ "ok": false, "error": "Định dạng ảnh không hợp lệ. Chỉ chấp nhận: gif, jpeg, jpg, png, webp." }
+```
+
+> Các form tạo/sửa tour & điểm đến (`POST /admin/tours`, `/admin/tours/<id>/edit`, `/admin/destinations`, `/admin/destinations/<id>/edit`) nhận thêm trường `image_file` (multipart). Nếu có file tải lên thì **ưu tiên dùng file**, ngược lại dùng giá trị trường `image_url`.
+
 

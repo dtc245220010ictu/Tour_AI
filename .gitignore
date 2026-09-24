@@ -27,3 +27,7 @@ htmlcov/
 .idea/
 *.swp
 
+# User-uploaded images (stored at runtime)
+static/uploads/*
+!static/uploads/.gitkeep
+
