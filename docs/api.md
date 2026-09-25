@@ -72,9 +72,11 @@ Tài liệu này đặc tả toàn bộ các endpoints của hệ thống TourAI
 {
   "description": "Hành trình đưa du khách trở về miền di sản Cố Đô cổ kính...",
   "itinerary": "Ngày 1: Đón sân bay Phú Bài - Đại Nội Huế...\nNgày 2: Chùa Thiên Mụ - Lăng Khải Định - Nghe ca Huế...\nNgày 3: Chợ Đông Ba mua đặc sản mè xửng, nón bài thơ - Tiễn khách.",
-  "full_content": "..."
+  "full_content": "...",
+  "source": "ai"
 }
 ```
+- `source`: `"ai"` nếu Gemini sinh nội dung; `"template"` nếu AI không khả dụng/trả về nội dung không hợp lệ → hệ thống tự động tạo mô tả & lịch trình theo mẫu cấu trúc (không bao giờ trả về câu chào mẫu chung chung).
 
 ### 2.2 Phân tích và tóm tắt phản hồi khách hàng
 - **Endpoint:** `POST /api/ai/summarize-feedbacks`
@@ -140,5 +142,7 @@ Tất cả các endpoints kế toán đều được bảo vệ bằng cơ chế
 ```
 
 > Các form tạo/sửa tour & điểm đến (`POST /admin/tours`, `/admin/tours/<id>/edit`, `/admin/destinations`, `/admin/destinations/<id>/edit`) nhận thêm trường `image_file` (multipart). Nếu có file tải lên thì **ưu tiên dùng file**, ngược lại dùng giá trị trường `image_url`.
+
+> Ô nhập URL trên form là `type="text"` (không dùng `type="url"`): hệ thống lưu ảnh upload dưới dạng đường dẫn tương đối `/static/uploads/...`, nếu dùng `type="url"` trình duyệt sẽ chặn submit và bắt người dùng nhập lại URL mỗi khi mở form Sửa tour/điểm đến đã có ảnh.
 
 

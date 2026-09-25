@@ -17,7 +17,11 @@ def generate_tour_description():
     title = data.get("title", "").strip()
     destination = data.get("destination", "").strip()
     highlights = data.get("highlights", "").strip()
-    duration_days = int(data.get("duration_days", 3))
+    try:
+        duration_days = int(data.get("duration_days", 3))
+    except (TypeError, ValueError):
+        duration_days = 3
+    duration_days = max(1, min(duration_days, 30))
 
     if not title:
         return jsonify({"error": "Vui lòng nhập tên tour."}), 400

@@ -1,4 +1,4 @@
-# Báo Cáo Kết Quả Kiểm Thử (Automated Test Report) - TourAI
+﻿# Báo Cáo Kết Quả Kiểm Thử (Automated Test Report) - TourAI
 
 Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự động toàn diện cho hệ thống **TourAI (Đề tài 17)** theo tiêu chuẩn `testing` skill.
 
@@ -6,48 +6,18 @@ Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự độn
 
 ## 1. Tóm tắt kết quả kiểm thử (Executive Summary)
 
-- **Thời điểm thực thi:** 23/09/2026
+- **Thời điểm thực thi:** 25/09/2026
 - **Test Framework:** `pytest 9.1.1`
 - **Môi trường:** Python 3.14 (Windows)
-- **Tổng số ca kiểm thử:** **27/27 PASSED**
+- **Tổng số ca kiểm thử:** **92/92 PASSED**
 - **Tỷ lệ thành công:** **100.0%**
-- **Thời gian thực thi:** 1.34 giây
+- **Thời gian thực thi:** 2.91 giây
 - **Tình trạng:** **PASSED - READY FOR PRODUCTION**
 
 ```text
-============================= test session starts =============================
-rootdir: F:\TourAI
-collected 27 items
-
-tests/test_accounting.py::test_payment_reconciliation_and_confirmation PASSED [  3%]
-tests/test_accounting.py::test_booking_debts_and_collection PASSED       [  7%]
-tests/test_accounting.py::test_record_tour_expense_and_validation PASSED [ 11%]
-tests/test_accounting.py::test_schedule_pnl_calculation PASSED           [ 14%]
-tests/test_accounting.py::test_cancellation_refund_policy_and_processing PASSED [ 18%]
-tests/test_accounting.py::test_cashflow_summary_metrics PASSED           [ 22%]
-tests/test_accounting.py::test_accounting_rbac_protection PASSED         [ 25%]
-tests/test_auth.py::test_register_and_login_success PASSED               [ 29%]
-tests/test_auth.py::test_login_invalid_password PASSED                   [ 33%]
-tests/test_auth.py::test_register_duplicate_email_fails PASSED           [ 37%]
-tests/test_booking_capacity.py::test_booking_successful_and_seats_deducted PASSED [ 40%]
-tests/test_booking_capacity.py::test_overbooking_prevention_rejected PASSED [ 44%]
-tests/test_booking_capacity.py::test_cancellation_restores_seats PASSED  [ 48%]
-tests/test_context_builder.py::test_build_context_with_tours PASSED      [ 51%]
-tests/test_context_builder.py::test_build_context_empty PASSED           [ 55%]
-tests/test_question_analyzer.py::test_analyze_ha_long_under_4_million PASSED [ 59%]
-tests/test_question_analyzer.py::test_analyze_da_nang_3_days_under_5_tr PASSED [ 62%]
-tests/test_question_analyzer.py::test_analyze_beach_preference PASSED    [ 66%]
-tests/test_question_analyzer.py::test_analyze_cheapest_sorting PASSED    [ 70%]
-tests/test_question_analyzer.py::test_analyze_empty_or_whitespace PASSED [ 74%]
-tests/test_rag_pipeline.py::test_rag_service_ha_long_query PASSED        [ 77%]
-tests/test_rag_pipeline.py::test_api_chat_success PASSED                 [ 81%]
-tests/test_rag_pipeline.py::test_api_chat_empty_question_returns_400 PASSED [ 85%]
-tests/test_rag_pipeline.py::test_api_chat_zero_hallucination_impossible_price PASSED [ 88%]
-tests/test_tour_retrieval.py::test_retrieve_ha_long_under_4_million PASSED [ 92%]
-tests/test_tour_retrieval.py::test_retrieve_impossible_budget_returns_empty PASSED [ 96%]
-tests/test_tour_retrieval.py::test_retrieve_alternative_tours_when_none_match PASSED [100%]
-
-============================= 27 passed in 1.34s ==============================
+92 tests collected
+............................................................................................
+92 passed in 2.91s
 ```
 
 ---
@@ -56,13 +26,18 @@ tests/test_tour_retrieval.py::test_retrieve_alternative_tours_when_none_match PA
 
 | STT | Tên Test File | Số ca test | Kết quả | Trọng tâm kiểm thử |
 |---|---|---|---|---|
-| 1 | `test_accounting.py` | 7 | 7/7 PASS | Đối soát thanh toán, công nợ, chi phí tour, P&L, hoàn tiền hủy tour, RBAC |
-| 2 | `test_auth.py` | 3 | 3/3 PASS | Mật khẩu băm an toàn, đăng ký trùng email bị từ chối, đăng nhập chính xác |
-| 3 | `test_booking_capacity.py` | 3 | 3/3 PASS | Trừ số chỗ nguyên tử, chặn đứng Overbooking, hoàn trả số chỗ khi hủy tour |
-| 4 | `test_question_analyzer.py` | 5 | 5/5 PASS | Bóc tách ngân sách (triệu, tr, nghìn), số ngày, điểm đến, sở thích biển/núi |
-| 5 | `test_tour_retrieval.py` | 3 | 3/3 PASS | Parameterized SQL query an toàn, không có tour giá ảo trả về empty list |
-| 6 | `test_context_builder.py` | 2 | 2/2 PASS | Định dạng ngữ cảnh ngắn gọn, thông báo rỗng chuẩn mực |
-| 7 | `test_rag_pipeline.py` | 4 | 4/4 PASS | Toàn trình RAG, API POST /api/chat, kiểm tra Zero Hallucination |
+| 1 | `test_accounting.py` | 6 | 6/6 PASS | Đối soát thanh toán, công nợ, chi phí tour, P&L, hoàn tiền hủy tour, RBAC |
+| 2 | `test_ai_content_service.py` | 9 | 9/9 PASS | AI sinh mô tả/lịch trình có fallback cấu trúc, retry và validation output |
+| 3 | `test_auth.py` | 6 | 6/6 PASS | Mật khẩu băm an toàn, đăng ký, đăng nhập và quick-login theo cấu hình |
+| 4 | `test_booking_capacity.py` | 5 | 5/5 PASS | Trừ số chỗ nguyên tử, chặn overbooking, hoàn chỗ và guardrails hủy đơn |
+| 5 | `test_context_builder.py` | 2 | 2/2 PASS | Định dạng context ngắn gọn, thông báo rỗng chuẩn mực |
+| 6 | `test_grounded_answer_builder.py` | 4 | 4/4 PASS | Câu trả lời chỉ dùng tour/giá/ngày đi có trong dữ liệu retrieve |
+| 7 | `test_image_upload.py` | 6 | 6/6 PASS | Upload/paste ảnh hợp lệ, chặn file sai, RBAC và ô ảnh form Sửa tour |
+| 8 | `test_price_consistency.py` | 5 | 5/5 PASS | Giá tour–lịch, tổng tiền booking và số chỗ tự tính khi sửa lịch |
+| 9 | `test_question_analyzer.py` | 9 | 9/9 PASS | Ngân sách, thời lượng/range, điểm đến, sở thích và regression "khoảng 5 triệu" |
+| 10 | `test_rag_pipeline.py` | 13 | 13/13 PASS | API chat, zero-hallucination, alternatives và câu hỏi mơ hồ |
+| 11 | `test_rbac.py` | 22 | 22/22 PASS | Ma trận phân quyền Admin/Staff/Accountant/Guide/Customer; nút Sửa & form sửa tour |
+| 12 | `test_tour_retrieval.py` | 5 | 5/5 PASS | Parameterized SQL, lọc tour còn chỗ và alternatives |
 
 ---
 
@@ -72,12 +47,14 @@ tests/test_tour_retrieval.py::test_retrieve_alternative_tours_when_none_match PA
 - Khi lịch khởi hành có `available_seats = 15`, khách đặt 3 chỗ -> `available_seats` giảm còn đúng 12 chỗ.
 - Khách đặt vượt quá số chỗ còn lại -> Hệ thống ném ngoại lệ `OverbookingError` và rollback giao dịch CSDL ngay lập tức.
 - Khi đơn đặt chỗ bị hủy -> Số chỗ được cộng trả chính xác về lịch trình tương ứng.
+- Khi sửa lịch khởi hành, số chỗ còn lại được tính lại từ booking chưa hủy; payload client không thể ghi đè số ghế đã giữ và không thể giảm tổng ghế thấp hơn số đã giữ.
 - **Đánh giá: ĐẠT 100%.**
 
 ### 3.2 Quy tắc Không Bịa Đặt Dữ Liệu (Zero Hallucination Policy)
 - Khi khách hỏi tour với mức giá không tưởng (ví dụ: "Dưới 100 nghìn"), Tour Retriever trả về danh sách rỗng `[]`.
 - Context Builder sinh thông báo rỗng.
 - Chatbot API trả về thông báo lịch sự rằng không tìm thấy tour phù hợp, tuyệt đối không bịa ra tour hay mức giá giả.
+- Các câu hỏi mơ hồ chỉ nhận tour đang mở bán/còn chỗ; câu "Tầm 5 triệu thì đi đâu?" chỉ trả tour không vượt ngân sách đã bóc tách.
 - **Đánh giá: ĐẠT 100%.**
 
 ### 3.3 Phân Hệ Kế Toán & Tài Chính (Accounting Module)

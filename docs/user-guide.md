@@ -61,11 +61,20 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
    - Nhấn nút màu tím: **✨ AI Sinh Mô Tả & Lịch Trình Tự Động**.
    - Hệ thống sẽ tự động tạo ra một đoạn văn giới thiệu chuẩn marketing du lịch hấp dẫn và phân bổ lịch trình chi tiết từ Ngày 1 đến ngày cuối cùng.
    - Nhân viên có thể chỉnh sửa lại theo ý muốn và nhấn **Lưu Tour Mới**.
+3. Để **sửa một tour đã có**:
+   - Tại bảng **Danh Sách Tour Hiện Có**, bấm nút **Sửa** ở cột **Thao tác** (ADMIN và STAFF đều sử dụng được).
+   - Form **✏️ Sửa Thông Tin Tour** mở ra với đầy đủ thông tin hiện tại: tên, điểm đến, thời lượng, giá, phương tiện, ảnh, mô tả, lịch trình chi tiết và trạng thái hiển thị.
+   - Ô **Ảnh đại diện** hiển thị sẵn ảnh hiện tại. Muốn đổi ảnh thì chọn file mới hoặc dán ảnh (Ctrl+V); nếu giữ nguyên thì không cần nhập lại URL — ảnh cũ vẫn được giữ khi bấm **💾 Lưu thay đổi**.
+   - Nếu đổi giá tour, giữ tích **"Đồng bộ giá lịch khởi hành theo giá tour mới"** để mọi đợt khởi hành được cập nhật: giá người lớn = giá tour, giá trẻ em = 70%.
+   - Bấm **💾 Lưu thay đổi**; hệ thống báo "Đã cập nhật tour thành công!" và danh sách tour hiển thị thông tin mới.
+4. Nút **Xóa** (xóa mềm — tour bị ẩn khỏi trang bán thay vì xóa vĩnh viễn) chỉ hiển thị với tài khoản **ADMIN**.
 
 ### 3. Mở Đợt Khởi Hành Mới & Kiểm Soát Chỗ
 1. Truy cập mục **Lịch Khởi Hành**.
 2. Chọn Tour, ngày khởi hành, ngày kết thúc, giá vé người lớn, giá vé trẻ em và tổng số chỗ (ví dụ: 20 chỗ).
 3. Nhấn **Lưu Lịch Khởi Hành** để mở bán trên trang web.
+4. Khi sửa một lịch đã có booking, chỉ cập nhật tổng số chỗ, ngày đi/về, giá và trạng thái. Trường **Số chỗ còn lại** là chỉ đọc: hệ thống tự tính bằng tổng số chỗ trừ số khách của các booking chưa hủy.
+5. Không thể giảm tổng số chỗ thấp hơn số chỗ đã giữ; hệ thống sẽ báo lỗi và giữ nguyên dữ liệu nếu thao tác không hợp lệ.
 
 ### 4. Phân Tích & Tóm Tắt Đánh Giá Bằng AI (Chỉ dành cho Quản trị viên)
 1. Truy cập mục **Đánh Giá AI** (yêu cầu quyền Quản trị viên - ADMIN).

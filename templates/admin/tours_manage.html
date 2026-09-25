@@ -89,6 +89,14 @@
             </div>
 
             <div style="margin-bottom: 15px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Điểm
+                    nhấn tour (AI dùng để sinh mô tả & lịch trình)</label>
+                <input type="text" id="tour-highlights" name="highlights"
+                    placeholder="Ví dụ: Kỳ Co, Eo Gió, bãi Xep, bún bài thơ, hải sản tươi sống"
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
                 <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Mô
                     tả tour (Giới thiệu hấp dẫn)</label>
                 <textarea id="tour-desc" name="description" rows="3" required placeholder="Mô tả tour lôi cuốn..."
@@ -135,6 +143,8 @@
                     <td style="padding: 12px; font-weight: 700; color: #e11d48;">{{ t.base_price | format_currency }}
                     </td>
                     <td style="padding: 12px; text-align: center;">
+                        <a href="{{ url_for('admin.edit_tour', tour_id=t.id) }}" class="btn btn-outline"
+                            style="padding: 4px 10px; font-size: 12px; margin-right: 6px;">Sửa</a>
                         {% if session.get('role') == 'ADMIN' %}
                         <form action="{{ url_for('admin.delete_tour', tour_id=t.id) }}" method="POST"
                             style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa mềm tour này?');">
@@ -159,6 +169,7 @@
         const destSelect = document.getElementById("tour-dest");
         const destName = destSelect.options[destSelect.selectedIndex].text;
         const days = document.getElementById("tour-days").value;
+        const highlights = document.getElementById("tour-highlights").value.trim();
 
         if (!title) {
             alert("Vui lòng nhập Tên chuyến tour trước khi yêu cầu AI sinh nội dung!");
@@ -177,14 +188,18 @@
                     title: title,
                     destination: destName,
                     duration_days: days,
-                    highlights: "Điểm tham quan nổi bật, ẩm thực đặc sản, nghỉ dưỡng cao cấp"
+                    highlights: highlights || "Điểm tham quan nổi bật, ẩm thực đặc sản, nghỉ dưỡng cao cấp"
                 })
             });
             const data = await res.json();
-            if (data.description) {
+            if (data.description && data.itinerary) {
                 document.getElementById("tour-desc").value = data.description;
                 document.getElementById("tour-itinerary").value = data.itinerary;
-                alert("✨ AI đã sinh thành công mô tả và lịch trình!");
+                if (data.source === "template") {
+                    alert("⚠️ AI tạm thời gián đoạn nên hệ thống đã tự động tạo mô tả & lịch trình theo mẫu cấu trúc.\nBạn có thể chỉnh sửa nội dung trước khi bấm Lưu Tour!");
+                } else {
+                    alert("✨ AI đã sinh thành công mô tả và lịch trình!");
+                }
             } else {
                 alert("Lỗi: " + (data.error || "Không thể sinh nội dung"));
             }

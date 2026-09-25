@@ -5,6 +5,7 @@ and rich tour cards response.
 """
 
 from services.rag_service import RAGService
+import pytest
 
 def test_rag_service_ha_long_query():
     query = "Có tour Hạ Long nào dưới 4 triệu không?"
@@ -37,6 +38,31 @@ def test_api_chat_empty_question_returns_400(client):
     assert response.status_code == 400
     data = response.get_json()
     assert "error" in data
+
+
+@pytest.mark.parametrize("question", [
+    "Tư vấn cho tôi đi du lịch",
+    "Có tour gì hay không?",
+])
+def test_api_chat_vague_request_returns_only_real_available_tours(client, question):
+    """Vague requests may receive general suggestions, but never fabricated/full tours."""
+    response = client.post("/api/chat", json={"question": question})
+    assert response.status_code == 200
+    data = response.get_json()
+
+    assert data["answer"]
+    assert 1 <= len(data["tours"]) <= 4
+    assert all(tour["total_available_seats"] > 0 for tour in data["tours"])
+
+
+def test_api_chat_vague_budget_request_respects_max_price(client):
+    """A short, underspecified budget question still constrains real suggestions."""
+    response = client.post("/api/chat", json={"question": "Tầm 5 triệu thì đi đâu?"})
+    assert response.status_code == 200
+    data = response.get_json()
+
+    assert len(data["tours"]) > 0
+    assert all(tour["base_price"] <= 5_000_000 for tour in data["tours"])
 
 def test_api_chat_zero_hallucination_impossible_price(client):
     """

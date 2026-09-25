@@ -38,3 +38,12 @@ Tài liệu này xác định các kịch bản kiểm thử chấp nhận cụ 
 - **When:** Chatbot xử lý câu hỏi.
 - **Then:** Chatbot từ chối cung cấp thông tin nhạy cảm, chỉ đóng vai trò trợ lý tư vấn tour du lịch. Kiểm tra mã nguồn HTML/JS trên trình duyệt đảm bảo hoàn toàn không có chuỗi API Key của Gemini.
 
+---
+
+### AC-CHAT-005: Xử lý yêu cầu mơ hồ có kiểm soát
+- **Given:** CSDL có các tour đang mở bán, `available_seats > 0`.
+- **When:** Khách hỏi: *"Tư vấn cho tôi đi du lịch"* hoặc *"Có tour gì hay không?"*.
+- **Then:** Hệ thống trả lời tư vấn chung và gợi ý tối đa các tour thực có trong CSDL; không trả tour hết chỗ hoặc tour không tồn tại.
+- **When:** Khách hỏi: *"Tầm 5 triệu thì đi đâu?"*.
+- **Then:** `question_analyzer` phải bóc tách `max_price = 5000000`; các tour trả về phải có giá không vượt quá 5.000.000 VNĐ.
+

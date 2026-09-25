@@ -5,6 +5,8 @@ bookings.total_amount and the tour title JOINed everywhere.
 """
 
 from database.db import execute_query, get_db
+import pytest
+from services.booking_service import BookingService
 from services.tour_service import TourService
 from services.analytics_service import AnalyticsService
 
@@ -91,3 +93,87 @@ def test_occupancy_rates_include_price_and_title():
         fetch_one=True,
     )
     assert first["tour_title"] == expected_title["title"]
+
+
+def test_update_schedule_derives_available_seats_from_active_bookings(client):
+    """Editing a schedule cannot overwrite availability reserved by bookings."""
+    tour_id = TourService.create_tour(
+        destination_id=1,
+        title="Tour Kiem Tra Dong Bo Cho",
+        description="Tour dùng để kiểm tra số chỗ còn lại luôn được tính từ booking.",
+        duration_days=2,
+        duration_nights=1,
+        base_price=1_500_000,
+        transportation="Xe test",
+        itinerary_text="Ngày 1: Test",
+        image_url="",
+    )
+    try:
+        schedule_id = TourService.create_schedule(
+            tour_id, "2027-03-10", "2027-03-11", 1_500_000, 1_050_000, 8
+        )
+        booking = BookingService.create_booking(
+            user_id=5,
+            schedule_id=schedule_id,
+            customer_name="Khách Đồng Bộ Chỗ",
+            customer_email="seat-sync@test.com",
+            customer_phone="0912345678",
+            num_adults=2,
+            num_children=1,
+        )
+        assert booking is not None
+        confirmed_booking = BookingService.create_booking(
+            user_id=5,
+            schedule_id=schedule_id,
+            customer_name="Khách Xác Nhận Chỗ",
+            customer_email="confirmed-seat-sync@test.com",
+            customer_phone="0987654321",
+            num_adults=2,
+            num_children=0,
+        )
+        assert confirmed_booking is not None
+        BookingService.update_booking_status(confirmed_booking["id"], "CONFIRMED")
+
+        # The endpoint must ignore a forged client-side available_seats value.
+        with client.session_transaction() as sess:
+            sess["user_id"] = 1
+            sess["user_name"] = "Quản Trị Viên"
+            sess["role"] = "ADMIN"
+        response = client.post(
+            f"/admin/schedules/{schedule_id}/edit",
+            data={
+                "departure_date": "2027-03-10",
+                "return_date": "2027-03-11",
+                "adult_price": "1600000",
+                "child_price": "1120000",
+                "total_seats": "10",
+                "available_seats": "9999",  # ignored: no longer part of the server contract
+                "status": "OPEN",
+            },
+        )
+        assert response.status_code == 302
+        updated = TourService.get_schedule_by_id(schedule_id)
+        assert updated is not None
+        assert updated["total_seats"] == 10
+        assert updated["available_seats"] == 5  # 10 - (3 PENDING + 2 CONFIRMED)
+        assert updated["status"] == "OPEN"
+
+        with pytest.raises(ValueError, match="5 chỗ đã được giữ"):
+            TourService.update_schedule(
+                schedule_id=schedule_id,
+                departure_date="2027-03-10",
+                return_date="2027-03-11",
+                adult_price=1_600_000,
+                child_price=1_120_000,
+                total_seats=4,
+                status="OPEN",
+            )
+        unchanged = TourService.get_schedule_by_id(schedule_id)
+        assert unchanged is not None
+        assert unchanged["total_seats"] == 10
+        assert unchanged["available_seats"] == 5
+    finally:
+        with get_db() as conn:
+            conn.execute("DELETE FROM bookings WHERE schedule_id IN (SELECT id FROM tour_schedules WHERE tour_id = ?);", (tour_id,))
+            conn.execute("DELETE FROM tour_schedules WHERE tour_id = ?;", (tour_id,))
+            conn.execute("DELETE FROM tours WHERE id = ?;", (tour_id,))

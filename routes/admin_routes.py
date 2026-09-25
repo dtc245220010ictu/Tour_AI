@@ -201,10 +201,9 @@ def edit_schedule(schedule_id):
                 adult_price=request.form.get("adult_price", 0, type=float),
                 child_price=request.form.get("child_price", 0, type=float),
                 total_seats=request.form.get("total_seats", 20, type=int),
-                available_seats=request.form.get("available_seats", 0, type=int),
                 status=request.form.get("status", "OPEN")
             )
-            flash("Đã cập nhật lịch khởi hành & số chỗ thành công!", "success")
+            flash("Đã cập nhật lịch khởi hành. Số chỗ còn lại được tính tự động từ các đơn đã giữ chỗ.", "success")
             return redirect(url_for("admin.manage_schedules"))
         except ValueError as e:
             flash(str(e), "danger")

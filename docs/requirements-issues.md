@@ -19,7 +19,7 @@ Tài liệu này ghi nhận các điểm mơ hồ (ambiguities), giả định (
 
 ## 2. Các giả định chính (Assumptions)
 - **Giả định 1 (Đơn vị tiền tệ):** Toàn bộ giá tour, giao dịch thanh toán và thống kê sử dụng đơn vị Việt Nam Đồng (VNĐ).
-- **Giả định 2 (Kiểm soát chỗ - Concurrency):** Khi khách hàng thực hiện thanh toán/xác nhận đặt chỗ, hệ thống sử dụng khóa mức bản ghi hoặc kiểm tra điều kiện `available_seats >= requested_seats` trong cùng một transaction để bảo đảm không bị race condition.
+- **Giả định 2 (Kiểm soát chỗ - Concurrency):** Khi khách hàng tạo booking, hệ thống giữ chỗ ngay bằng kiểm tra điều kiện `available_seats >= requested_seats` và cập nhật nguyên tử trong cùng transaction để bảo đảm không bị race condition. Booking `PENDING`, `CONFIRMED`, `COMPLETED` giữ chỗ; booking `CANCELLED` hoàn chỗ.
 - **Giả định 3 (AI Fallback):** Trong trường hợp người dùng chưa cấu hình `GEMINI_API_KEY` hoặc mạng bị gián đoạn, hệ thống phải có cơ chế fallback thông minh (Rule-based Search & Mock Response) để không làm crash hệ thống và vẫn phục vụ được khách hàng.
 - **Giả định 4 (Phân quyền):** Người dùng có vai trò `ADMIN` có toàn quyền truy cập tất cả module; vai trò `STAFF` quản lý tour, booking, phản hồi; vai trò `CUSTOMER` chỉ xem và quản lý đơn đặt của chính mình.
 
