@@ -50,3 +50,31 @@ def test_retrieve_alternative_tours_when_none_match():
     assert len(alternatives) > 0
     assert alternatives[0]["destination_name"] == "Hạ Long"
 
+def test_retrieve_duration_range_filter():
+    """A day range like [3, 4] must match tours of 3 OR 4 days (inclusive)."""
+    intent = {
+        "destinations": [],
+        "max_price": 5_000_000,
+        "min_price": None,
+        "duration_days": [3, 4],
+        "sort_by": None
+    }
+    results = TourRetriever.retrieve_tours(intent)
+
+    assert len(results) >= 1
+    for tour in results:
+        assert 3 <= tour["duration_days"] <= 4
+        assert tour["base_price"] <= 5_000_000
+
+def test_alternative_tours_fall_back_when_destination_has_no_tours():
+    """When the requested destination has no tours at all, alternatives must
+    still suggest OTHER available tours so the chatbot can introduce them
+    after honestly reporting that no matching tour exists."""
+    intent = {"destinations": ["Hà Nội"]}
+
+    assert TourRetriever.retrieve_tours(intent) == []
+
+    alternatives = TourRetriever.retrieve_alternative_tours(intent)
+    assert len(alternatives) > 0
+    assert all(alt["destination_name"] != "Hà Nội" for alt in alternatives)
+
