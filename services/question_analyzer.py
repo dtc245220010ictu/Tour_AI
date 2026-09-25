@@ -27,15 +27,36 @@ DESTINATION_MAP = {
     "đồng văn": "Hà Giang",
     "ma pi leng": "Hà Giang",
     "mã pí lèng": "Hà Giang",
+    "nha trang": "Nha Trang",
+    "ninh binh": "Ninh Bình",
+    "ninh bình": "Ninh Bình",
+    "trang an": "Ninh Bình",
+    "tràng an": "Ninh Bình",
+    "tam coc": "Ninh Bình",
+    "tàm cốc": "Ninh Bình",
+    "hue": "Huế",
+    "huế": "Huế",
+    "quy nhon": "Quy Nhơn",
+    "quy nhơn": "Quy Nhơn",
+    "phu yen": "Phú Yên",
+    "phú yên": "Phú Yên",
+    "vung tau": "Vũng Tàu",
+    "vũng tàu": "Vũng Tàu",
+    "con dao": "Côn Đảo",
+    "côn đảo": "Côn Đảo",
+    "moc chau": "Mộc Châu",
+    "mộc châu": "Mộc Châu",
+    "buon ma thuot": "Buôn Ma Thuột",
+    "buôn ma thuột": "Buôn Ma Thuột",
 }
 
 KEYWORD_DESTINATIONS = {
-    "biển": ["Hạ Long", "Đà Nẵng", "Phú Quốc"],
-    "đảo": ["Phú Quốc"],
+    "biển": ["Hạ Long", "Đà Nẵng", "Hội An", "Phú Quốc", "Nha Trang", "Huế", "Quy Nhơn", "Phú Yên", "Vũng Tàu", "Côn Đảo"],
+    "đảo": ["Phú Quốc", "Côn Đảo"],
     "cano": ["Phú Quốc"],
     "du thuyền": ["Hạ Long"],
-    "núi": ["Sa Pa", "Hà Giang", "Đà Lạt"],
-    "săn mây": ["Sa Pa", "Đà Lạt", "Hà Giang"],
+    "núi": ["Sa Pa", "Hà Giang", "Đà Lạt", "Mộc Châu"],
+    "săn mây": ["Sa Pa", "Đà Lạt", "Hà Giang", "Mộc Châu"],
     "đèo": ["Hà Giang"],
     "hoa": ["Đà Lạt"],
 }
@@ -44,6 +65,22 @@ def remove_accents(input_str: str) -> str:
     """Converts Vietnamese characters to ASCII without diacritics."""
     nfkd_form = unicodedata.normalize('NFKD', input_str)
     return "".join([c for c in nfkd_form if not unicodedata.combining(c)]).lower()
+
+def matches_term(text: str, term: str) -> bool:
+    """Whole-word match of `term` inside `text`.
+
+    Word boundaries are required so short terms never match inside unrelated
+    words: accent-stripped "khoảng" -> "khoang" must NOT trigger keyword "hoa",
+    otherwise the query is wrongly mapped to Đà Lạt and returns zero tours.
+    """
+    if not text or not term:
+        return False
+    return re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text) is not None
+
+def to_vnd(num_str: str, unit: str) -> float:
+    """Converts a numeric string + Vietnamese unit to VND."""
+    value = float(num_str.replace(",", "."))
+    return value * 1_000 if unit in ("nghin", "ngan", "k") else value * 1_000_000
 
 class QuestionAnalyzer:
     @staticmethod
@@ -95,6 +132,48 @@ class QuestionAnalyzer:
         if match_above_nghin and not min_price:
             min_price = float(match_above_nghin.group(1).replace(',', '.')) * 1_000
 
+        # Fallback pass (accent-insensitive, runs only when nothing matched above):
+        # handles inputs without diacritics ("duoi 5 trieu") and budget phrases
+        # that carry no explicit prefix ("khoảng 5 triệu", "tour 5 triệu", "tôi có 5 triệu").
+        plain = remove_accents(text.lower())
+
+        # "duoi / toi da / nho hon / khong qua / tam do X trieu|nghin"
+        if min_price is None and max_price is None:
+            m_under = re.search(
+                r"(?<!\w)(?:duoi|toi da|nho hon|khong qua|tam do)(?!\w)\s*"
+                r"(\d+(?:[.,]\d+)?)\s*(trieu|tr|cu|nghin|ngan|k)(?!\w)",
+                plain,
+            )
+            if m_under:
+                max_price = to_vnd(m_under.group(1), m_under.group(2))
+
+        # "tu / tam / khoang X den Y trieu" (range without diacritics)
+        if min_price is None and max_price is None:
+            m_range = re.search(
+                r"(?<!\w)(?:tu|tam|khoang)(?!\w)\s*"
+                r"(\d+(?:[.,]\d+)?)\s*(?:den|-)\s*(\d+(?:[.,]\d+)?)\s*(?:trieu|tr|cu)(?!\w)",
+                plain,
+            )
+            if m_range:
+                min_price = float(m_range.group(1).replace(",", ".")) * 1_000_000
+                max_price = float(m_range.group(2).replace(",", ".")) * 1_000_000
+
+        # "tren / tu / it nhat / lon hon X trieu"
+        if min_price is None and max_price is None:
+            m_above = re.search(
+                r"(?<!\w)(?:tren|tu|it nhat|lon hon)(?!\w)\s*"
+                r"(\d+(?:[.,]\d+)?)\s*(trieu|tr|cu|nghin|ngan|k)(?!\w)",
+                plain,
+            )
+            if m_above:
+                min_price = to_vnd(m_above.group(1), m_above.group(2))
+
+        # Bare budget: "tour 5 triệu", "giá 5 triệu", "5 triệu" -> budget ceiling
+        if min_price is None and max_price is None:
+            m_bare = re.search(r"(\d+(?:[.,]\d+)?)\s*(trieu|tr|cu)(?!\w)", plain)
+            if m_bare:
+                max_price = to_vnd(m_bare.group(1), m_bare.group(2))
+
         return min_price, max_price
 
     @staticmethod
@@ -104,6 +183,22 @@ class QuestionAnalyzer:
         match = re.search(r'(\d+)\s*(?:ngày|n\b|ngay)', lower)
         if match:
             return int(match.group(1))
+        return None
+
+    @staticmethod
+    def parse_duration_range(text: str):
+        """Extracts a day range like '3-4 ngày' / 'từ 3 đến 4 ngày' -> (3, 4).
+
+        Returns None when the query asks for a single duration (or none at all),
+        so callers can keep using `duration_days` as a plain integer.
+        """
+        plain = remove_accents(text.lower())
+        match = re.search(r'(\d+)\s*(?:den|-|~)\s*(\d+)\s*(?:ngay|n\b)', plain)
+        if match:
+            lo, hi = int(match.group(1)), int(match.group(2))
+            if lo == hi:
+                return None
+            return (lo, hi) if lo < hi else (hi, lo)
         return None
 
     @staticmethod
@@ -125,16 +220,16 @@ class QuestionAnalyzer:
         q_lower = q_clean.lower()
         q_no_accent = remove_accents(q_clean)
 
-        # 1. Identify destinations
+        # 1. Identify destinations (whole-word matching avoids false positives)
         matched_destinations = set()
         for key, dest_name in DESTINATION_MAP.items():
-            if key in q_lower or remove_accents(key) in q_no_accent:
+            if matches_term(q_lower, key) or matches_term(q_no_accent, remove_accents(key)):
                 matched_destinations.add(dest_name)
 
         # 2. Extract keywords & map to destinations if none found
         extracted_keywords = []
         for kw, dest_list in KEYWORD_DESTINATIONS.items():
-            if kw in q_lower or remove_accents(kw) in q_no_accent:
+            if matches_term(q_lower, kw) or matches_term(q_no_accent, remove_accents(kw)):
                 extracted_keywords.append(kw)
                 if not matched_destinations:
                     for d in dest_list:
@@ -143,8 +238,13 @@ class QuestionAnalyzer:
         # 3. Parse price limits
         min_price, max_price = QuestionAnalyzer.parse_price(q_clean)
 
-        # 4. Parse duration
-        duration_days = QuestionAnalyzer.parse_duration(q_clean)
+        # 4. Parse duration: a range like "3-4 ngày" becomes [3, 4],
+        #    a single value stays an integer (e.g. 3).
+        duration_range = QuestionAnalyzer.parse_duration_range(q_clean)
+        if duration_range:
+            duration_days = [duration_range[0], duration_range[1]]
+        else:
+            duration_days = QuestionAnalyzer.parse_duration(q_clean)
 
         # 5. Determine sort preference
         sort_by = None

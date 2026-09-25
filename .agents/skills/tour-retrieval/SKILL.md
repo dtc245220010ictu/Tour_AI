@@ -16,7 +16,7 @@ Execute precise, safe, parameterized database queries against MySQL/SQLite to fe
 3. Apply filter for open schedules with available seats (`schedules.available_seats > 0`).
 4. Apply destination and regional filters.
 5. Apply budget constraints (`base_price <= max_price`, `base_price >= min_price`).
-6. Apply duration filter (`duration_days = ?`).
+6. Apply duration filter (`duration_days = ?` for a single day count; `duration_days BETWEEN ? AND ?` when the intent provides an inclusive range such as `[3, 4]`).
 7. Apply sorting (by price, rating, or upcoming departure date).
 8. Limit number of results (typically 3 to 5 results).
 
@@ -26,4 +26,5 @@ Execute precise, safe, parameterized database queries against MySQL/SQLite to fe
 - Do not return inactive or deleted tours.
 - Do not return tours with zero available seats (`available_seats = 0`).
 - If no matching tours are found, return an empty list (`[]`). Never fabricate data.
+- Alternative retrieval (`retrieve_alternative_tours`) runs after an empty strict search so the chatbot can honestly report "no exact match" AND introduce other real tours: it prefers tours from the requested destinations (lowest price first); if those destinations have no tours at all, it falls back to any available tour. It must return `[]` only when the database truly has no available tours.
 

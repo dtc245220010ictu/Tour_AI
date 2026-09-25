@@ -18,19 +18,26 @@ class GeminiService:
     @staticmethod
     def is_configured():
         key = GeminiService.get_api_key()
-        return bool(key and key != "your_gemini_api_key_here")
+        if not key:
+            return False
+        # Reject placeholder values from .env.example (e.g. "your_google_gemini_api_key_here")
+        # so the app never calls the API with a fake key.
+        return not key.lower().startswith("your_")
 
     @staticmethod
-    def generate_content(prompt: str, temperature: float = 0.4) -> str:
+    def generate_content(prompt: str, temperature: float = 0.4, fallback_answer: str | None = None) -> str:
         """
         Sends prompt to Gemini API.
-        If API key is missing or request fails, falls back gracefully to smart rule-based answer.
+        If API key is missing or request fails, falls back gracefully to the
+        precomputed `fallback_answer` (a data-grounded answer built by
+        GroundedAnswerBuilder), or to the canned rule-based text when no
+        fallback_answer was provided (e.g. staff AI content tools).
         """
         api_key = GeminiService.get_api_key()
         
         if not GeminiService.is_configured():
-            logger.info("GEMINI_API_KEY not configured. Using intelligent fallback generator.")
-            return GeminiService._generate_fallback(prompt)
+            logger.info("GEMINI_API_KEY not configured. Using grounded fallback answer.")
+            return fallback_answer or GeminiService._generate_fallback(prompt)
 
         # Gemini REST API endpoint
         model = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
@@ -47,7 +54,10 @@ class GeminiService:
             ],
             "generationConfig": {
                 "temperature": temperature,
-                "maxOutputTokens": 1024,
+                # Thinking models spend tokens on internal reasoning first
+                # (e.g. thoughtsTokenCount ~100+), so keep enough budget that
+                # long multi-tour answers are never truncated mid-sentence.
+                "maxOutputTokens": 4096,
             }
         }
 
@@ -62,11 +72,11 @@ class GeminiService:
                         return parts[0]["text"].strip()
             
             logger.warning(f"Gemini API returned status {response.status_code}: {response.text[:200]}")
-            return GeminiService._generate_fallback(prompt)
+            return fallback_answer or GeminiService._generate_fallback(prompt)
 
         except Exception as e:
             logger.error(f"Error connecting to Gemini API: {str(e)}")
-            return GeminiService._generate_fallback(prompt)
+            return fallback_answer or GeminiService._generate_fallback(prompt)
 
     @staticmethod
     def _generate_fallback(prompt: str) -> str:
@@ -83,9 +93,12 @@ class GeminiService:
 
         if "=== KHÔNG CÓ TOUR ĐÚNG TIÊU CHÍ, DƯỚI ĐÂY LÀ CÁC TOUR GẦN NHẤT" in prompt:
             return (
-                "Chào bạn! Hiện tại hệ thống chưa tìm thấy tour đúng hoàn toàn với mức ngân sách hoặc số ngày bạn yêu cầu. "
-                "Tuy nhiên, TourAI gợi ý cho bạn một số tour hấp dẫn khởi hành gần nhất có mức giá rất ưu đãi hiển thị bên dưới. "
-                "Bạn hãy xem qua và liên hệ tư vấn viên để nhận thêm khuyến mãi nhé!"
+                "Chào bạn! Rất tiếc hiện tại hệ thống **chưa có tour nào đáp ứng đúng hoàn toàn** "
+                "ngân sách hoặc tiêu chí bạn yêu cầu.\n\n"
+                "Để bạn không lỡ chuyến đi, dưới đây TourAI xin **giới thiệu các tour khác** đang mở bán "
+                "và còn chỗ với mức giá hấp dẫn nhất — bạn hãy tham khảo và chọn tour phù hợp nhé! "
+                "Nếu cần tùy chỉnh lịch trình theo ngân sách của mình, hãy liên hệ hotline 1900-6868 "
+                "để được tư vấn riêng ạ!"
             )
 
         # Extract tour info if available

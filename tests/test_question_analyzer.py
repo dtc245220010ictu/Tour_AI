@@ -42,3 +42,46 @@ def test_analyze_empty_or_whitespace():
     assert intent["destinations"] == []
     assert intent["max_price"] is None
 
+
+def test_analyze_khoang_5_trieu_no_false_da_lat_mapping():
+    """REGRESSION: accent-stripped "khoảng" -> "khoang" contains "hoa".
+
+    Whole-word matching must prevent keyword "hoa" from firing here, otherwise the
+    query is wrongly mapped to Đà Lạt (no tours in DB) and the chatbot reports
+    that no tour exists for a perfectly valid 5-million budget question.
+    """
+    intent = QuestionAnalyzer.analyze_question("Có tour nào khoảng 5 triệu không?")
+
+    assert intent["max_price"] == 5_000_000
+    assert intent["destinations"] == []
+    assert "hoa" not in intent["keywords"]
+
+
+def test_analyze_bare_budget_phrases():
+    """Budget without an explicit prefix ("dưới/tối đa") must still be extracted."""
+    for query in [
+        "tour 5 triệu",
+        "Tư vấn cho tôi tour giá 5 triệu",
+        "Tôi có 5 triệu muốn đi du lịch",
+        "tour 5tr",
+    ]:
+        intent = QuestionAnalyzer.analyze_question(query)
+        assert intent["max_price"] == 5_000_000, f"failed for: {query}"
+
+
+def test_analyze_duration_range_3_to_4_days():
+    """Quick-chip scenario: budget + day range must produce an inclusive range."""
+    intent = QuestionAnalyzer.analyze_question(
+        "Tôi có khoảng 5 triệu, muốn đi biển 3-4 ngày thì có tour nào?"
+    )
+
+    assert intent["duration_days"] == [3, 4]
+    assert intent["max_price"] == 5_000_000
+    assert "biển" in intent["keywords"]
+    assert "hoa" not in intent["keywords"]
+
+
+def test_analyze_duration_single_day_stays_integer():
+    intent = QuestionAnalyzer.analyze_question("Tôi muốn đi Đà Nẵng 3 ngày dưới 5tr")
+    assert intent["duration_days"] == 3
+

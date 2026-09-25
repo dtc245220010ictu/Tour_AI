@@ -10,6 +10,7 @@ from services.tour_retriever import TourRetriever
 from services.context_builder import ContextBuilder
 from services.prompt_builder import PromptBuilder
 from services.gemini_service import GeminiService
+from services.grounded_answer_builder import GroundedAnswerBuilder
 from database.db import execute_query
 
 class RAGService:
@@ -43,8 +44,13 @@ class RAGService:
         # Step 4: Prompt Construction
         prompt = PromptBuilder.build_prompt(clean_q, context)
 
-        # Step 5: Gemini AI Generation
-        answer = GeminiService.generate_content(prompt)
+        # Step 4b: Precompute a Gemini-style answer grounded STRICTLY in retrieved data.
+        # Used whenever the Gemini API is unavailable (no key / network error),
+        # so the chat stays helpful without ever inventing information.
+        grounded_answer = GroundedAnswerBuilder.build(clean_q, intent, tours, alternatives)
+
+        # Step 5: Gemini AI Generation (falls back to the grounded answer above)
+        answer = GeminiService.generate_content(prompt, fallback_answer=grounded_answer)
 
         # Step 6: Log chat interaction for analytics and auditing
         try:

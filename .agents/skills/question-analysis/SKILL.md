@@ -25,6 +25,9 @@ Structured intent JSON with the following fields:
 - Normalize Vietnamese monetary expressions to numeric VND:
   - "dưới 5 triệu" / "dưới 5tr" / "dưới 5 củ" -> `max_price: 5000000`
   - "khoảng 3-4 triệu" -> `min_price: 3000000, max_price: 4000000`
+  - "khoảng 5 triệu" / "tour 5 triệu" / "tôi có 5 triệu" (budget with no explicit prefix) -> `max_price: 5000000`
   - "ít nhất 3 ngày" -> `duration_days: 3`
+  - "3-4 ngày" / "từ 3 đến 4 ngày" -> `duration_days: [3, 4]` (inclusive range)
 - Handle diacritics and non-diacritic inputs gracefully ("da lat" -> "Đà Lạt").
+- Match destinations and keywords as whole words only: accent-stripped "khoảng" -> "khoang" must never trigger keyword "hoa", otherwise the query is wrongly mapped to Đà Lạt and valid budget questions return zero tours.
 

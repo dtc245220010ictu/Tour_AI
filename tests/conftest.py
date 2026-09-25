@@ -20,6 +20,11 @@ from app import create_app
 from database.db import init_db
 from database.seeder import seed_all
 
+# Keep tests hermetic: never call the external Gemini API during test runs.
+# (load_dotenv() inside app.py may have loaded a real key from the project .env;
+#  tests must exercise the deterministic grounded-fallback path instead.)
+os.environ.pop("GEMINI_API_KEY", None)
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():
     """Initializes and seeds test database once for the session."""
