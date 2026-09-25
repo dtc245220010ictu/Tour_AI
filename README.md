@@ -4,7 +4,7 @@
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-orange.svg)](https://www.sqlite.org/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-60%2F60%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-92%2F92%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -69,6 +69,7 @@ TourAI/
 │   ├── test-report.md                  # Báo cáo kết quả kiểm thử tự động
 │   ├── code-review.md                  # Báo cáo đánh giá mã nguồn & phân loại lỗi
 │   ├── security-review.md              # Báo cáo đánh giá an toàn thông tin & lỗ hổng
+│   ├── ai-assisted-development-evidence.md # Hồ sơ AI-Assisted Development: prompt tái lập & ma trận truy vết KT1–KT3
 │   ├── chatbot-requirements.md         # Yêu cầu chuyên biệt cho Chatbot AI
 │   ├── chatbot-functional-requirements.md # Yêu cầu chức năng Chatbot
 │   ├── chatbot-user-stories.md         # User stories của Chatbot
@@ -113,6 +114,7 @@ TourAI/
 │   ├── prompt_builder.py               # Xây dựng prompt kèm quy tắc Zero-Hallucination
 │   ├── gemini_service.py               # Gọi Gemini API an toàn kèm fallback
 │   ├── rag_service.py                  # Điều phối toàn trình RAG
+│   ├── grounded_answer_builder.py      # Sinh câu trả lời chat "Gemini-style" chỉ từ dữ liệu đã truy xuất
 │   └── ai_content_service.py           # Sinh mô tả tour & tóm tắt phản hồi
 │
 ├── templates/                          # Giao diện HTML5 Jinja2 hiện đại
@@ -156,21 +158,24 @@ TourAI/
 │   ├── css/
 │   │   ├── style.css                   # Định kiểu giao diện toàn trang
 │   │   └── chat.css                    # Định kiểu Chatbot, gradient header, cards
-│   └── js/
-│       └── chat.js                     # Xử lý fetch API chat, render cards, loading
+│   ├── js/
+│   │   └── chat.js                     # Xử lý fetch API chat, render cards, loading
+│   └── uploads/                        # Ảnh admin tải lên/dán (Ctrl+V) — gitignore, chỉ giữ file .gitkeep
 │
-├── tests/                              # Bộ kiểm thử tự động (Pytest)
+├── tests/                              # Bộ kiểm thử tự động (Pytest) - 92 ca PASSED
 │   ├── conftest.py                     # Cấu hình test database cô lập
 │   ├── test_auth.py                    # Kiểm thử xác thực, băm mật khẩu & đăng nhập nhanh (6)
-│   ├── test_rbac.py                    # Kiểm thử phân quyền 5 vai trò trên mọi route (20)
+│   ├── test_rbac.py                    # Kiểm thử phân quyền 5 vai trò trên mọi route (22)
 │   ├── test_booking_capacity.py        # Kiểm thử chống Overbooking & hoàn trả chỗ (5)
-│   ├── test_question_analyzer.py       # Kiểm thử bóc tách ngân sách & điểm đến (5)
-│   ├── test_rag_pipeline.py            # Kiểm thử toàn trình RAG & API POST /api/chat (4)
-│   ├── test_tour_retrieval.py          # Kiểm thử truy xuất tour & không bịa dữ liệu (3)
+│   ├── test_price_consistency.py       # Kiểm thử liên kết giá vé & số chỗ tự tính khi sửa lịch (5)
+│   ├── test_accounting.py              # Kiểm thử kế toán: duyệt thu, công nợ, chi phí, P&L (6)
+│   ├── test_question_analyzer.py       # Kiểm thử bóc tách ngân sách, thời lượng & điểm đến (9)
+│   ├── test_tour_retrieval.py          # Kiểm thử truy xuất tour & không bịa dữ liệu (5)
 │   ├── test_context_builder.py         # Kiểm thử tạo ngữ cảnh CSDL (2)
-│   ├── test_image_upload.py            # Kiểm thử upload ảnh: hợp lệ, sai định dạng, RBAC (5)
-│   ├── test_price_consistency.py       # Kiểm thử liên kết giá vé & tên tour giữa các bảng (4)
-│   └── test_accounting.py              # Kiểm thử kế toán: duyệt thu, công nợ, chi phí, P&L (6)
+│   ├── test_grounded_answer_builder.py # Kiểm thử câu trả lời chỉ dùng dữ liệu đã truy xuất (4)
+│   ├── test_rag_pipeline.py            # Kiểm thử toàn trình RAG, API /api/chat & câu hỏi mơ hồ (13)
+│   ├── test_ai_content_service.py      # Kiểm thử AI sinh mô tả/lịch trình & fallback cấu trúc (9)
+│   └── test_image_upload.py            # Kiểm thử upload ảnh: hợp lệ, sai định dạng, RBAC, ô ảnh form Sửa (6)
 │
 ├── scripts/
 │   ├── check_rbac_live.py              # Kiểm tra RBAC trực tiếp trên server đang chạy
@@ -229,8 +234,8 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả mong đợi:** 60/60 tests `PASSED` 100%.
-*(Phân bổ theo file: RBAC 20 · Auth 6 · Kế toán 6 · Chống overbooking 5 · Bóc tách câu hỏi 5 · RAG pipeline 4 · Truy xuất tour 3 · Upload ảnh 5 · Liên kết dữ liệu 4 · Context builder 2.)*
+**Kết quả mong đợi:** 92/92 tests `PASSED` 100%.
+*(Bao gồm xác thực/RBAC, CRUD & đồng bộ tour–lịch, booking–thanh toán–hoàn tiền, chống overbooking, RAG zero-hallucination, AI content fallback và các truy vấn tư vấn mơ hồ.)*
 
 ---
 
@@ -284,6 +289,7 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 | `/accounting/transactions` | GET | Sổ quỹ thu & đối soát giao dịch chuyển khoản từ khách hàng |
 | `/accounting/transactions/<id>/verify` | POST | Kế toán xác nhận tiền đã vào tài khoản ngân hàng (duyệt giao dịch) |
 | `/accounting/debts` | GET | Quản lý công nợ khách hàng; form ghi nhận thu nợ nhiều đợt |
+| `/accounting/debts/<id>/pay` | POST | Kế toán ghi nhận một đợt thu nợ (tiền mặt/chuyển khoản) cho đơn đặt chỗ |
 | `/accounting/expenses` | GET, POST | Kê chi phí vận hành tour & form thêm khoản chi gắn với Lịch khởi hành |
 | `/accounting/tours-pnl` | GET | Báo cáo hiệu quả kinh doanh & lãi/lỗ (P&L) theo từng đoàn tour |
 | `/accounting/refunds` | GET, POST | Quản lý và lập phiếu chi hoàn tiền cho booking đã hủy |
@@ -303,7 +309,7 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 - Bảng **`payments`**: hỗ trợ `payment_type` ∈ {DEPOSIT, FULL, REMAINING, REFUND} cùng các trường xác nhận `verified_by`, `verified_at`.
 
 ### Kiểm thử phân hệ kế toán
-Các test trong `tests/test_accounting.py` (nằm trong bộ 60 test):
+Các test trong `tests/test_accounting.py` (nằm trong bộ 92 test):
 - `test_record_and_verify_payment` — quy trình kế toán duyệt thanh toán chuyển khoản.
 - `test_debt_calculation` — tính công nợ khi khách mới đặt cọc một phần.
 - `test_tour_expense_and_pnl` — ghi nhận chi phí tour & kiểm tra công thức Lợi nhuận = Doanh thu − Chi phí.

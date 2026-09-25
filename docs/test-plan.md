@@ -37,6 +37,9 @@ Tài liệu này đặc tả kế hoạch kiểm thử tự động và thủ c�
   - Đặt tour thành công và trừ chính xác số chỗ khả dụng trong CSDL.
   - Ngăn chặn Overbooking: ném lỗi `OverbookingError` khi đặt số chỗ lớn hơn `available_seats`.
   - Hủy đơn đặt tour và tự động hoàn trả số chỗ về lịch trình.
+- `tests/test_price_consistency.py`:
+  - Đồng bộ giá tour và giá lịch khởi hành.
+  - Khi sửa lịch khởi hành đã có booking, tính lại `available_seats` từ booking `PENDING`/`CONFIRMED`/`COMPLETED`; chặn giảm `total_seats` thấp hơn số ghế đã giữ.
 
 ### 2.2 Kiểm thử Tích hợp (Integration Tests)
 - `tests/test_rag_pipeline.py`:
@@ -44,6 +47,20 @@ Tài liệu này đặc tả kế hoạch kiểm thử tự động và thủ c�
   - Endpoint `POST /api/chat`: trả mã HTTP 200, phản hồi JSON đầy đủ gồm `answer` và `tours`.
   - Kiểm tra tính hợp lệ dữ liệu đầu vào: câu hỏi rỗng trả về mã lỗi HTTP 400.
   - Kịch bản Zero-Hallucination: khi hỏi tour giá dưới 100k, chatbot trả lời lịch sự không có tour, không bịa thông tin.
+  - Kịch bản yêu cầu mơ hồ: "Tư vấn cho tôi đi du lịch" và "Có tour gì hay không?" chỉ trả các tour thực tế còn chỗ; "Tầm 5 triệu thì đi đâu?" chỉ trả tour có giá không vượt 5.000.000 VNĐ.
+
+### 2.3 Kiểm thử Phân quyền & Luồng Quản trị Tour (RBAC & Admin Flow Tests)
+- `tests/test_rbac.py`:
+  - Ma trận phân quyền 5 vai trò (ADMIN, STAFF, ACCOUNTANT, GUIDE, CUSTOMER) trên các route quản trị, kế toán, phản hồi và AI.
+  - Trang **Quản lý sản phẩm tour** hiển thị nút **Sửa** cho ADMIN và STAFF; nút **Xóa** chỉ hiển thị với ADMIN.
+  - STAFF mở được form **Sửa Thông Tin Tour** từ danh sách và lưu thành công thay đổi (tên, thời lượng, giá) vào CSDL.
+
+### 2.4 Kiểm thử Upload Ảnh & Bảo Toàn Ảnh Trong Form Sửa (Image Upload Tests)
+- `tests/test_image_upload.py`:
+  - Upload ảnh hợp lệ qua `POST /admin/upload-image` -> trả URL `/static/uploads/...` và file thực sự tồn tại trong thư mục upload.
+  - Chặn file sai định dạng (`script.exe`) kèm thông báo lỗi; yêu cầu đăng nhập và chặn CUSTOMER tải ảnh.
+  - Tạo tour kèm file ảnh -> `image_url` lưu đường dẫn nội bộ `/static/uploads/...`.
+  - Form **Sửa tour** giữ nguyên ảnh upload nội bộ: ô ảnh là `type="text"` (không dùng `type="url"` — đường dẫn tương đối sẽ bị HTML5 chặn submit, khiến nhân viên bị bắt nhập lại URL) và bấm **Lưu thay đổi** không làm mất ảnh cũ.
 
 ---
 

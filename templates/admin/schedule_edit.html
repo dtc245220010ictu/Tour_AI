@@ -60,9 +60,9 @@
                 <div>
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Số
-                        chỗ còn lại (cập nhật số chỗ) *</label>
-                    <input type="number" name="available_seats" value="{{ schedule.available_seats }}" min="0"
-                        required style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
+                        chỗ còn lại</label>
+                    <input type="number" value="{{ schedule.available_seats }}" readonly aria-readonly="true"
+                        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #f8fafc; color: #475569; cursor: not-allowed;">
                 </div>
                 <div>
                     <label
@@ -77,9 +77,9 @@
                 </div>
             </div>
 
-            <p style="font-size: 12.5px; color: #94a3b8; margin-bottom: 15px;">Đã đặt: {{ schedule.total_seats -
-                schedule.available_seats }}/{{ schedule.total_seats }} chỗ. Số chỗ còn lại không được nhỏ hơn 0 và không
-                vượt tổng số chỗ.</p>
+            <p style="font-size: 12.5px; color: #64748b; margin-bottom: 15px;">Đã giữ chỗ: {{ schedule.total_seats -
+                schedule.available_seats }}/{{ schedule.total_seats }}. Số chỗ còn lại được hệ thống tự động tính từ các
+                booking chưa hủy; không thể chỉnh sửa thủ công.</p>
 
             <button type="submit" class="btn btn-primary" style="padding: 10px 24px; font-size: 15px;">💾 Lưu thay
                 đổi</button>

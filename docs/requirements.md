@@ -63,7 +63,7 @@
 - **NFR-002 (Bảo mật - Mật khẩu):** Mật khẩu người dùng phải được băm an toàn bằng thuật toán bcrypt/pbkdf2 trước khi lưu vào CSDL.
 - **NFR-003 (Bảo mật - Secrets):** API Key của AI Engine (Gemini API Key) và Secret Key của ứng dụng phải lưu trong biến môi trường (`.env`), tuyệt đối không hardcode trong mã nguồn hoặc client-side JS.
 - **NFR-004 (Bảo mật - Injection):** Toàn bộ truy vấn cơ sở dữ liệu phải dùng parameterized query hoặc ORM để triệt tiêu lỗ hổng SQL Injection.
-- **NFR-005 (Toàn vẹn dữ liệu):** Ràng buộc tính nhất quán số chỗ trống: `available_seats = total_seats - SUM(confirmed_passengers)` luôn được bảo đảm bằng giao dịch (database transaction).
+- **NFR-005 (Toàn vẹn dữ liệu):** Ràng buộc tính nhất quán số chỗ trống: `available_seats = total_seats - SUM(num_adults + num_children của booking PENDING, CONFIRMED, COMPLETED)` luôn được bảo đảm bằng giao dịch (database transaction). Booking `PENDING` đã giữ chỗ; booking `CANCELLED` được hoàn chỗ và không được tính vào số ghế đã giữ.
 - **NFR-006 (Giao diện & Trải nghiệm):** Giao diện thân thiện, tương thích đa thiết bị (responsive trên mobile, tablet, desktop).
 - **NFR-007 (Độ tin cậy của AI):** Cơ chế Zero-Hallucination: Prompt hệ thống của RAG Chatbot nghiêm cấm việc suy đoán hoặc tự tạo tour, giá tiền hay ngày khởi hành không có trong ngữ cảnh CSDL được cấp.
 - **NFR-008 (Khả năng mở rộng):** Thiết kế theo mô hình kiến trúc phân lớp (Layered Architecture: Route -> Service -> Repository/Model) giúp dễ dàng tích hợp thêm các dịch vụ thanh toán và mô hình AI khác.

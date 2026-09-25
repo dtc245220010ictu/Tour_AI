@@ -7,6 +7,9 @@ against management, accounting, feedback, and AI endpoints.
 import re
 import pytest
 
+from database.db import get_db
+from services.tour_service import TourService
+
 
 def _page_text(resp):
     return re.sub(r"\s+", " ", resp.data.decode("utf-8"))
@@ -55,6 +58,71 @@ def test_staff_cannot_delete_tour(client):
     _login_as(client, 2, "Tư Vấn Viên", "STAFF")
     resp = client.post("/admin/tours/1/delete")
     assert resp.status_code == 302  # roles_required redirects (permission denied)
+
+
+def test_tour_manage_list_exposes_edit_action(client):
+    """CN2: Trang Quản lý sản phẩm tour hiển thị nút Sửa cho ADMIN/STAFF; nút Xóa chỉ ADMIN."""
+    _login_as(client, 2, "Tư Vấn Viên", "STAFF")
+    text = _page_text(client.get("/admin/tours"))
+    assert "/admin/tours/1/edit" in text
+    assert "/admin/tours/1/delete" not in text
+
+    _login_as(client, 1, "Quản Trị Viên", "ADMIN")
+    text = _page_text(client.get("/admin/tours"))
+    assert "/admin/tours/1/edit" in text
+    assert "/admin/tours/1/delete" in text
+
+
+def test_staff_can_open_and_submit_tour_edit_form(client):
+    """CN2: STAFF mở được form Sửa tour từ danh sách và lưu thay đổi thành công."""
+    tour_id = TourService.create_tour(
+        destination_id=1,
+        title="Tour Kiem Tra Form Sua",
+        description="Tour dùng để kiểm tra chức năng sửa từ trang quản lý sản phẩm tour.",
+        duration_days=2,
+        duration_nights=1,
+        base_price=1_000_000,
+        transportation="Xe test",
+        itinerary_text="Ngày 1: Test",
+        image_url="",
+    )
+    try:
+        _login_as(client, 2, "Tư Vấn Viên", "STAFF")
+
+        resp = client.get(f"/admin/tours/{tour_id}/edit")
+        assert resp.status_code == 200
+        assert "Sửa Thông Tin Tour" in _page_text(resp)
+
+        resp = client.post(
+            f"/admin/tours/{tour_id}/edit",
+            data={
+                "destination_id": "1",
+                "title": "Tour Da Cap Nhat Tu Quan Ly",
+                "description": "Mô tả tour đã được cập nhật thành công từ trang quản lý sản phẩm.",
+                "duration_days": "3",
+                "duration_nights": "2",
+                "base_price": "1200000",
+                "transportation": "Xe du lịch",
+                "itinerary_text": "Ngày 1: Cập nhật",
+                "is_active": "1",
+            },
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200
+        assert "Đã cập nhật tour thành công!" in _page_text(resp)
+
+        updated = TourService.get_tour_by_id(tour_id)
+        assert updated is not None
+        assert updated["title"] == "Tour Da Cap Nhat Tu Quan Ly"
+        assert updated["duration_days"] == 3
+        assert float(updated["base_price"]) == 1_200_000
+    finally:
+        with get_db() as conn:
+            conn.execute("DELETE FROM guide_assignments WHERE schedule_id IN (SELECT id FROM tour_schedules WHERE tour_id = ?);", (tour_id,))
+            conn.execute("DELETE FROM tour_expenses WHERE schedule_id IN (SELECT id FROM tour_schedules WHERE tour_id = ?);", (tour_id,))
+            conn.execute("DELETE FROM bookings WHERE schedule_id IN (SELECT id FROM tour_schedules WHERE tour_id = ?);", (tour_id,))
+            conn.execute("DELETE FROM tour_schedules WHERE tour_id = ?;", (tour_id,))
+            conn.execute("DELETE FROM tours WHERE id = ?;", (tour_id,))
 
 
 def test_accountant_can_view_statistics(client):

@@ -61,6 +61,7 @@ Nhiều khách hàng có thể cùng đặt chỗ cho một đợt khởi hành 
   `UPDATE tour_schedules SET available_seats = available_seats - ? WHERE id = ? AND available_seats >= ?`.
 - Khi hủy booking, thực hiện atomic update:
   `UPDATE tour_schedules SET available_seats = available_seats + ? WHERE id = ?`.
+- Khi Staff/Admin cập nhật lịch khởi hành, không nhận `available_seats` từ client. Hệ thống tính lại giá trị này trong transaction bằng `total_seats - SUM(số khách của booking PENDING/CONFIRMED/COMPLETED)` và từ chối giảm `total_seats` thấp hơn số ghế đã giữ.
 
 ### Hệ quả
 - **Tích cực:** Đảm bảo tính toàn vẹn dữ liệu, triệt tiêu nguy cơ overbooking.

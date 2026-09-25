@@ -5,6 +5,7 @@ with an uploaded image file.
 """
 
 import io
+import re
 from pathlib import Path
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "static" / "uploads"
@@ -110,3 +111,59 @@ def test_create_tour_with_file_upload(client):
         # Dọn dẹp dữ liệu test
         conn.execute("DELETE FROM tours WHERE id = ?;", (tour_id,))
     _cleanup(image_url)
+
+
+def test_edit_form_image_field_accepts_relative_uploaded_url(client):
+    """Ô ảnh trên form Sửa tour không dùng type=url: ảnh upload nội bộ (/static/uploads/...)
+    là đường dẫn tương đối nên HTML5 type=url sẽ chặn submit và bắt người dùng nhập lại URL."""
+    from database.db import get_db
+    from services.tour_service import TourService
+
+    tour_id = TourService.create_tour(
+        destination_id=1,
+        title="Tour Test Sua Anh Tuong Doi",
+        description="Tour dùng để kiểm tra ô ảnh trên form sửa tour.",
+        duration_days=2,
+        duration_nights=1,
+        base_price=1_000_000,
+        transportation="Xe test",
+        itinerary_text="Ngày 1: Test",
+        image_url="/static/uploads/relative-image-test.png",
+    )
+    try:
+        _login_as(client, 1, "Quản Trị Viên", "ADMIN")
+        resp = client.get(f"/admin/tours/{tour_id}/edit")
+        assert resp.status_code == 200
+        html = resp.data.decode("utf-8")
+        match = re.search(r'<input[^>]*name="image_url"[^>]*>', html)
+        assert match is not None
+        tag = match.group(0)
+        assert 'type="url"' not in tag
+        assert "/static/uploads/relative-image-test.png" in tag
+
+        # Bấm "Lưu thay đổi" với nguyên giá trị ảnh tương đối -> không bị mất ảnh
+        resp = client.post(
+            f"/admin/tours/{tour_id}/edit",
+            data={
+                "destination_id": "1",
+                "title": "Tour Test Sua Anh Tuong Doi",
+                "description": "Tour dùng để kiểm tra ô ảnh trên form sửa tour.",
+                "duration_days": "2",
+                "duration_nights": "1",
+                "base_price": "1000000",
+                "transportation": "Xe test",
+                "itinerary_text": "Ngày 1: Test",
+                "image_url": "/static/uploads/relative-image-test.png",
+                "is_active": "1",
+            },
+        )
+        assert resp.status_code == 302
+        with get_db() as conn:
+            saved = conn.execute(
+                "SELECT image_url FROM tours WHERE id = ?;", (tour_id,)
+            ).fetchone()
+        assert saved["image_url"] == "/static/uploads/relative-image-test.png"
+    finally:
+        with get_db() as conn:
+            conn.execute("DELETE FROM tour_schedules WHERE tour_id = ?;", (tour_id,))
+            conn.execute("DELETE FROM tours WHERE id = ?;", (tour_id,))

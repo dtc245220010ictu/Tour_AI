@@ -97,6 +97,33 @@ flowchart LR
 | `UC-03` | Chatbot tư vấn tour (RAG) | Khách hàng | Người dùng nhập câu hỏi tự nhiên | Chatbot trả lời thông tin chính xác từ CSDL, không bịa |
 | `UC-04` | AI sinh mô tả tour | Nhân viên / Admin | Nhân viên nhập điểm đến, từ khóa | AI sinh đoạn văn mô tả chuẩn SEO và lịch trình chi tiết |
 | `UC-05` | AI tóm tắt phản hồi | Admin / Quản lý | Đã có các phản hồi đánh giá trong CSDL | AI sinh báo cáo tổng hợp ưu/nhược điểm dịch vụ |
+| `UC-06` | Ghi nhận thanh toán / đặt cọc | Khách hàng / Kế toán / Admin | Booking tồn tại; khách chỉ thao tác trên đơn của mình | Có bản ghi payment; booking được xác nhận khi thanh toán thành công hoặc kế toán duyệt giao dịch |
+| `UC-07` | Xử lý hoàn tiền hủy tour | Kế toán / Admin | Booking đã `CANCELLED` và có giao dịch thanh toán thành công | Có phiếu `REFUND` đã được xác nhận, không vượt quá số tiền thực đã thanh toán |
+
+### 1.3 Đặc tả luồng Use Case trọng yếu
+
+#### UC-06 — Ghi nhận thanh toán / đặt cọc
+- **Tác nhân:** Khách hàng (đơn của chính mình), Kế toán, Admin.
+- **Tiền điều kiện:** Booking tồn tại; người thao tác được phân quyền phù hợp.
+- **Luồng chính:**
+  1. Người dùng chọn phương thức thanh toán và số tiền thanh toán/đặt cọc.
+  2. Hệ thống tạo bản ghi `payments` với `payment_type` (`DEPOSIT`, `FULL` hoặc `REMAINING`) và trạng thái giao dịch.
+  3. Nếu giao dịch `SUCCESS`, booking chuyển từ `PENDING` sang `CONFIRMED`.
+  4. Với chuyển khoản ở trạng thái `PENDING`, Kế toán đối soát, cập nhật `verified_by`, `verified_at`, `payment_status = SUCCESS`; booking được xác nhận khi có tiền thanh toán thành công.
+- **Ngoại lệ:** số tiền không lớn hơn 0; không tìm thấy booking; thao tác trên booking không thuộc khách hàng; giao dịch đã được duyệt trước đó.
+- **Hậu điều kiện:** lịch sử thanh toán được lưu, trạng thái booking phản ánh kết quả duyệt.
+
+#### UC-07 — Hủy tour và xử lý hoàn tiền
+- **Tác nhân:** Khách hàng (hủy đơn của mình), Admin (hủy đơn), Kế toán/Admin (hoàn tiền).
+- **Tiền điều kiện:** booking ở `PENDING` hoặc `CONFIRMED`; booking `COMPLETED` không được hủy.
+- **Luồng chính:**
+  1. Hệ thống chuyển booking sang `CANCELLED` và hoàn số hành khách về lịch khởi hành.
+  2. Kế toán xem booking đã hủy cùng tổng tiền đã thanh toán thành công.
+  3. Hệ thống đề xuất tỷ lệ hoàn: từ 7 ngày trước khởi hành là 90%, từ 3 đến 6 ngày là 50%, dưới 3 ngày là 0%.
+  4. Kế toán xác nhận số tiền hoàn không vượt quá số tiền đã trả còn lại.
+  5. Hệ thống lưu payment loại `REFUND`, trạng thái `SUCCESS`, người duyệt và thời điểm duyệt.
+- **Ngoại lệ:** khách hủy booking của người khác; hủy booking đã hoàn thành; hoàn vượt quá số tiền đã thanh toán hoặc số tiền còn có thể hoàn.
+- **Hậu điều kiện:** chỗ được hoàn trả chính xác; dòng tiền hoàn được lưu để phục vụ công nợ, sổ quỹ và P&L.
 
 ---
 
@@ -175,9 +202,13 @@ classDiagram
         +int booking_id
         +float amount
         +string payment_method
+        +string payment_type
         +string transaction_id
         +string payment_status
         +datetime payment_date
+        +int verified_by
+        +datetime verified_at
+        +string notes
     }
 
     class TourGuide {
@@ -327,14 +358,15 @@ flowchart TD
     LockSeats --> CreateBooking[Tạo mã đơn Booking PENDING]
     CreateBooking --> ChoosePayment{Lựa chọn thanh toán}
     
-    ChoosePayment --> PayOnline[Thanh toán Online / Chuyển khoản]
-    ChoosePayment --> PayLater[Giữ chỗ thanh toán sau]
+    ChoosePayment --> PayOnline[Thanh toán mô phỏng / Chuyển khoản]
+    ChoosePayment --> PayLater[Chờ thanh toán]
     
     PayOnline --> CheckPaymentSuccess{Thanh toán thành công?}
     CheckPaymentSuccess -- Thành công --> ConfirmBooking[Cập nhật trạng thái CONFIRMED]
-    CheckPaymentSuccess -- Thất bại / Quá hạn --> CancelPending[Hủy đơn quá hạn & Hoàn trả số chỗ]
+    CheckPaymentSuccess -- Thất bại --> RemainPending[Giữ trạng thái PENDING]
     
-    PayLater --> ConfirmBooking
+    PayLater --> RemainPending
+    RemainPending --> PayOnline
     
     ConfirmBooking --> TravelProcess[Khách hàng tham gia Tour du lịch]
     TravelProcess --> FinishTour[Hoàn thành tour COMPLETED]
@@ -434,9 +466,13 @@ erDiagram
         int booking_id FK
         decimal amount
         string payment_method "CASH, BANK_TRANSFER, ONLINE"
+        string payment_type "DEPOSIT, FULL, REMAINING, REFUND"
         string transaction_id
         string payment_status "PENDING, SUCCESS, FAILED, REFUNDED"
         datetime payment_date
+        int verified_by FK
+        datetime verified_at
+        text notes
     }
 
     TOUR_GUIDES {

@@ -51,7 +51,9 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `status` VARCHAR(20) NOT NULL DEFAULT 'OPEN' (`OPEN`, `FULL`, `CLOSED`, `CANCELLED`)
 - `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 
-*Ràng buộc toàn vẹn:* `CHECK (available_seats <= total_seats AND available_seats >= 0)`
+*Ràng buộc toàn vẹn:* `CHECK (available_seats <= total_seats AND available_seats >= 0)`.
+
+*Quy tắc nghiệp vụ triển khai:* khi tạo booking, hệ thống giữ chỗ ngay từ trạng thái `PENDING`; vì vậy số chỗ đã giữ được tính từ tất cả booking có trạng thái `PENDING`, `CONFIRMED` hoặc `COMPLETED`. Khi Staff/Admin sửa lịch khởi hành, `available_seats` **không nhận từ form** mà được tính lại trong transaction theo công thức: `total_seats - SUM(num_adults + num_children của booking chưa CANCELLED)`. Hệ thống từ chối giảm `total_seats` thấp hơn số chỗ đã giữ.
 
 ### 1.5 Bảng `bookings` (Quản lý đơn đặt tour)
 - `id` INT PRIMARY KEY AUTO_INCREMENT
@@ -72,7 +74,7 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `id` INT PRIMARY KEY AUTO_INCREMENT
 - `booking_id` INT NOT NULL (FK -> `bookings.id`)
 - `amount` DECIMAL(12,2) NOT NULL
-- `payment_method` VARCHAR(30) NOT NULL (`CASH`, `BANK_TRANSFER`, `ONLINE_MOCK`)
+- `payment_method` VARCHAR(30) NOT NULL DEFAULT `BANK_TRANSFER` (`CASH`, `BANK_TRANSFER`, `ONLINE`)
 - `payment_type` VARCHAR(30) NOT NULL DEFAULT 'FULL' (`DEPOSIT`, `FULL`, `REMAINING`, `REFUND`)
 - `transaction_id` VARCHAR(100)
 - `payment_status` VARCHAR(20) NOT NULL DEFAULT 'SUCCESS' (`PENDING`, `SUCCESS`, `FAILED`, `REFUNDED`)

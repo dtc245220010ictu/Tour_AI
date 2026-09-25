@@ -245,16 +245,14 @@ class TourService:
     @staticmethod
     def update_schedule(schedule_id: int, departure_date: str, return_date: str,
                         adult_price: float, child_price: float, total_seats: int,
-                        available_seats: int, status: str = "OPEN"):
-        """Cập nhật lịch khởi hành & số chỗ (ADMIN / STAFF)."""
-        schedule = execute_query(
-            "SELECT * FROM tour_schedules WHERE id = ?;",
-            (schedule_id,),
-            fetch_one=True
-        )
-        if not schedule:
-            raise ValueError("Không tìm thấy lịch khởi hành.")
+                        status: str = "OPEN"):
+        """Cập nhật lịch khởi hành mà không cho phép ghi đè số ghế đã giữ.
 
+        `available_seats` luôn được suy ra từ tổng số ghế trừ số hành khách của
+        các booking chưa hủy (PENDING, CONFIRMED hoặc COMPLETED). Nhờ vậy form
+        quản trị không thể vô tình nhập một số chỗ còn lại mâu thuẫn với dữ liệu
+        booking thực tế.
+        """
         departure_date = (departure_date or "").strip()
         return_date = (return_date or "").strip()
         if not departure_date or not return_date:
@@ -268,29 +266,48 @@ class TourService:
             raise ValueError("Giá vé phải lớn hơn 0.")
 
         total_seats = int(total_seats)
-        available_seats = int(available_seats)
         if total_seats < 1:
             raise ValueError("Tổng số chỗ phải lớn hơn 0.")
-        if available_seats < 0 or available_seats > total_seats:
-            raise ValueError("Số chỗ còn lại phải nằm trong khoảng từ 0 đến tổng số chỗ.")
 
-        if status not in ("OPEN", "FULL", "CLOSED", "CANCELLED"):
-            status = "OPEN"
-        # Đồng bộ trạng thái với số chỗ (cập nhật số chỗ)
-        if available_seats == 0 and status == "OPEN":
-            status = "FULL"
-        elif available_seats > 0 and status == "FULL":
-            status = "OPEN"
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM tour_schedules WHERE id = ?;", (schedule_id,))
+            if not cursor.fetchone():
+                raise ValueError("Không tìm thấy lịch khởi hành.")
 
-        execute_query(
-            """UPDATE tour_schedules SET
-               departure_date = ?, return_date = ?, adult_price = ?, child_price = ?,
-               total_seats = ?, available_seats = ?, status = ?
-               WHERE id = ?;""",
-            (departure_date, return_date, adult_price, child_price,
-             total_seats, available_seats, status, schedule_id),
-            commit=True
-        )
+            # Booking is created in PENDING while its seats are already reserved,
+            # therefore every non-cancelled booking must be counted here.
+            cursor.execute(
+                """SELECT COALESCE(SUM(num_adults + num_children), 0) AS reserved_seats
+                   FROM bookings
+                   WHERE schedule_id = ? AND status IN ('PENDING', 'CONFIRMED', 'COMPLETED');""",
+                (schedule_id,),
+            )
+            reserved_row = cursor.fetchone()
+            reserved_seats = int(reserved_row["reserved_seats"] or 0)
+            if total_seats < reserved_seats:
+                raise ValueError(
+                    f"Tổng số chỗ không thể nhỏ hơn {reserved_seats} chỗ đã được giữ bởi các đơn đặt tour."
+                )
+            available_seats = total_seats - reserved_seats
+
+            if status not in ("OPEN", "FULL", "CLOSED", "CANCELLED"):
+                status = "OPEN"
+            # OPEN/FULL is always determined from the derived availability.
+            # CLOSED and CANCELLED remain explicit operational decisions.
+            if status == "OPEN" and available_seats == 0:
+                status = "FULL"
+            elif status == "FULL" and available_seats > 0:
+                status = "OPEN"
+
+            cursor.execute(
+                """UPDATE tour_schedules SET
+                   departure_date = ?, return_date = ?, adult_price = ?, child_price = ?,
+                   total_seats = ?, available_seats = ?, status = ?
+                   WHERE id = ?;""",
+                (departure_date, return_date, adult_price, child_price,
+                 total_seats, available_seats, status, schedule_id),
+            )
         return True
 
     @staticmethod

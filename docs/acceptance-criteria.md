@@ -78,3 +78,35 @@ Tài liệu này định nghĩa các tiêu chí chấp nhận cụ thể cho cá
 - **When:** Nhân viên nhấn nút "AI Sinh mô tả".
 - **Then:** Hệ thống gửi prompt tới AI Engine và trả về đoạn văn mô tả tour văn phong hấp dẫn, bố cục rõ ràng, kèm tóm tắt lịch trình theo ngày gợi ý.
 
+---
+
+### AC-009 (Sửa lịch khởi hành không làm lệch số chỗ)
+- **Given:** Một lịch khởi hành có `total_seats = 8`, một booking `PENDING` gồm `2 người lớn` và `1 trẻ em`, cùng một booking `CONFIRMED` gồm `2 người lớn` (tổng 5 chỗ đã giữ).
+- **When:** Staff/Admin sửa lịch, tăng `total_seats` lên `10`.
+- **Then:**
+  1. Hệ thống tự tính `available_seats = 10 - 5 = 5`; không nhận giá trị số chỗ còn lại từ form.
+  2. Nếu client cố gửi `available_seats` sai lệch, giá trị này bị bỏ qua.
+  3. Nếu Staff/Admin cố giảm `total_seats` xuống dưới `5`, hệ thống từ chối cập nhật và dữ liệu lịch hiện tại không bị thay đổi.
+  4. Form chỉ hiển thị số chỗ còn lại ở chế độ chỉ đọc.
+
+---
+
+### AC-010 (Chatbot xử lý yêu cầu mơ hồ)
+- **Given:** CSDL có các tour đang `OPEN` và còn chỗ.
+- **When:** Khách hỏi *"Tư vấn cho tôi đi du lịch"* hoặc *"Có tour gì hay không?"*.
+- **Then:** Chatbot có thể gợi ý tối đa các tour đang mở bán, nhưng mỗi tour trả về phải có thật trong CSDL và `total_available_seats > 0`.
+- **When:** Khách hỏi *"Tầm 5 triệu thì đi đâu?"*.
+- **Then:** Chatbot chỉ trả các tour có `base_price <= 5.000.000 VNĐ`, không suy đoán tour/giá không có trong CSDL.
+
+---
+
+### AC-011 (Sửa tour từ trang Quản lý sản phẩm tour)
+- **Given:** Một tour đang hiển thị trong bảng **Danh Sách Tour Hiện Có** của trang Quản lý sản phẩm tour.
+- **When:** Nhân viên/Quản trị viên bấm nút **Sửa** ở cột **Thao tác** của tour đó.
+- **Then:**
+  1. Hệ thống mở form **✏️ Sửa Thông Tin Tour** với đầy đủ thông tin hiện tại (tên, điểm đến, thời lượng, giá, phương tiện, ảnh, mô tả, lịch trình, trạng thái hiển thị).
+  2. Sau khi lưu, thông tin mới được cập nhật vào CSDL, hệ thống hiển thị thông báo "Đã cập nhật tour thành công!" và bảng danh sách tour hiển thị dữ liệu mới.
+  3. Nếu tích "Đồng bộ giá lịch khởi hành theo giá tour mới", giá người lớn của mọi đợt khởi hành bằng giá tour mới và giá trẻ em bằng 70%.
+  4. Nút **Sửa** hiển thị cho cả ADMIN và STAFF; nút **Xóa** chỉ hiển thị với ADMIN.
+  5. Ô **Ảnh đại diện** hiển thị sẵn ảnh hiện tại; với ảnh upload nội bộ (`/static/uploads/...`), nhân viên **không bị bắt nhập lại URL** khi bấm **Lưu thay đổi** và ảnh cũ vẫn được giữ nguyên.
+
