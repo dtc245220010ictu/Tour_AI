@@ -181,3 +181,42 @@ def test_api_chat_no_match_answer_introduces_alternative_tours(client, monkeypat
     assert len(data["tours"]) > 0
     assert data["tours"][0]["title"] in data["answer"]
 
+
+def test_api_chat_feedback_summary_requires_admin(client, monkeypatch):
+    """REGRESSION: a request to summarize customer feedback must NOT be answered
+    with tour consultation text. Non-admin users receive a polite notice and no
+    tour cards / no feedback content."""
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+
+    response = client.post("/api/chat", json={"question": "Tóm tắt phản hồi khách hàng"})
+    assert response.status_code == 200
+    data = response.get_json()
+
+    assert data["tours"] == []
+    assert "ADMIN" in data["answer"]
+    # Never leak the feedback report, never fall back to tour introductions
+    assert "ĐIỂM KHEN NGỢI" not in data["answer"]
+    assert "chưa có tour" not in data["answer"].lower()
+
+
+def test_api_chat_feedback_summary_admin_returns_feedback_report(client, monkeypatch):
+    """ADMIN asking for a feedback summary receives a real report built from the
+    feedbacks stored in the database (deterministic offline fallback in tests)."""
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with client.session_transaction() as sess:
+        sess["user_id"] = 1
+        sess["user_name"] = "Quản Trị Viên"
+        sess["role"] = "ADMIN"
+
+    response = client.post("/api/chat", json={"question": "Tóm tắt phản hồi khách hàng"})
+    assert response.status_code == 200
+    data = response.get_json()
+
+    assert data["tours"] == []
+    answer = data["answer"]
+    assert "ĐIỂM KHEN NGỢI" in answer
+    assert "ĐIỂM CẦN CẢI THIỆN" in answer
+    # Header must be grounded in the seeded test database (4 feedbacks, avg 4.8/5)
+    assert "4 phản hồi" in answer
+    assert "4.8/5" in answer
+

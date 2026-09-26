@@ -15,4 +15,5 @@ Tài liệu này đặc tả các yêu cầu chức năng cụ thể của hệ 
 - **FR-CHAT-007:** Nếu không tìm thấy tour nào thỏa mãn điều kiện trong CSDL, hệ thống phải thông báo rõ ràng rằng hiện không có tour phù hợp và hướng dẫn khách hàng thay đổi tiêu chí, không được bịa ra thông tin giả.
 - **FR-CHAT-008:** Hệ thống phải có cơ chế lưu nhật ký đối thoại (chat logs) để phân tích nhu cầu khách hàng và cải thiện chất lượng phục vụ.
 - **FR-CHAT-009:** Hệ thống phải có cơ chế Fallback thông minh: Nếu chưa có Gemini API Key hoặc mất kết nối mạng bên ngoài, hệ thống tự động tổng hợp câu trả lời tư vấn chuẩn xác từ dữ liệu CSDL tìm được mà không làm gián đoạn trải nghiệm người dùng.
+- **FR-CHAT-010:** Hệ thống nhận diện câu hỏi yêu cầu tổng hợp phản hồi khách hàng (dạng *"Tóm tắt phản hồi khách hàng"*) và trả về **Báo cáo chất lượng dịch vụ** tổng hợp từ đánh giá thật trong CSDL kèm số lượng phản hồi và điểm trung bình sao — KHÔNG trả lời bằng nội dung tư vấn/giới thiệu tour. Báo cáo chỉ dành cho tài khoản `ADMIN` (đồng nhất với phân hệ quản lý phản hồi); các vai trò khác nhận thông báo lịch sự và không được xem nội dung phản hồi.
 

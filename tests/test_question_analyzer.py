@@ -1,7 +1,10 @@
 """
 Unit tests for Question Analyzer service.
-Verifies parsing of Vietnamese travel queries, budget normalization, and destination extraction.
+Verifies parsing of Vietnamese travel queries, budget normalization, destination extraction,
+and detection of customer-feedback-summary requests.
 """
+
+import pytest
 
 from services.question_analyzer import QuestionAnalyzer
 
@@ -84,4 +87,26 @@ def test_analyze_duration_range_3_to_4_days():
 def test_analyze_duration_single_day_stays_integer():
     intent = QuestionAnalyzer.analyze_question("Tôi muốn đi Đà Nẵng 3 ngày dưới 5tr")
     assert intent["duration_days"] == 3
+
+
+@pytest.mark.parametrize("question", [
+    "Tóm tắt phản hồi khách hàng",
+    "Phân tích đánh giá của khách hàng giúp tôi",
+    "Tổng hợp nhận xét khách hàng sau các chuyến đi",
+    "Thống kê review feedback của du khách",
+])
+def test_feedback_summary_question_detected(question):
+    """The chat assistant must recognize feedback-summary requests."""
+    assert QuestionAnalyzer.is_feedback_summary_question(question) is True
+
+
+@pytest.mark.parametrize("question", [
+    "Có tour Hạ Long nào dưới 4 triệu không?",
+    "Tư vấn giúp tôi tour Đà Nẵng 3 ngày",
+    "Tóm tắt giúp tôi tour Sa Pa 2 ngày",
+    "Tour nào khách hàng đánh giá cao nhất?",
+])
+def test_normal_tour_question_not_treated_as_feedback_summary(question):
+    """Regular tour-consultation questions must NOT trigger the feedback branch."""
+    assert QuestionAnalyzer.is_feedback_summary_question(question) is False
 

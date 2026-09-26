@@ -34,6 +34,9 @@
             <div class="prompt-chip" data-prompt="Tour Sa Pa leo núi Fansipan còn chỗ không?">⛰️ Sa Pa Fansipan</div>
             <div class="prompt-chip" data-prompt="Tour nào có giá rẻ nhất hiện tại?">💰 Tour rẻ nhất hiện có</div>
             <div class="prompt-chip" data-prompt="Có tour Đà Lạt ngắm hoa săn mây không?">🌸 Tour Đà Lạt săn mây</div>
+            {% if session.get('role') == 'ADMIN' %}
+            <div class="prompt-chip" data-prompt="Tóm tắt phản hồi khách hàng">📊 Tóm tắt phản hồi khách hàng</div>
+            {% endif %}
         </div>
 
         <!-- Messages Area -->

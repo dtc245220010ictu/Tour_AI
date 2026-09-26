@@ -32,3 +32,9 @@
   - *so that* hệ thống luôn an toàn và ổn định.
   - *Traceability:* `FR-CHAT-008`, `FR-CHAT-009`
 
+- **US-CHAT-006 (Tổng hợp phản hồi khách hàng qua Trợ lý AI):**
+  - *As an* quản trị viên công ty du lịch,
+  - *I want to* hỏi trợ lý AI *"Tóm tắt phản hồi khách hàng"* và nhận ngay Báo cáo chất lượng dịch vụ dựng từ dữ liệu đánh giá thật,
+  - *so that* tôi không bị trả lời lạc hướng bằng tư vấn/giới thiệu tour và nhanh chóng nắm được điểm khen, điểm chê cùng đề xuất hành động.
+  - *Traceability:* `FR-CHAT-010`
+

@@ -6,18 +6,18 @@ Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự độn
 
 ## 1. Tóm tắt kết quả kiểm thử (Executive Summary)
 
-- **Thời điểm thực thi:** 25/09/2026
+- **Thời điểm thực thi:** 26/09/2026
 - **Test Framework:** `pytest 9.1.1`
 - **Môi trường:** Python 3.14 (Windows)
-- **Tổng số ca kiểm thử:** **92/92 PASSED**
+- **Tổng số ca kiểm thử:** **103/103 PASSED**
 - **Tỷ lệ thành công:** **100.0%**
-- **Thời gian thực thi:** 2.91 giây
+- **Thời gian thực thi:** 3.54 giây
 - **Tình trạng:** **PASSED - READY FOR PRODUCTION**
 
 ```text
-92 tests collected
-............................................................................................
-92 passed in 2.91s
+103 tests collected
+....................................................................................................
+103 passed in 3.54s
 ```
 
 ---
@@ -34,8 +34,8 @@ Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự độn
 | 6 | `test_grounded_answer_builder.py` | 4 | 4/4 PASS | Câu trả lời chỉ dùng tour/giá/ngày đi có trong dữ liệu retrieve |
 | 7 | `test_image_upload.py` | 6 | 6/6 PASS | Upload/paste ảnh hợp lệ, chặn file sai, RBAC và ô ảnh form Sửa tour |
 | 8 | `test_price_consistency.py` | 5 | 5/5 PASS | Giá tour–lịch, tổng tiền booking và số chỗ tự tính khi sửa lịch |
-| 9 | `test_question_analyzer.py` | 9 | 9/9 PASS | Ngân sách, thời lượng/range, điểm đến, sở thích và regression "khoảng 5 triệu" |
-| 10 | `test_rag_pipeline.py` | 13 | 13/13 PASS | API chat, zero-hallucination, alternatives và câu hỏi mơ hồ |
+| 9 | `test_question_analyzer.py` | 17 | 17/17 PASS | Ngân sách, thời lượng/range, điểm đến, sở thích, regression "khoảng 5 triệu" & nhận diện yêu cầu tóm tắt phản hồi |
+| 10 | `test_rag_pipeline.py` | 15 | 15/15 PASS | API chat, zero-hallucination, alternatives, câu hỏi mơ hồ & phân nhánh tóm tắt phản hồi (ADMIN) |
 | 11 | `test_rbac.py` | 22 | 22/22 PASS | Ma trận phân quyền Admin/Staff/Accountant/Guide/Customer; nút Sửa & form sửa tour |
 | 12 | `test_tour_retrieval.py` | 5 | 5/5 PASS | Parameterized SQL, lọc tour còn chỗ và alternatives |
 
@@ -65,4 +65,11 @@ Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự độn
 - **Hoàn tiền hủy tour:** Áp dụng chính sách 3 mốc (90% / 50% / 0%). Hoàn vượt tiền đã trả bị từ chối.
 - **Sổ quỹ dòng tiền:** Tổng hợp đúng `Net Cash = Total Inflow - Total Outflow`.
 - **RBAC:** Anonymous → redirect login. CUSTOMER/GUIDE → redirect denied. ACCOUNTANT/ADMIN → 200 OK.
+- **Đánh giá: ĐẠT 100%.**
+
+### 3.4 Phân Nhánh Tổng Hợp Phản Hồi Khách Hàng Trên Trợ Lý AI (ADMIN)
+- Câu hỏi dạng *"Tóm tắt phản hồi khách hàng"* (động từ tóm tắt + danh từ phản hồi) được nhận diện và **không** bị trả lời bằng nội dung tư vấn/giới thiệu tour.
+- `ADMIN` nhận **Báo cáo tổng hợp phản hồi** dựng từ dữ liệu thật trong bảng `feedbacks`: số lượng phản hồi, điểm trung bình sao và 3 mục phân tích (Khen ngợi / Cần cải thiện / Đề xuất hành động); trường `tours` trả về rỗng.
+- Người dùng không phải `ADMIN` chỉ nhận thông báo lịch sự rằng chức năng dành cho Quản trị viên — không rò rỉ nội dung phản hồi và không bị trả lời lạc hướng bằng giới thiệu tour.
+- Khi Gemini không khả dụng, báo cáo dùng bản tổng hợp luật theo thang điểm sao — hệ thống không bao giờ trả về câu trả lời rỗng hoặc thông tin bịa đặt.
 - **Đánh giá: ĐẠT 100%.**

@@ -27,6 +27,8 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
    - Hiển thị trực tiếp **Thẻ Tour (Product Cards)** ngay bên dưới câu trả lời.
 4. Bấm nút **"Xem chi tiết & Đặt"** trên thẻ tour để chuyển ngay đến trang chi tiết chuyến đi.
 
+> 💡 **Lưu ý:** Chức năng *"Tóm tắt phản hồi khách hàng"* chỉ dành cho tài khoản **Quản trị viên (ADMIN)**. Khi khách hàng hỏi, trợ lý sẽ nhắc nhở lịch sự rằng chức năng dành cho Quản trị viên và tiếp tục hỗ trợ tư vấn tour.
+
 ### 3. Đặt Chỗ Tour & Giữ Ghế (Booking)
 1. Tại trang chi tiết tour, cuộn xuống mục **📅 Lịch Khởi Hành & Chỗ Còn Trống**.
 2. Chọn ngày khởi hành mong muốn (chú ý số chỗ còn lại) và nhấn **Đặt tour**.
@@ -84,6 +86,9 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
      - Các điểm khách hàng hài lòng nhất (Hướng dẫn viên, đồ ăn, cảnh quan...).
      - Các hạn chế cần khắc phục (xe cộ, thời gian nghỉ ngơi...).
      - Đề xuất cải tiến hành động cụ thể cho ban quản lý.
+4. **Hỏi trực tiếp Trợ lý AI:** Ngoài trang Đánh Giá AI, bạn có thể vào mục **🤖 Trợ lý AI** và gõ *"Tóm tắt phản hồi khách hàng"* (hoặc bấm chip **📊 Tóm tắt phản hồi khách hàng** chỉ hiển thị với tài khoản ADMIN):
+   - Trợ lý nhận diện đúng yêu cầu và trả ngay **Báo cáo tổng hợp phản hồi** kèm số lượng phản hồi và điểm trung bình sao — thay vì trả lời tư vấn tour.
+   - Khách hàng (không phải ADMIN) khi hỏi sẽ nhận thông báo lịch sự rằng chức năng dành cho Quản trị viên.
 
 ---
 
