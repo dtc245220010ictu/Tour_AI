@@ -6,6 +6,7 @@ with an uploaded image file.
 
 import io
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "static" / "uploads"
@@ -167,3 +168,76 @@ def test_edit_form_image_field_accepts_relative_uploaded_url(client):
         with get_db() as conn:
             conn.execute("DELETE FROM tour_schedules WHERE tour_id = ?;", (tour_id,))
             conn.execute("DELETE FROM tours WHERE id = ?;", (tour_id,))
+
+
+class _DomNode:
+    """Nút DOM tối giản mô phỏng Element.closest() của trình duyệt (chỉ đi lên tổ tiên)."""
+
+    def __init__(self, tag, attrs, parent):
+        self.tag = tag
+        self.attrs = dict(attrs)
+        self.parent = parent
+        self.text = ""
+
+    def closest(self, class_name):
+        if class_name in (self.attrs.get("class") or "").split():
+            return self
+        return self.parent.closest(class_name) if self.parent else None
+
+
+class _DomParser(HTMLParser):
+    """Parse HTML đã render thành cây DOM để kiểm tra quan hệ cha - con thực tế."""
+
+    VOID_TAGS = {
+        "area", "base", "br", "col", "embed", "hr", "img", "input",
+        "link", "meta", "param", "source", "track", "wbr",
+    }
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.root = _DomNode("[document]", [], None)
+        self._stack = [self.root]
+        self.scripts = []
+
+    def handle_starttag(self, tag, attrs):
+        node = _DomNode(tag, attrs, self._stack[-1])
+        if tag not in self.VOID_TAGS:
+            self._stack.append(node)
+        if tag == "script":
+            self.scripts.append(node)
+
+    def handle_endtag(self, tag):
+        for i in range(len(self._stack) - 1, 0, -1):
+            if self._stack[i].tag == tag:
+                del self._stack[i:]
+                break
+
+    def handle_data(self, data):
+        if self._stack[-1].tag == "script":
+            self._stack[-1].text += data
+
+
+def _find_image_field_script(html):
+    """Tìm thẻ <script> gắn sự kiện cho ô ảnh (.img-field) trong HTML đã render."""
+    parser = _DomParser()
+    parser.feed(html)
+    return next(
+        (s for s in parser.scripts if "img-field" in s.text and "currentScript" in s.text),
+        None,
+    )
+
+
+def test_image_field_script_is_inside_field_container(client):
+    """Script của ô ảnh phải nằm TRONG div.img-field: document.currentScript.closest('.img-field')
+    chỉ đi lên tổ tiên, nếu script là sibling nằm ngoài div thì root = null và toàn bộ JS
+    (xem trước ảnh, chặn ảnh > 5MB, dán Ctrl+V) bị bỏ qua im lặng."""
+    _login_as(client, 1, "Quản Trị Viên", "ADMIN")
+    for url in ("/admin/tours", "/admin/destinations"):
+        resp = client.get(url)
+        assert resp.status_code == 200
+        script = _find_image_field_script(resp.data.decode("utf-8"))
+        assert script is not None, f"Không tìm thấy script ô ảnh trong {url}"
+        assert script.closest("img-field") is not None, (
+            f"Script ô ảnh trong {url} nằm ngoài .img-field -> "
+            "document.currentScript.closest('.img-field') sẽ trả về null."
+        )
