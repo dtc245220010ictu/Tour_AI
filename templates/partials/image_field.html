@@ -19,10 +19,9 @@
             </p>
         </div>
     </div>
-</div>
 <script>
     (function () {
-        const root = document.currentScript.closest(".img-field");
+        const root = document.currentScript ? document.currentScript.closest(".img-field") : null;
         if (!root) return;
         const fileInput = root.querySelector(".img-file");
         const urlInput = root.querySelector(".img-url");
@@ -39,6 +38,9 @@
             if (url) {
                 preview.src = url;
                 preview.style.display = "block";
+            } else {
+                preview.removeAttribute("src");
+                preview.style.display = "none";
             }
         }
 
@@ -56,7 +58,7 @@
         });
 
         urlInput.addEventListener("change", function () {
-            if (urlInput.value) setPreview(urlInput.value);
+            setPreview(urlInput.value.trim());
         });
 
         urlInput.addEventListener("paste", async function (e) {
@@ -94,3 +96,4 @@
         });
     })();
 </script>
+</div>
