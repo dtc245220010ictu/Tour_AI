@@ -61,6 +61,17 @@ KEYWORD_DESTINATIONS = {
     "hoa": ["Đà Lạt"],
 }
 
+# Verbs signalling a "summarize / build a report" request.
+_SUMMARY_VERBS = [
+    "tóm tắt", "tổng hợp", "phân tích", "thống kê", "báo cáo", "tổng kết",
+    "summary", "summarize",
+]
+
+# Nouns signalling the request is about CUSTOMER FEEDBACK (not tours).
+_FEEDBACK_NOUNS = [
+    "phản hồi", "đánh giá", "nhận xét", "góp ý", "ý kiến", "review", "feedback",
+]
+
 def remove_accents(input_str: str) -> str:
     """Converts Vietnamese characters to ASCII without diacritics."""
     nfkd_form = unicodedata.normalize('NFKD', input_str)
@@ -200,6 +211,26 @@ class QuestionAnalyzer:
                 return None
             return (lo, hi) if lo < hi else (hi, lo)
         return None
+
+    @staticmethod
+    def is_feedback_summary_question(question: str) -> bool:
+        """
+        Detects requests asking to summarize / report CUSTOMER FEEDBACK
+        (e.g. "Tóm tắt phản hồi khách hàng", "Phân tích đánh giá của khách").
+
+        The chat assistant must answer these with a real feedback report from the
+        database instead of treating them as tour-consultation questions.
+        Both a summary verb AND a feedback noun must appear; a question like
+        "Tóm tắt giúp tôi tour Sa Pa" or "Tour nào khách hàng đánh giá cao?" is
+        NOT considered a feedback-summary request.
+        """
+        if not question or not question.strip():
+            return False
+
+        plain = remove_accents(question.lower())
+        has_summary_verb = any(matches_term(plain, remove_accents(verb)) for verb in _SUMMARY_VERBS)
+        has_feedback_noun = any(matches_term(plain, remove_accents(noun)) for noun in _FEEDBACK_NOUNS)
+        return has_summary_verb and has_feedback_noun
 
     @staticmethod
     def analyze_question(question: str) -> dict:

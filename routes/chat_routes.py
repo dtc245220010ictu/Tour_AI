@@ -25,7 +25,9 @@ def api_chat():
     session_id = session.get("session_id", request.remote_addr or "guest")
 
     try:
-        result = RAGService.answer_question(question, session_id=session_id)
+        # `role` lets the RAG pipeline gate admin-only intents such as
+        # "Tóm tắt phản hồi khách hàng".
+        result = RAGService.answer_question(question, session_id=session_id, role=session.get("role"))
         return jsonify({
             "answer": result["answer"],
             "tours": result["tours"]

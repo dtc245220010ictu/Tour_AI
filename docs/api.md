@@ -48,6 +48,20 @@ Tài liệu này đặc tả toàn bộ các endpoints của hệ thống TourAI
 }
 ```
 
+### 1.2 Hỏi Trợ Lý AI tổng hợp phản hồi khách hàng (Feedback Summary Intent)
+- **Endpoint:** `POST /api/chat` (dùng chung endpoint 1.1 — hệ thống tự nhận diện ý định từ nội dung câu hỏi).
+- **Mô tả:** Khi câu hỏi chứa cặp *"động từ tóm tắt + danh từ phản hồi"* (ví dụ: *"Tóm tắt phản hồi khách hàng"*, *"Phân tích đánh giá của khách"*, *"Tổng hợp nhận xét khách hàng"*), pipeline **bỏ qua bước truy xuất tour** và trả về **Báo cáo tổng hợp chất lượng dịch vụ** dựng từ dữ liệu thật trong bảng `feedbacks`: số lượng phản hồi, điểm trung bình sao và 3 mục 1. ĐIỂM KHEN NGỢI / 2. ĐIỂM CẦN CẢI THIỆN / 3. ĐỀ XUẤT HÀNH ĐỘNG. Trường `tours` trả về `[]` (không trả thẻ tour).
+- **Quyền hạn:** Báo cáo chỉ dành cho `ADMIN` (đồng nhất với `/admin/feedbacks` và `/api/ai/summarize-feedbacks`). Các vai trò khác nhận thông báo lịch sự rằng chức năng dành cho Quản trị viên — không rò rỉ nội dung phản hồi.
+- **Fallback:** Nếu Gemini không khả dụng hoặc hết quota, hệ thống trả về bản tổng hợp luật theo thang điểm sao — không bao giờ trả câu chào mẫu chung chung hay thông tin bịa đặt.
+
+#### Response Success (HTTP 200 OK) — ví dụ với tài khoản ADMIN
+```json
+{
+  "answer": "📊 **Báo cáo tổng hợp phản hồi khách hàng** — 4 phản hồi, điểm trung bình 4.8/5 ⭐\n\n1. ĐIỂM KHEN NGỢI:\n- Hướng dẫn viên rất nhiệt tình và chu đáo...\n2. ĐIỂM CẦN CẢI THIỆN:\n- ...\n3. ĐỀ XUẤT HÀNH ĐỘNG:\n- ...",
+  "tours": []
+}
+```
+
 ---
 
 ## 2. Công Cụ Nội Bộ AI Cho Nhân Viên (Staff AI Tools)

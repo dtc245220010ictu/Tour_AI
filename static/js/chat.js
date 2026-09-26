@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // Basic markdown formatter (bold, line breaks)
+    // Basic markdown formatter (bold, headings, bullets, line breaks)
     const formatText = (text) => {
         if (!text) return "";
         let formatted = text
@@ -34,6 +34,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Bold: **text**
         formatted = formatted.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+        // Markdown headings produced by the AI report: "### 1. ĐIỂM KHEN NGỢI"
+        formatted = formatted.replace(/^#{1,6}\s*(.+)$/gm, "<strong>$1</strong>");
+
+        // Horizontal rules "---" used by the AI report -> dropped
+        formatted = formatted.replace(/^[ \t]*-{3,}[ \t]*$/gm, "");
 
         // Bullet points: * or -
         formatted = formatted.replace(/(?:^|\n)[*-]\s+(.*)/g, "<br>• $1");

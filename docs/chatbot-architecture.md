@@ -60,6 +60,7 @@ flowchart TD
    - Tiếp nhận câu hỏi, kiểm tra tính hợp lệ (`question` không rỗng), bắt ngoại lệ, không lộ stack trace.
 2. **Question Analyzer (`services/question_analyzer.py`):**
    - Trích xuất điểm đến, ngân sách tối đa/tối thiểu, số ngày đi, từ khóa sở thích.
+   - Nhận diện ý định đặc biệt **tổng hợp phản hồi khách hàng** (động từ tóm tắt + danh từ phản hồi) để rẽ nhánh pipeline.
 3. **Tour Retriever (`services/tour_retriever.py`):**
    - Xây dựng SQL có tham số, lọc các tour đang hoạt động (`is_active = 1`) và có lịch trình còn chỗ (`available_seats > 0`).
 4. **Context Builder (`services/context_builder.py`):**
@@ -70,4 +71,5 @@ flowchart TD
    - Giao tiếp với Google Gemini API (model `gemini-1.5-flash`), xử lý timeout, bảo mật key và cơ chế fallback.
 7. **RAG Service (`services/rag_service.py`):**
    - Điều phối tuần tự các bước trên và ghi log vào bảng `chat_logs`.
+   - Nhánh đặc biệt: nếu câu hỏi là yêu cầu tổng hợp phản hồi khách hàng → bỏ qua truy xuất tour; `ADMIN` nhận báo cáo dựng từ bảng `feedbacks` (số lượng, điểm trung bình, phân tích AI), các vai trò khác nhận thông báo dành cho Quản trị viên.
 

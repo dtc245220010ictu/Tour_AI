@@ -4,7 +4,7 @@
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-orange.svg)](https://www.sqlite.org/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-92%2F92%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-103%2F103%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -19,6 +19,7 @@
    - Truy vấn CSDL thực tế bằng Parameterized SQL an toàn.
    - **Chính sách Không Bịa Đặt Dữ Liệu (Zero Hallucination):** Chỉ gợi ý tour có thật và còn chỗ trong hệ thống. Nếu không có tour thỏa mãn, thông báo lịch sự không có tour thay vì tự bịa ra thông tin giả.
    - Hiển thị trực quan dưới dạng thẻ tour (Product Cards) kèm nút xem chi tiết và đặt chỗ ngay.
+   - **Hỏi đáp tổng hợp phản hồi khách hàng (ADMIN):** Trợ lý AI nhận diện câu hỏi dạng *"Tóm tắt phản hồi khách hàng"* và trả về **Báo cáo phân tích chất lượng dịch vụ** tổng hợp từ đánh giá thật trong CSDL (kèm số lượng phản hồi và điểm trung bình sao) thay vì trả lời tư vấn tour; người dùng khác nhận thông báo dành cho Quản trị viên, không rò rỉ nội dung phản hồi.
 4. **Công Cụ AI Sinh Nội Dung Cho Nhân Viên:**
    - Tự động sinh mô tả tour chuẩn SEO và gợi ý lịch trình chi tiết theo ngày.
    - Tự động phân tích và tóm tắt toàn bộ phản hồi, đánh giá của khách hàng thành báo cáo chất lượng dịch vụ.
@@ -162,18 +163,18 @@ TourAI/
 │   │   └── chat.js                     # Xử lý fetch API chat, render cards, loading
 │   └── uploads/                        # Ảnh admin tải lên/dán (Ctrl+V) — gitignore, chỉ giữ file .gitkeep
 │
-├── tests/                              # Bộ kiểm thử tự động (Pytest) - 92 ca PASSED
+├── tests/                              # Bộ kiểm thử tự động (Pytest) - 103 ca PASSED
 │   ├── conftest.py                     # Cấu hình test database cô lập
 │   ├── test_auth.py                    # Kiểm thử xác thực, băm mật khẩu & đăng nhập nhanh (6)
 │   ├── test_rbac.py                    # Kiểm thử phân quyền 5 vai trò trên mọi route (22)
 │   ├── test_booking_capacity.py        # Kiểm thử chống Overbooking & hoàn trả chỗ (5)
 │   ├── test_price_consistency.py       # Kiểm thử liên kết giá vé & số chỗ tự tính khi sửa lịch (5)
 │   ├── test_accounting.py              # Kiểm thử kế toán: duyệt thu, công nợ, chi phí, P&L (6)
-│   ├── test_question_analyzer.py       # Kiểm thử bóc tách ngân sách, thời lượng & điểm đến (9)
+│   ├── test_question_analyzer.py       # Kiểm thử bóc tách ngân sách, thời lượng, điểm đến & nhận diện yêu cầu tóm tắt phản hồi (17)
 │   ├── test_tour_retrieval.py          # Kiểm thử truy xuất tour & không bịa dữ liệu (5)
 │   ├── test_context_builder.py         # Kiểm thử tạo ngữ cảnh CSDL (2)
 │   ├── test_grounded_answer_builder.py # Kiểm thử câu trả lời chỉ dùng dữ liệu đã truy xuất (4)
-│   ├── test_rag_pipeline.py            # Kiểm thử toàn trình RAG, API /api/chat & câu hỏi mơ hồ (13)
+│   ├── test_rag_pipeline.py            # Kiểm thử toàn trình RAG, API /api/chat, câu hỏi mơ hồ & phân nhánh tóm tắt phản hồi (15)
 │   ├── test_ai_content_service.py      # Kiểm thử AI sinh mô tả/lịch trình & fallback cấu trúc (9)
 │   └── test_image_upload.py            # Kiểm thử upload ảnh: hợp lệ, sai định dạng, RBAC, ô ảnh form Sửa (6)
 │
@@ -234,8 +235,8 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả mong đợi:** 92/92 tests `PASSED` 100%.
-*(Bao gồm xác thực/RBAC, CRUD & đồng bộ tour–lịch, booking–thanh toán–hoàn tiền, chống overbooking, RAG zero-hallucination, AI content fallback và các truy vấn tư vấn mơ hồ.)*
+**Kết quả mong đợi:** 103/103 tests `PASSED` 100%.
+*(Bao gồm xác thực/RBAC, CRUD & đồng bộ tour–lịch, booking–thanh toán–hoàn tiền, chống overbooking, RAG zero-hallucination, phân nhánh tóm tắt phản hồi khách hàng cho ADMIN, AI content fallback và các truy vấn tư vấn mơ hồ.)*
 
 ---
 
@@ -273,6 +274,7 @@ Truy cập trang Chatbot tại **http://127.0.0.1:5000/chat** và thử nghiệm
 - *"Tôi có khoảng 5 triệu, muốn đi biển 3-4 ngày thì có tour nào?"* &rarr; Gợi ý Tour Phú Quốc và Đà Nẵng còn chỗ.
 - *"Tour Sa Pa leo núi Fansipan còn chỗ không?"* &rarr; Báo số chỗ còn của tour Sa Pa.
 - *"Có tour Đà Lạt nào dưới 100 nghìn không?"* &rarr; **Kiểm tra Zero Hallucination**: Chatbot thông báo lịch sự không có tour nào giá dưới 100k, tuyệt đối không bịa tour giả!
+- *"Tóm tắt phản hồi khách hàng"* (đăng nhập ADMIN) &rarr; Trợ lý trả về **Báo cáo tổng hợp phản hồi** dựng từ dữ liệu thật (số lượng phản hồi + điểm trung bình sao + 3 mục Khen ngợi / Cần cải thiện / Đề xuất hành động) — không trả thẻ tour; khách hàng/khách vãng lai nhận thông báo chức năng dành cho Quản trị viên.
 
 ---
 
@@ -309,7 +311,7 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 - Bảng **`payments`**: hỗ trợ `payment_type` ∈ {DEPOSIT, FULL, REMAINING, REFUND} cùng các trường xác nhận `verified_by`, `verified_at`.
 
 ### Kiểm thử phân hệ kế toán
-Các test trong `tests/test_accounting.py` (nằm trong bộ 92 test):
+Các test trong `tests/test_accounting.py` (nằm trong bộ 103 test):
 - `test_record_and_verify_payment` — quy trình kế toán duyệt thanh toán chuyển khoản.
 - `test_debt_calculation` — tính công nợ khi khách mới đặt cọc một phần.
 - `test_tour_expense_and_pnl` — ghi nhận chi phí tour & kiểm tra công thức Lợi nhuận = Doanh thu − Chi phí.
