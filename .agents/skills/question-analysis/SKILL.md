@@ -1,33 +1,32 @@
 ---
 name: question-analysis
-description: Analyze natural language user queries in Vietnamese and extract structured search intent parameters including destinations, budget limits, duration, and preferences.
+description: Phân tích câu hỏi ngôn ngữ tự nhiên tiếng Việt của người dùng và bóc tách tham số tìm kiếm có cấu trúc gồm điểm đến, giới hạn ngân sách, thời lượng và sở thích.
 ---
-# Question Analysis Skill
+# Skill Phân Tích Câu Hỏi
 
-## Objective
-Transform raw natural-language questions from users into a structured intent JSON object containing normalized search criteria suitable for database queries.
+## Mục tiêu
+Chuyển câu hỏi ngôn ngữ tự nhiên thô thành đối tượng intent JSON có cấu trúc, chứa tiêu chí tìm kiếm đã chuẩn hóa, phù hợp cho truy vấn CSDL.
 
-## Inputs
-- Natural language query string (Vietnamese).
+## Đầu vào
+- Chuỗi truy vấn ngôn ngữ tự nhiên (tiếng Việt).
 
-## Outputs
-Structured intent JSON with the following fields:
-- `destinations`: list of destination names mentioned (e.g. `["Hạ Long", "Đà Nẵng"]`).
-- `min_price`: minimum price in VND or null.
-- `max_price`: maximum price in VND or null.
-- `duration_days`: list or int of days requested (e.g. `2`, `3`).
-- `keywords`: key travel terms extracted (e.g. `["biển", "du thuyền", "nghỉ dưỡng"]`).
-- `sort_by`: sorting preference (`"price_asc"`, `"price_desc"`, or `null`).
+## Đầu ra
+Intent JSON có cấu trúc gồm các trường:
+- `destinations`: danh sách điểm đến được nhắc đến (ví dụ `["Hạ Long", "Đà Nẵng"]`).
+- `min_price`: giá tối thiểu (VND) hoặc null.
+- `max_price`: giá tối đa (VND) hoặc null.
+- `duration_days`: danh sách hoặc số ngày được yêu cầu (ví dụ `2`, `3`).
+- `keywords`: các từ khóa du lịch chính được bóc tách (ví dụ `["biển", "du thuyền", "nghỉ dưỡng"]`).
+- `sort_by`: tiêu chí sắp xếp (`"price_asc"`, `"price_desc"` hoặc `null`).
 
-## Rules
-- Do not invent destinations not mentioned or strongly implied.
-- Do not guess price constraints if the user did not specify budget.
-- Normalize Vietnamese monetary expressions to numeric VND:
-  - "dưới 5 triệu" / "dưới 5tr" / "dưới 5 củ" -> `max_price: 5000000`
-  - "khoảng 3-4 triệu" -> `min_price: 3000000, max_price: 4000000`
-  - "khoảng 5 triệu" / "tour 5 triệu" / "tôi có 5 triệu" (budget with no explicit prefix) -> `max_price: 5000000`
-  - "ít nhất 3 ngày" -> `duration_days: 3`
-  - "3-4 ngày" / "từ 3 đến 4 ngày" -> `duration_days: [3, 4]` (inclusive range)
-- Handle diacritics and non-diacritic inputs gracefully ("da lat" -> "Đà Lạt").
-- Match destinations and keywords as whole words only: accent-stripped "khoảng" -> "khoang" must never trigger keyword "hoa", otherwise the query is wrongly mapped to Đà Lạt and valid budget questions return zero tours.
-
+## Quy tắc
+- Không tự thêm điểm đến không được nhắc đến hoặc không được hàm ý rõ ràng.
+- Không đoán ràng buộc giá nếu người dùng không nêu ngân sách.
+- Chuẩn hóa cách diễn đạt tiền Việt Nam về số VND:
+  - "dưới 5 triệu" / "dưới 5tr" / "dưới 5 củ" → `max_price: 5000000`
+  - "khoảng 3-4 triệu" → `min_price: 3000000, max_price: 4000000`
+  - "khoảng 5 triệu" / "tour 5 triệu" / "tôi có 5 triệu" (ngân sách không có tiền tố rõ ràng) → `max_price: 5000000`
+  - "ít nhất 3 ngày" → `duration_days: 3`
+  - "3-4 ngày" / "từ 3 đến 4 ngày" → `duration_days: [3, 4]` (khoảng bao gồm hai đầu)
+- Xử lý linh hoạt cả đầu vào có dấu và không dấu ("da lat" → "Đà Lạt").
+- Chỉ so khớp điểm đến và từ khóa theo từ nguyên vẹn (whole word): "khoảng" khi bỏ dấu thành "khoang" tuyệt đối không được kích hoạt từ khóa "hoa", nếu không câu hỏi sẽ bị ánh xạ nhầm sang Đà Lạt và các câu hỏi ngân sách hợp lệ trả về 0 tour.

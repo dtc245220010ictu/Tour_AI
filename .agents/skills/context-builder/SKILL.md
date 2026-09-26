@@ -1,23 +1,22 @@
 ---
 name: context-builder
-description: Construct compact, factual, clean context text from database records for prompt engineering, stripping unnecessary fields and preventing data manipulation.
+description: Xây dựng đoạn ngữ cảnh gọn, chính xác, sạch từ bản ghi CSDL phục vụ prompt engineering — loại bỏ các trường không cần thiết và ngăn chặn thao túng dữ liệu.
 ---
-# Context Builder Skill
+# Skill Context Builder
 
-## Objective
-Convert raw database records into a clean, concise, structured text format specifically optimized for LLM comprehension and factual grounding.
+## Mục tiêu
+Chuyển bản ghi CSDL thô thành định dạng văn bản sạch, súc tích, có cấu trúc, được tối ưu riêng cho khả năng hiểu của LLM và bám sát dữ liệu thật (factual grounding).
 
-## Inputs
-- List of tour records returned by `tour_retriever`.
+## Đầu vào
+- Danh sách bản ghi tour do `tour_retriever` trả về.
 
-## Outputs
-- Clean, compact text block representing the available tour options.
+## Đầu ra
+- Khối văn bản ngắn gọn, sạch biểu diễn các lựa chọn tour hiện có.
 
-## Rules
-- Do NOT add information not present in the database.
-- Do NOT alter prices, discounts, or seat counts.
-- Do NOT invent fake hotels, flights, or policies.
-- Format prices in clear Vietnamese currency format (e.g. `3.200.000 VNĐ`).
-- Include essential fields only: Tour Title, Destination, Duration, Price, Next Departure Date, Available Seats, Highlights.
-- If list is empty, output an explicit indicator: `[KHÔNG TÌM THẤY TOUR NÀO THỎA MÃN TRONG CSDL]`.
-
+## Quy tắc
+- KHÔNG thêm thông tin không có trong CSDL.
+- KHÔNG thay đổi giá, giảm giá hoặc số chỗ.
+- KHÔNG bịa khách sạn, chuyến bay hoặc chính sách không có thật.
+- Định dạng giá theo chuẩn tiền Việt Nam rõ ràng (ví dụ `3.200.000 VNĐ`).
+- Chỉ bao gồm các trường thiết yếu: Tên tour, Điểm đến, Thời lượng, Giá, Ngày khởi hành gần nhất, Số chỗ còn trống, Điểm nhấn.
+- Nếu danh sách rỗng, xuất chỉ báo rõ ràng: `[KHÔNG TÌM THẤY TOUR NÀO THỎA MÃN TRONG CSDL]`.

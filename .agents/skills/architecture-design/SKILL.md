@@ -1,43 +1,42 @@
 ---
 name: architecture-design
-description: Design software architecture from approved requirements while preserving traceability and documenting architectural decisions.
+description: Thiết kế kiến trúc phần mềm từ yêu cầu đã được phê duyệt, bảo toàn truy xuất nguồn gốc và ghi nhận đầy đủ các quyết định kiến trúc.
 ---
-# Architecture Design Skill
+# Skill Thiết Kế Kiến Trúc
 
-## Objective
-Transform approved software requirements into a coherent, modular, and extensible software architecture suitable for implementation.
+## Mục tiêu
+Chuyển yêu cầu phần mềm đã được phê duyệt thành kiến trúc phần mềm mạch lạc, mô-đun hóa và dễ mở rộng, sẵn sàng cho triển khai.
 
-## Inputs
-Read:
+## Đầu vào
+Đọc:
 - `docs/requirements.md`
 - `docs/user-stories.md`
 - `docs/acceptance-criteria.md`
 - `docs/uml-diagrams.md`
-Only use approved requirements.
+Chỉ sử dụng các yêu cầu đã được phê duyệt.
 
-## Process
-1. Identify architectural style (Layered Architecture, MVC, Modular Monolith with RAG AI subsystem).
-2. Identify major components and layers (Presentation, Routing, Application/Service Layer, Data Access/ORM, Database, External AI Services).
-3. Define responsibility of each component.
-4. Define dependencies between components (Dependency Inversion, Loose Coupling).
-5. Define communication protocols and interfaces between components.
-6. Define data flow across layers for critical workflows.
-7. Identify external systems (Google Gemini AI API, payment gateway simulators).
-8. Identify security boundaries, authentication/authorization checkpoints, and secrets isolation.
-9. Document architectural decisions using ADR (Architectural Decision Records) format.
-10. Check requirements-to-architecture traceability.
+## Quy trình
+1. Xác định phong cách kiến trúc (Layered Architecture, MVC, Modular Monolith kèm phân hệ AI RAG).
+2. Xác định các thành phần và tầng chính (Presentation, Routing, tầng Application/Service, tầng truy cập dữ liệu/ORM, CSDL, dịch vụ AI bên ngoài).
+3. Định nghĩa trách nhiệm của từng thành phần.
+4. Định nghĩa quan hệ phụ thuộc giữa các thành phần (Dependency Inversion, Loose Coupling).
+5. Định nghĩa giao thức giao tiếp và giao diện giữa các thành phần.
+6. Định nghĩa luồng dữ liệu xuyên tầng cho các quy trình nghiệp vụ quan trọng.
+7. Xác định các hệ thống bên ngoài (Google Gemini AI API, bộ mô phỏng cổng thanh toán).
+8. Xác định ranh giới bảo mật, các điểm kiểm soát xác thực/phân quyền và cô lập bí mật (secrets).
+9. Ghi nhận các quyết định kiến trúc theo định dạng ADR (Architectural Decision Records).
+10. Kiểm tra truy xuất nguồn gốc yêu cầu → kiến trúc.
 
-## Rules
-- Do not implement source code.
-- Do not modify approved requirements.
-- Do not introduce unnecessary technologies or over-engineering.
-- Every major architectural decision must have an explicit rationale.
+## Quy tắc
+- Không viết mã nguồn.
+- Không sửa đổi yêu cầu đã được phê duyệt.
+- Không đưa vào công nghệ không cần thiết hoặc thiết kế quá mức (over-engineering).
+- Mọi quyết định kiến trúc quan trọng phải có lý do rõ ràng.
 
-## Outputs
-Create:
+## Đầu ra
+Tạo:
 - `docs/architecture.md`
 - `docs/architecture-decisions.md`
 
-## Verification
-Verify that every major functional requirement is supported by at least one architectural component.
-
+## Kiểm tra
+Xác minh mọi yêu cầu chức năng quan trọng đều được ít nhất một thành phần kiến trúc đáp ứng.

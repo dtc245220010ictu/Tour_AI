@@ -1,53 +1,52 @@
 ---
 name: testing
-description: Plan, write, and execute automated test suites (unit, integration, and capacity checks) adhering to requirements and verifying zero-hallucination and overbooking prevention.
+description: Lập kế hoạch, viết và thực thi bộ kiểm thử tự động (unit, integration, kiểm tra sức chứa), bám sát yêu cầu, xác minh zero-hallucination và chống overbooking.
 ---
-# Testing Skill
+# Skill Kiểm Thử (Testing)
 
-## Objective
-Establish a rigorous quality assurance workflow that translates software requirements into concrete test scenarios, automated test cases, and execution reports.
+## Mục tiêu
+Thiết lập quy trình đảm bảo chất lượng nghiêm ngặt, chuyển yêu cầu phần mềm thành kịch bản kiểm thử cụ thể, ca kiểm thử tự động và báo cáo thực thi.
 
-## Workflow
-Requirements
+## Quy trình làm việc
+Yêu cầu (Requirements)
     ↓
-Test Scenario
+Kịch bản kiểm thử (Test Scenario)
     ↓
-Test Case
+Ca kiểm thử (Test Case)
     ↓
-Automated Test (pytest)
+Kiểm thử tự động (pytest)
     ↓
-Execution
+Thực thi (Execution)
     ↓
-Result & Metrics
+Kết quả & chỉ số (Result & Metrics)
     ↓
-Defect Reporting
+Báo cáo lỗi (Defect Reporting)
 
-## Inputs
-Read:
+## Đầu vào
+Đọc:
 - `docs/requirements.md`
 - `docs/user-stories.md`
 - `docs/acceptance-criteria.md`
 
-## Process
-1. **Develop Test Scenarios:** Map each Functional Requirement (FR-xxx) and Acceptance Criteria (AC-xxx) to test scenarios.
-2. **Design Test Cases:** Detail preconditions, inputs, execution steps, expected outcomes, and boundary conditions.
-3. **Implement Automated Tests in `tests/`:**
-   - Unit tests for core services (Auth, Booking, Capacity Lock, Question Analysis, Retrieval, Context Builder).
-   - Integration tests for Flask endpoints (`/tours`, `POST /booking/new/...`, `POST /api/chat`).
-4. **Execute Test Suite:** Run tests via `pytest -v`.
-5. **Analyze Failures:** Never modify tests merely to make them pass; verify if failure is a real defect in implementation.
-6. **Produce Test Reports:** Generate structured test plan and execution report.
+## Quy trình
+1. **Xây dựng kịch bản kiểm thử:** Ánh xạ từng Yêu cầu chức năng (FR-xxx) và Tiêu chí chấp nhận (AC-xxx) sang kịch bản kiểm thử.
+2. **Thiết kế ca kiểm thử:** Mô tả chi tiết điều kiện tiên quyết, đầu vào, các bước thực thi, kết quả mong đợi và các giá trị biên.
+3. **Triển khai kiểm thử tự động trong `tests/`:**
+   - Unit test cho các service cốt lõi (Auth, Booking, khóa sức chứa, phân tích câu hỏi, truy xuất tour, Context Builder).
+   - Integration test cho các endpoint Flask (`/tours`, `POST /booking/new/...`, `POST /api/chat`).
+4. **Thực thi bộ kiểm thử:** Chạy qua `pytest -v`.
+5. **Phân tích lỗi:** Không bao giờ sửa test chỉ để test PASS; xác minh xem lỗi có phải khiếm khuyết thật trong triển khai không.
+6. **Tạo báo cáo kiểm thử:** Sinh kế hoạch kiểm thử và báo cáo thực thi có cấu trúc.
 
-## Rules
-- Do NOT alter tests just to pass; address root causes in application code if a defect is found.
-- Ensure 100% test coverage for critical business logic:
-  - Seat deduction and overbooking prevention.
-  - Zero-hallucination when no tours match.
-  - SQL injection immunity in tour retrieval.
+## Quy tắc
+- KHÔNG sửa test chỉ để vượt qua; nếu phát hiện khiếm khuyết phải xử lý tận gốc trong mã ứng dụng.
+- Đảm bảo bao phủ 100% cho logic nghiệp vụ quan trọng:
+  - Trừ số chỗ và chống overbooking.
+  - Zero-hallucination khi không có tour phù hợp.
+  - Kháng SQL injection trong truy xuất tour.
 
-## Outputs
-Create:
+## Đầu ra
+Tạo:
 - `docs/test-plan.md`
 - `docs/test-report.md`
-- Automated test scripts in `tests/`
-
+- Script kiểm thử tự động trong `tests/`

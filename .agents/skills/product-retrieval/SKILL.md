@@ -1,24 +1,23 @@
 ---
 name: product-retrieval
-description: Retrieve relevant products or tour packages from relational database using structured intent and parameterized SQL queries to guarantee zero SQL injection and zero hallucination.
+description: Truy xuất sản phẩm/tour phù hợp từ CSDL quan hệ bằng intent có cấu trúc và truy vấn SQL tham số hóa, đảm bảo không SQL injection và không bịa dữ liệu.
 ---
-# Product Retrieval Skill
+# Skill Truy Xuất Sản Phẩm (Tour)
 
-## Objective
-Execute precise, safe, parameterized database queries against MySQL/SQLite to fetch only existing tour products that have available seats matching the user's intent.
+## Mục tiêu
+Thực thi truy vấn CSDL chính xác, an toàn, tham số hóa trên MySQL/SQLite để chỉ lấy ra các tour đang bán còn chỗ đúng với ý định (intent) của người dùng.
 
-## Inputs
-- Structured intent JSON from `question_analyzer`.
+## Đầu vào
+- Intent JSON có cấu trúc từ `question_analyzer`.
 
-## Process
-1. Build parameterized SQL query base.
-2. Apply active status filters.
-3. Apply capacity constraints (`available_seats > 0`).
-4. Apply category/destination, budget, and duration filters.
-5. Limit number of results.
+## Quy trình
+1. Xây dựng câu truy vấn SQL tham số hóa nền.
+2. Áp dụng bộ lọc trạng thái đang hoạt động.
+3. Áp dụng ràng buộc sức chứa (`available_seats > 0`).
+4. Áp dụng bộ lọc điểm đến/danh mục, ngân sách và thời lượng.
+5. Giới hạn số lượng kết quả.
 
-## Rules
-- NEVER use SQL string concatenation.
-- ALWAYS use parameterized queries (`?`).
-- Never fabricate or guess products.
-
+## Quy tắc
+- TUYỆT ĐỐI KHÔNG nối chuỗi SQL.
+- LUÔN dùng truy vấn tham số hóa (`?`).
+- Không bao giờ bịa hoặc đoán sản phẩm.

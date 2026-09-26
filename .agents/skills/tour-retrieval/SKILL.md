@@ -1,30 +1,29 @@
 ---
 name: tour-retrieval
-description: Retrieve relevant tours and schedules from relational database using structured intent and parameterized SQL queries to guarantee zero SQL injection and zero hallucination.
+description: Truy xuất tour và lịch khởi hành phù hợp từ CSDL quan hệ bằng intent có cấu trúc và truy vấn SQL tham số hóa, đảm bảo không SQL injection và không bịa dữ liệu.
 ---
-# Tour / Product Retrieval Skill
+# Skill Truy Xuất Tour / Sản Phẩm
 
-## Objective
-Execute precise, safe, parameterized database queries against MySQL/SQLite to fetch only existing tours that have available seats matching the user's intent.
+## Mục tiêu
+Thực thi truy vấn CSDL chính xác, an toàn, tham số hóa trên MySQL/SQLite để chỉ lấy ra các tour đang bán còn chỗ đúng với ý định (intent) của người dùng.
 
-## Inputs
-- Structured intent JSON from `question_analyzer`.
+## Đầu vào
+- Intent JSON có cấu trúc từ `question_analyzer`.
 
-## Process
-1. Build parameterized SQL query base (`tours` joined with `destinations` and `tour_schedules`).
-2. Apply filter for active tours (`tours.is_active = 1`).
-3. Apply filter for open schedules with available seats (`schedules.available_seats > 0`).
-4. Apply destination and regional filters.
-5. Apply budget constraints (`base_price <= max_price`, `base_price >= min_price`).
-6. Apply duration filter (`duration_days = ?` for a single day count; `duration_days BETWEEN ? AND ?` when the intent provides an inclusive range such as `[3, 4]`).
-7. Apply sorting (by price, rating, or upcoming departure date).
-8. Limit number of results (typically 3 to 5 results).
+## Quy trình
+1. Xây dựng câu truy vấn SQL tham số hóa nền (`tours` join với `destinations` và `tour_schedules`).
+2. Áp dụng bộ lọc tour đang hoạt động (`tours.is_active = 1`).
+3. Áp dụng bộ lọc lịch mở bán còn chỗ (`schedules.available_seats > 0`).
+4. Áp dụng bộ lọc điểm đến và vùng miền.
+5. Áp dụng ràng buộc ngân sách (`base_price <= max_price`, `base_price >= min_price`).
+6. Áp dụng bộ lọc thời lượng (`duration_days = ?` khi intent nêu một số ngày; `duration_days BETWEEN ? AND ?` khi intent cho khoảng bao gồm hai đầu như `[3, 4]`).
+7. Áp dụng sắp xếp (theo giá, đánh giá hoặc ngày khởi hành gần nhất).
+8. Giới hạn số lượng kết quả (thường 3 đến 5 kết quả).
 
-## Rules
-- NEVER use string formatting/concatenation to construct SQL queries.
-- ALWAYS use parameterized queries with placeholders (`?` or `%s`).
-- Do not return inactive or deleted tours.
-- Do not return tours with zero available seats (`available_seats = 0`).
-- If no matching tours are found, return an empty list (`[]`). Never fabricate data.
-- Alternative retrieval (`retrieve_alternative_tours`) runs after an empty strict search so the chatbot can honestly report "no exact match" AND introduce other real tours: it prefers tours from the requested destinations (lowest price first); if those destinations have no tours at all, it falls back to any available tour. It must return `[]` only when the database truly has no available tours.
-
+## Quy tắc
+- TUYỆT ĐỐI KHÔNG dùng format/nối chuỗi để dựng câu truy vấn SQL.
+- LUÔN dùng truy vấn tham số hóa với placeholder (`?` hoặc `%s`).
+- Không trả về tour đã ngừng bán hoặc đã xóa.
+- Không trả về tour hết chỗ (`available_seats = 0`).
+- Nếu không tìm thấy tour phù hợp, trả về danh sách rỗng (`[]`). Không bao giờ bịa dữ liệu.
+- Truy xuất thay thế (`retrieve_alternative_tours`) chạy sau khi tìm kiếm nghiêm ngặt trả về rỗng, để chatbot có thể trung thực báo "không có tour đúng tiêu chí" ĐỒNG THỜI giới thiệu các tour thật khác: ưu tiên tour thuộc điểm đến được yêu cầu (giá thấp nhất trước); nếu các điểm đến đó hoàn toàn không có tour, chuyển sang bất kỳ tour còn chỗ nào. Chỉ được trả về `[]` khi CSDL thực sự không còn tour nào khả dụng.
