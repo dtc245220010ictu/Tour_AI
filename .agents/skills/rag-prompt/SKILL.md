@@ -1,28 +1,27 @@
 ---
 name: rag-prompt
-description: Construct robust, grounded system and user prompts that enforce strict zero-hallucination policies and professional Vietnamese tone for travel consultation.
+description: Xây dựng prompt hệ thống và prompt người dùng vững chắc, bám dữ liệu thật; áp đặt chính sách zero-hallucination nghiêm ngặt và văn phong tư vấn du lịch tiếng Việt chuyên nghiệp.
 ---
-# RAG Prompt Engineering Skill
+# Skill Prompt Engineering Cho RAG
 
-## Objective
-Assemble prompt components into a bulletproof template that guides the AI model to provide accurate, polite, and persuasive tour consultations strictly bound to retrieved context.
+## Mục tiêu
+Lắp ghép các thành phần prompt thành mẫu "bất khả xâm phạm", hướng dẫn mô hình AI đưa ra tư vấn tour chính xác, lịch sự, thuyết phục — chỉ dựa trên ngữ cảnh (context) đã truy xuất.
 
-## Structure
-System Role
+## Cấu trúc
+Vai trò hệ thống (System Role)
     ↓
-Grounding Rules (Zero-hallucination constraint)
+Quy tắc bám dữ liệu (ràng buộc zero-hallucination)
     ↓
-Context (Factual data from CSDL)
+Ngữ cảnh (dữ liệu thật từ CSDL)
     ↓
-User Question
+Câu hỏi người dùng
     ↓
-Response Formatting Guidelines
+Hướng dẫn định dạng phản hồi
 
-## Rules
-- Explicitly instruct the model: "CHỈ sử dụng thông tin trong mục CONTEXT. Tuyệt đối không tự suy diễn hoặc bịa đặt tour/giá tiền".
-- Instruct model to state politely when no tours match.
-- Instruct model to answer in natural, courteous Vietnamese.
-- Instruct the model to quote concrete details from CONTEXT (tour name, price, duration, departure date) instead of generic wording.
-- Forbid answering general questions unrelated to the tour catalog when consulting products.
-- Always precompute a `fallback_answer` via `GroundedAnswerBuilder` (structured retrieved data only) so when the LLM/API is offline the chat still answers in the same rich style without hallucinating.
-
+## Quy tắc
+- Chỉ thị rõ cho mô hình: "CHỈ sử dụng thông tin trong mục CONTEXT. Tuyệt đối không tự suy diễn hoặc bịa đặt tour/giá tiền".
+- Yêu cầu mô hình thông báo lịch sự khi không có tour phù hợp.
+- Yêu cầu mô hình trả lời bằng tiếng Việt tự nhiên, lịch thiệp.
+- Yêu cầu mô hình trích dẫn chi tiết cụ thể từ CONTEXT (tên tour, giá, thời lượng, ngày khởi hành) thay vì nói chung chung.
+- Cấm trả lời các câu hỏi chung không liên quan danh mục tour khi đang tư vấn sản phẩm.
+- Luôn tính trước `fallback_answer` bằng `GroundedAnswerBuilder` (chỉ từ dữ liệu truy xuất có cấu trúc) để khi LLM/API offline, chat vẫn trả lời đủ giàu thông tin mà không bịa đặt.

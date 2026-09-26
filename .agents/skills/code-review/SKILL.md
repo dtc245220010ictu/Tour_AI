@@ -1,35 +1,34 @@
 ---
 name: code-review
-description: Review software implementation against architectural patterns, requirements compliance, code quality, maintainability, performance, error handling, and test thoroughness.
+description: Đánh giá mã nguồn theo mẫu kiến trúc, mức độ tuân thủ yêu cầu, chất lượng mã, khả năng bảo trì, hiệu năng, xử lý lỗi và độ đầy đủ của kiểm thử.
 ---
-# Code Review Skill
+# Skill Đánh Giá Mã Nguồn (Code Review)
 
-## Objective
-Systematically evaluate the entire codebase to detect defects, requirement gaps, architectural drift, performance bottlenecks, and code smell without modifying source code.
+## Mục tiêu
+Đánh giá một cách hệ thống toàn bộ mã nguồn nhằm phát hiện lỗi, thiếu sót so với yêu cầu, lệch kiến trúc, điểm nghẽn hiệu năng và code smell — mà KHÔNG chỉnh sửa mã nguồn.
 
-## Evaluation Criteria
-1. **Correctness:** Does the code perform the exact intended function?
-2. **Requirements Compliance:** Are all functional requirements and acceptance criteria fulfilled? Are there invented features?
-3. **Architecture Compliance:** Are layering boundaries respected? Does the route talk to service? Does service talk to data access? Is LLM isolated from database?
-4. **Maintainability & Clean Code:** Naming conventions, function sizing, modularity, type hints, docstrings.
-5. **Duplication:** DRY (Don't Repeat Yourself) principle adherence.
-6. **Error Handling:** Graceful exception management without leaking internal stack traces.
-7. **Database Access:** Safe parameterized queries, transaction atomicity, connection cleanup.
-8. **Test Quality:** Independent, repeatable, comprehensive automated tests.
+## Tiêu chí đánh giá
+1. **Tính đúng đắn:** Mã nguồn có thực hiện đúng chức năng dự kiến?
+2. **Tuân thủ yêu cầu:** Tất cả yêu cầu chức năng và tiêu chí chấp nhận có được đáp ứng? Có chức năng nào tự thêm ngoài đặc tả không?
+3. **Tuân thủ kiến trúc:** Các ranh giới phân lớp có được tôn trọng? Route có gọi Service? Service có gọi tầng truy cập dữ liệu? LLM có được cô lập khỏi CSDL?
+4. **Khả năng bảo trì & Clean Code:** Quy ước đặt tên, kích thước hàm, tính mô-đun, type hints, docstrings.
+5. **Trùng lặp mã:** Mức độ tuân thủ nguyên tắc DRY (Don't Repeat Yourself).
+6. **Xử lý lỗi:** Quản lý ngoại lệ an toàn, không rò rỉ stack trace nội bộ.
+7. **Truy cập CSDL:** Truy vấn tham số hóa an toàn, tính nguyên tử của giao dịch, đóng kết nối đúng cách.
+8. **Chất lượng kiểm thử:** Kiểm thử tự động độc lập, lặp lại được và bao phủ toàn diện.
 
-## Issue Classification
-Classify all identified items into 4 severity levels:
-- **CRITICAL:** Causes data corruption, security vulnerability, or complete system crash.
-- **HIGH:** Broken core requirement, overbooking leak, or uncontrolled hallucination.
-- **MEDIUM:** Suboptimal performance, missing index, or inconsistent error response.
-- **LOW:** Code style inconsistency, minor formatting, or documentation typo.
+## Phân loại lỗi
+Phân loại mọi vấn đề phát hiện được vào 4 mức độ nghiêm trọng:
+- **CRITICAL:** Gây hỏng dữ liệu, lỗ hổng bảo mật hoặc sập toàn bộ hệ thống.
+- **HIGH:** Yêu cầu cốt lõi bị hỏng, rò rỉ overbooking hoặc ảo giác AI không kiểm soát.
+- **MEDIUM:** Hiệu năng chưa tối ưu, thiếu index hoặc phản hồi lỗi không nhất quán.
+- **LOW:** Không nhất quán phong cách mã, lỗi định dạng nhỏ hoặc lỗi chính tả tài liệu.
 
-## Rules
-- Do NOT modify application code during review.
-- Provide concrete evidence (file paths and line numbers) for each observation.
-- Recommend actionable remedies for every identified issue.
+## Quy tắc
+- KHÔNG chỉnh sửa mã ứng dụng trong quá trình đánh giá.
+- Cung cấp bằng chứng cụ thể (đường dẫn file và số dòng) cho mỗi nhận xét.
+- Đề xuất giải pháp khắc phục cụ thể, có thể hành động được cho từng vấn đề.
 
-## Outputs
-Create or update:
+## Đầu ra
+Tạo hoặc cập nhật:
 - `docs/code-review.md`
-

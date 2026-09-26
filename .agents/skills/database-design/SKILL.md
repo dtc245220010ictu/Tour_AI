@@ -1,46 +1,45 @@
 ---
 name: database-design
-description: Design normalized relational database schemas from approved requirements and architectural models, including tables, relationships, constraints, indexes, and SQL schemas.
+description: Thiết kế lược đồ CSDL quan hệ chuẩn hóa từ yêu cầu đã phê duyệt và mô hình kiến trúc, bao gồm bảng, quan hệ, ràng buộc, chỉ mục (index) và script SQL.
 ---
-# Database Design Skill
+# Skill Thiết Kế CSDL
 
-## Objective
-Transform approved software requirements and architectural specifications into an optimal, normalized relational database design (MySQL/SQLite) complete with constraints, indexes, and full SQL schema scripts.
+## Mục tiêu
+Chuyển yêu cầu phần mềm đã phê duyệt và đặc tả kiến trúc thành thiết kế CSDL quan hệ chuẩn hóa, tối ưu (MySQL/SQLite), đầy đủ ràng buộc, chỉ mục và script SQL schema hoàn chỉnh.
 
-## Inputs
-Read:
+## Đầu vào
+Đọc:
 - `docs/requirements.md`
 - `docs/architecture.md`
 - `docs/uml-diagrams.md`
 
-## Process
-1. **Identify Entities:** Extract all core domain entities from requirements and ERD.
-2. **Define Attributes & Types:** Select appropriate data types (VARCHAR, INT, DECIMAL, DATETIME, TEXT, BOOLEAN) ensuring storage efficiency and precision.
-3. **Establish Relationships & Cardinality:** Define 1-1, 1-N, and N-M relationships with explicit Foreign Keys.
-4. **Normalization:** Apply 1NF, 2NF, and 3NF normalization principles to eliminate data redundancy and update anomalies.
-5. **Keys & Constraints:**
-   - Define Primary Keys (AUTO_INCREMENT/INTEGER PRIMARY KEY).
-   - Define Foreign Keys with referential integrity (`ON DELETE CASCADE` or `RESTRICT`).
-   - Define NOT NULL, UNIQUE, and CHECK constraints.
-6. **Indexing Strategy:**
-   - Index search columns (e.g. tour title, destination, price, departure_date).
-   - Index foreign keys and frequently filtered columns.
-7. **RAG & Chatbot Retrieval Optimization:** Ensure indexes support efficient multi-criteria search queries from the RAG retriever (destination, price range, duration, available seats).
-8. **Generate SQL Schema Script:** Produce clean, production-ready DDL scripts compatible with MySQL and SQLite.
+## Quy trình
+1. **Xác định thực thể:** Trích xuất toàn bộ thực thể miền cốt lõi từ yêu cầu và ERD.
+2. **Định nghĩa thuộc tính & kiểu dữ liệu:** Chọn kiểu dữ liệu phù hợp (VARCHAR, INT, DECIMAL, DATETIME, TEXT, BOOLEAN), đảm bảo hiệu quả lưu trữ và độ chính xác.
+3. **Thiết lập quan hệ & bản số:** Định nghĩa quan hệ 1-1, 1-N, N-M với khóa ngoại (Foreign Key) tường minh.
+4. **Chuẩn hóa:** Áp dụng nguyên tắc chuẩn hóa 1NF, 2NF, 3NF để loại bỏ dư thừa dữ liệu và bất thường cập nhật.
+5. **Khóa & ràng buộc:**
+   - Định nghĩa khóa chính (AUTO_INCREMENT/INTEGER PRIMARY KEY).
+   - Định nghĩa khóa ngoại kèm toàn vẹn tham chiếu (`ON DELETE CASCADE` hoặc `RESTRICT`).
+   - Định nghĩa ràng buộc NOT NULL, UNIQUE và CHECK.
+6. **Chiến lược đánh chỉ mục (Index):**
+   - Đánh chỉ mục cho các cột tìm kiếm (ví dụ: tên tour, điểm đến, giá, departure_date).
+   - Đánh chỉ mục cho khóa ngoại và các cột thường xuyên được lọc.
+7. **Tối ưu truy xuất cho RAG & Chatbot:** Đảm bảo chỉ mục hỗ trợ hiệu quả các truy vấn tìm kiếm đa tiêu chí của RAG retriever (điểm đến, khoảng giá, thời lượng, số chỗ còn trống).
+8. **Sinh script SQL schema:** Tạo script DDL sạch, sẵn sàng production, tương thích cả MySQL và SQLite.
 
-## Rules
-- Do not write application source code.
-- Do not invent undocumented fields.
-- Strictly adhere to naming conventions (snake_case for tables and columns).
-- Ensure foreign keys and indexes are explicitly defined.
+## Quy tắc
+- Không viết mã nguồn ứng dụng.
+- Không tự sáng tạo trường dữ liệu không có trong tài liệu.
+- Tuân thủ nghiêm ngặt quy ước đặt tên (snake_case cho bảng và cột).
+- Đảm bảo khóa ngoại và chỉ mục được định nghĩa tường minh.
 
-## Outputs
-Create:
+## Đầu ra
+Tạo:
 - `docs/database-design.md`
 - `database/schema.sql`
 
-## Verification
-- Verify that every functional requirement's data persistence is covered.
-- Verify normalization up to 3NF.
-- Verify that capacity constraints (`available_seats`, `total_seats`) are supported by constraints and atomic operations.
-
+## Kiểm tra
+- Xác minh mọi yêu cầu chức năng đều được bao phủ về lưu trữ dữ liệu.
+- Xác minh chuẩn hóa đạt tới 3NF.
+- Xác minh các ràng buộc sức chứa (`available_seats`, `total_seats`) được hỗ trợ bằng ràng buộc và thao tác nguyên tử.
