@@ -136,17 +136,33 @@
                 <p style="color: #64748b;">Hiện tại chưa có đợt khởi hành mở bán cho tour này. Vui lòng liên hệ tư vấn
                     viên để biết thêm chi tiết.</p>
                 {% endif %}
+
+                {% if postponed_schedules %}
+                <div
+                    style="margin-top: 18px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 16px 18px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #92400e; margin-bottom: 10px;">⏸️ Đợt
+                        khởi hành đang tạm hoãn</div>
+                    {% for s in postponed_schedules %}
+                    <div style="font-size: 13.5px; color: #78350f; margin-bottom: 6px;">
+                        Đợt {{ s.departure_date }} &rarr; {{ s.return_date }} — <em>Lý do: {{
+                        s.postpone_reason }}</em>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
 
             <!-- Feedbacks & Reviews -->
-            <div style="background: #ffffff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0;">
+            <div id="feedback-section"
+                style="background: #ffffff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0;">
                 <h3
                     style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
                     ⭐ Đánh Giá Của Khách Hàng ({{ feedbacks | length }})
                 </h3>
 
-                <!-- Feedback Form -->
-                {% if session.get('user_id') and session.get('role') in ['ADMIN', 'CUSTOMER'] %}
+                <!-- Feedback Form: chỉ mở khi khách đã HOÀN THÀNH chuyến đi của tour này -->
+                {% if session.get('role') == 'ADMIN' %}
+                {# ADMIN đánh giá thử nghiệm, không gắn với đơn nào #}
                 <form action="{{ url_for('feedback.submit_feedback') }}" method="POST"
                     style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0;">
                     <input type="hidden" name="tour_id" value="{{ tour.id }}">
@@ -173,6 +189,45 @@
                     <button type="submit" class="btn btn-primary" style="padding: 8px 18px; font-size: 14px;">Gửi đánh
                         giá</button>
                 </form>
+                {% elif review_booking %}
+                {# Khách đã hoàn thành chuyến đi và chưa đánh giá đơn này -> mở bảng đánh giá #}
+                <form action="{{ url_for('feedback.submit_feedback') }}" method="POST"
+                    style="background: #ecfdf5; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #a7f3d0;">
+                    <input type="hidden" name="tour_id" value="{{ tour.id }}">
+                    <input type="hidden" name="booking_id" value="{{ review_booking.id }}">
+                    <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 6px; color: #065f46;">✅ Chuyến đi
+                        {{ review_booking.departure_date }} &rarr; {{ review_booking.return_date }} đã hoàn
+                        thành</h4>
+                    <p style="font-size: 13px; color: #047857; margin-bottom: 14px;">Cảm ơn bạn đã đồng hành! Đánh giá
+                        của bạn giúp chúng tôi nâng cao chất lượng dịch vụ (đơn {{ review_booking.booking_code }}).</p>
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 13px; font-weight: 600; color: #475569;">Đánh giá sao:</label>
+                        <select name="rating"
+                            style="padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; margin-left: 10px;">
+                            <option value="5">⭐⭐⭐⭐⭐ (5 sao - Tuyệt vời)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 sao - Rất tốt)</option>
+                            <option value="3">⭐⭐⭐ (3 sao - Bình thường)</option>
+                            <option value="2">⭐⭐ (2 sao - Cần cải thiện)</option>
+                            <option value="1">⭐ (1 sao - Thất vọng)</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <textarea name="comment"
+                            placeholder="Chia sẻ cảm nhận của bạn về hướng dẫn viên, khách sạn, điểm tham quan..."
+                            rows="3"
+                            style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; font-family: inherit;"
+                            required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding: 8px 18px; font-size: 14px;">Gửi đánh
+                        giá</button>
+                </form>
+                {% elif session.get('role') == 'CUSTOMER' %}
+                {# Đã đăng nhập nhưng chưa hoàn thành chuyến đi nào (hoặc đã đánh giá rồi) #}
+                <div
+                    style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #475569;">
+                    💡 Bảng đánh giá sẽ mở sau khi bạn <strong>hoàn thành chuyến đi</strong> của tour này. Bạn có
+                    thể theo dõi trạng thái tại <a href="{{ url_for('booking.my_bookings') }}">Tour của tôi</a>.
+                </div>
                 {% else %}
                 <div
                     style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #475569;">

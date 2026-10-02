@@ -1,0 +1,90 @@
+{# ==============================================================
+   PHIẾU BÁO HOÀN TOÀN CẦN DUYỆT
+   Khách hủy tour đã thanh toán -> hệ thống tự tạo phiếu "báo hoàn toàn"
+   ở trạng thái PENDING. Kế toán / Quản trị duyệt hoặc từ chối tại đây.
+   Biến truyền vào: pending_refunds, history_refunds
+   ============================================================== #}
+<div
+    style="background: #ffffff; border: 2px solid #f59e0b; border-radius: 16px; padding: 22px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+    <h2 style="font-size: 19px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">📨 Phiếu Báo Hoàn Toàn
+        Cần Duyệt</h2>
+    <p style="color: #64748b; font-size: 13.5px; margin-bottom: 18px;">Khách vừa hủy tour và
+        <strong>báo hoàn toàn</strong> số tiền đã thanh toán. Kế toán / Quản trị kiểm tra rồi quyết định
+        duyệt hoặc từ chối.</p>
+
+    {% if pending_refunds %}
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13.5px;">
+            <thead>
+                <tr style="background: #fef3c7; border-bottom: 2px solid #fcd34d; text-align: left;">
+                    <th style="padding: 11px 12px;">Mã đơn / Khách</th>
+                    <th style="padding: 11px 12px;">Tour</th>
+                    <th style="padding: 11px 12px;">Lý do khách hủy</th>
+                    <th style="padding: 11px 12px; text-align: right;">Khách đã trả</th>
+                    <th style="padding: 11px 12px; text-align: right;">BÁO HOÀN TOÀN</th>
+                    <th style="padding: 11px 12px; text-align: right;">Gợi ý chính sách</th>
+                    <th style="padding: 11px 12px; text-align: center;">Quyết định</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in pending_refunds %}
+                <tr style="border-bottom: 1px solid #f1f5f9; vertical-align: top;">
+                    <td style="padding: 12px;">
+                        <strong style="color: #0284c7;">{{ r.booking_code }}</strong>
+                        <div style="font-size: 12.5px; color: #475569; margin-top: 3px;">{{ r.customer_name
+                            }}</div>
+                        <div style="font-size: 11.5px; color: #94a3b8;">📞 {{ r.customer_phone }}</div>
+                    </td>
+                    <td style="padding: 12px; max-width: 190px;">
+                        <div style="font-weight: 600;">{{ r.tour_title }}</div>
+                        <div style="font-size: 11.5px; color: #64748b; margin-top: 3px;">🗓️ Khởi hành {{
+                            r.departure_date }}</div>
+                    </td>
+                    <td style="padding: 12px; max-width: 200px; color: #78350f; font-size: 12.5px;">{{
+                        r.reason or "(Khách không nêu lý do)" }}</td>
+                    <td style="padding: 12px; text-align: right; font-weight: 700;">{{ r.paid_amount |
+                        format_currency }}</td>
+                    <td
+                        style="padding: 12px; text-align: right; font-weight: 800; color: #dc2626; font-size: 15px;">{{
+                        r.request_amount | format_currency }}</td>
+                    <td style="padding: 12px; text-align: right; font-size: 12.5px;">
+                        <span
+                            style="background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 6px; font-weight: 700;">{{
+                            r.policy_percent }}%</span>
+                        <div style="color: #64748b; margin-top: 3px;">= {{ r.policy_amount | format_currency }}
+                        </div>
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <form action="{{ url_for('accounting.approve_refund', request_id=r.id) }}" method="POST"
+                            style="margin-bottom: 8px;">
+                            <input type="hidden" name="decision_amount" value="{{ r.request_amount }}">
+                            <input type="text" name="notes" placeholder="Ghi chú / STK nhận tiền..."
+                                style="width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11.5px; margin-bottom: 5px;">
+                            <button type="submit" class="btn btn-primary"
+                                style="width: 100%; background: #047857; padding: 6px; font-size: 12.5px;">✅ Duyệt
+                                hoàn tiền</button>
+                        </form>
+                        <form action="{{ url_for('accounting.reject_refund', request_id=r.id) }}" method="POST"
+                            onsubmit="return confirm('Từ chối hoàn tiền đơn {{ r.booking_code }}? Khách sẽ không được hoàn khoản này.');">
+                            <input type="text" name="notes" placeholder="Bắt buộc: lý do từ chối" required
+                                style="width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11.5px; margin-bottom: 5px;">
+                            <button type="submit" class="btn"
+                                style="width: 100%; background: #dc2626; color: #fff; padding: 6px; font-size: 12.5px;">❌
+                                Từ chối</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div
+        style="background: #f0fdf4; border: 1px dashed #4ade80; border-radius: 12px; padding: 30px; text-align: center;">
+        <div style="font-size: 34px; margin-bottom: 8px;">✅</div>
+        <p style="color: #166534; font-weight: 700;">Không có phiếu báo hoàn nào đang chờ duyệt.</p>
+        <p style="color: #64748b; font-size: 13px; margin-top: 4px;">Khi khách hủy tour đã thanh toán, yêu cầu
+            hoàn tiền sẽ tự động xuất hiện tại đây.</p>
+    </div>
+    {% endif %}
+</div>

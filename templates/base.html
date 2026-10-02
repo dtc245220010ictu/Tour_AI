@@ -17,44 +17,76 @@
     <!-- Navbar -->
     <nav class="navbar">
         <div class="container nav-container">
-            <a href="{{ url_for('tour.index') }}" class="brand-logo">
-                <span>✈️</span> TourAI
+            <a href="{{ url_for('tour.index') }}" class="brand-logo" aria-label="TourAI - Trang chủ">
+                <span class="brand-icon">✈️</span>
+                <span class="brand-text">Tour<span class="brand-accent">AI</span></span>
             </a>
-            <ul class="nav-menu">
-                <li><a href="{{ url_for('tour.index') }}" class="nav-link">Trang chủ</a></li>
-                <li><a href="{{ url_for('tour.catalog') }}" class="nav-link">Khám phá Tour</a></li>
-                <li><a href="{{ url_for('chat.chatbot_page') }}" class="nav-link"
-                        style="color: #0284c7; font-weight: 700;">🤖 Trợ lý AI</a></li>
+
+            {# Nút mở/đóng menu trên thiết bị di động #}
+            <button class="nav-toggle" id="navToggle" type="button" aria-label="Mở / đóng menu điều hướng"
+                aria-controls="navMenu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+
+            {% set ep = request.endpoint or '' %}
+            <ul class="nav-menu" id="navMenu">
+                <li>
+                    <a href="{{ url_for('tour.index') }}"
+                        class="nav-link {% if ep == 'tour.index' %}active{% endif %}">🏠 Trang chủ</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('tour.catalog') }}"
+                        class="nav-link {% if ep in ['tour.catalog', 'tour.detail'] %}active{% endif %}">🎫 Khám phá Tour</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('chat.chatbot_page') }}"
+                        class="nav-link nav-link-ai {% if ep == 'chat.chatbot_page' %}active{% endif %}">🤖 Trợ lý AI</a>
+                </li>
 
                 {% if session.get('user_id') %}
                 {# "Tour của tôi" - CHỈ Khách hàng (CUSTOMER) mới được thấy menu này #}
                 {% if session.get('role') == 'CUSTOMER' %}
-                <li><a href="{{ url_for('booking.my_bookings') }}" class="nav-link">Tour của tôi</a></li>
+                <li>
+                    <a href="{{ url_for('booking.my_bookings') }}"
+                        class="nav-link {% if ep == 'booking.my_bookings' %}active{% endif %}">🎒 Tour của tôi</a>
+                </li>
                 {% endif %}
                 {% if session.get('role') in ['ADMIN', 'ACCOUNTANT'] %}
-                <li><a href="{{ url_for('accounting.dashboard') }}" class="nav-link"
-                        style="color: #059669; font-weight: 600;">💼 Kế toán</a></li>
+                <li>
+                    <a href="{{ url_for('accounting.dashboard') }}"
+                        class="nav-link nav-link-accounting {% if ep.startswith('accounting.') %}active{% endif %}">💼 Kế toán</a>
+                </li>
                 {% endif %}
                 {% if session.get('role') == 'ADMIN' %}
-                <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"
-                        style="color: #d97706; font-weight: 600;">📊 Quản trị</a></li>
+                <li>
+                    <a href="{{ url_for('admin.dashboard') }}"
+                        class="nav-link nav-link-admin {% if ep.startswith('admin.') %}active{% endif %}">📊 Quản trị</a>
+                </li>
                 {% elif session.get('role') == 'ACCOUNTANT' %}
-                <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link"
-                        style="color: #d97706; font-weight: 600;">📊 Thống Kê</a></li>
+                <li>
+                    <a href="{{ url_for('admin.dashboard') }}"
+                        class="nav-link nav-link-admin {% if ep.startswith('admin.') %}active{% endif %}">📊 Thống Kê</a>
+                </li>
                 {% elif session.get('role') == 'STAFF' %}
-                <li><a href="{{ url_for('admin.manage_tours') }}" class="nav-link"
-                        style="color: #d97706; font-weight: 600;">📊 Quản trị</a></li>
+                <li>
+                    <a href="{{ url_for('admin.manage_tours') }}"
+                        class="nav-link nav-link-admin {% if ep.startswith('admin.') %}active{% endif %}">📊 Quản trị</a>
+                </li>
                 {% elif session.get('role') == 'GUIDE' %}
-                <li><a href="{{ url_for('guide.schedule') }}" class="nav-link"
-                        style="color: #0d9488; font-weight: 600;">🧭 Lịch Phân Công</a></li>
+                <li>
+                    <a href="{{ url_for('guide.schedule') }}"
+                        class="nav-link nav-link-guide {% if ep.startswith('guide.') %}active{% endif %}">🧭 Lịch Phân Công</a>
+                </li>
                 {% endif %}
-                <li style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 14px; color: #64748b;">👤 {{ session.get('user_name') }}</span>
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline"
-                        style="padding: 4px 10px; font-size: 13px;">Đăng xuất</a>
+                <li class="nav-user">
+                    <span class="nav-user-name" title="{{ session.get('user_name') }}">👤 {{ session.get('user_name') }}</span>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline nav-logout">Đăng xuất</a>
                 </li>
                 {% else %}
-                <li><a href="{{ url_for('auth.login') }}" class="nav-link">Đăng nhập</a></li>
+                <li>
+                    <a href="{{ url_for('auth.login') }}"
+                        class="nav-link {% if ep == 'auth.login' %}active{% endif %}">🔑 Đăng nhập</a>
+                </li>
                 <li><a href="{{ url_for('auth.register') }}" class="nav-btn">Đăng ký</a></li>
                 {% endif %}
             </ul>
@@ -108,6 +140,20 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        // Bật/tắt menu điều hướng trên thiết bị di động
+        (function () {
+            var toggle = document.getElementById('navToggle');
+            var menu = document.getElementById('navMenu');
+            if (!toggle || !menu) return;
+            toggle.addEventListener('click', function () {
+                var isOpen = menu.classList.toggle('open');
+                toggle.classList.toggle('open', isOpen);
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        })();
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>

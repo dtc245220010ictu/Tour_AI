@@ -4,9 +4,13 @@ Compacts retrieved database records into structured, factual text for prompt gro
 """
 
 def format_currency(val: float) -> str:
-    """Formats numeric value to Vietnamese currency string."""
+    """Định dạng tiền kiểu Việt Nam, giữ nguyên phần thập phân (không làm tròn)."""
     try:
-        return f"{int(val):,}".replace(",", ".") + " VNĐ"
+        number = float(val)
+        integer_part, _, decimal_part = f"{number:.2f}".partition(".")
+        grouped = f"{int(integer_part):,}".replace(",", ".")
+        decimal_part = decimal_part.rstrip("0")
+        return grouped + ("," + decimal_part if decimal_part else "") + " VNĐ"
     except (ValueError, TypeError):
         return str(val)
 

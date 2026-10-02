@@ -14,10 +14,14 @@ import time
 from services.gemini_service import GeminiService
 
 # The Gemini endpoint occasionally returns transient errors (e.g. 503
-# UNAVAILABLE under high demand), so retry a couple of times before falling
-# back to the locally generated content.
-_MAX_AI_ATTEMPTS = 3
+# UNAVAILABLE under high demand), so retry once before falling back to the
+# locally generated content. Kept at 2 attempts because each call may now
+# legitimately take 15-25s - retrying 3 times would stall the staff form
+# for minutes before the fallback content appears.
+_MAX_AI_ATTEMPTS = 2
 _RETRY_DELAY_SECONDS = 0.5
+# Sinh mô tả + lịch trình cần ~15-25 giây; để dư 1 chút biên cho mạng chậm.
+_AI_CONTENT_TIMEOUT = 90.0
 
 # Markers may come back as plain "[MÔ TẢ TOUR]", markdown "**[MÔ TẢ TOUR]**"
 # or a heading "## MÔ TẢ TOUR". Match them only at line start so words like
@@ -88,7 +92,8 @@ LƯU Ý: KHÔNG viết thêm lời chào hay bất kỳ phần nào ngoài hai p
         if GeminiService.is_configured():
             for attempt in range(_MAX_AI_ATTEMPTS):
                 response_text = GeminiService.generate_content(
-                    prompt, temperature=0.7, fallback_answer=local_content
+                    prompt, temperature=0.7, fallback_answer=local_content,
+                    timeout=_AI_CONTENT_TIMEOUT
                 )
                 # GeminiService returns `fallback_answer` unchanged when the
                 # API call failed -> treat as a retryable miss.
@@ -255,7 +260,8 @@ Viết ngắn gọn, súc tích bằng tiếng Việt theo các tiêu đề rõ 
 
         for attempt in range(_MAX_AI_ATTEMPTS):
             result = GeminiService.generate_content(
-                prompt, temperature=0.3, fallback_answer=local_summary
+                prompt, temperature=0.3, fallback_answer=local_summary,
+                timeout=_AI_CONTENT_TIMEOUT
             )
             if result != local_summary:
                 return result

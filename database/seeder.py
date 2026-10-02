@@ -82,6 +82,132 @@ def seed_accounting_addon(cursor):
             expenses
         )
 
+COMPLETED_TRIP_DATE = "2026-09-12"
+COMPLETED_TRIP_SLUG = "phu-quoc-thien-duong-dan-ve"  # fallback nếu tour chưa tồn tại
+
+
+def seed_completed_trip_with_reviews(cursor):
+    """Tạo 1 chuyến đi ĐÃ HOÀN THÀNH có 5 khách hàng đi và để lại đánh giá.
+
+    - Đợt khởi hành có ngày về trong quá khứ, status = 'FULL'
+      => hệ thống tự đánh dấu là tour đã hoàn thành (is_completed).
+    - Bảo đảm có đủ 5 tài khoản CUSTOMER (tạo thêm nếu thiếu).
+    - 5 booking trạng thái 'COMPLETED', mỗi booking kèm 1 đánh giá
+      nên trang chi tiết tour hiển thị đủ 5 đánh giá thật.
+    """
+    # 1) Bảo đảm đủ 5 khách hàng CUSTOMER
+    extra_customers = [
+        ("Nguyễn Minh Anh", "minhanh.nguyen@tourai.vn", "0911223344"),
+        ("Trần Thu Hà", "thuha.tran@tourai.vn", "0922334455"),
+        ("Lê Quang Huy", "quanghuy.le@tourai.vn", "0933445566"),
+        ("Phạm Thùy Linh", "thuylinh.pham@tourai.vn", "0944556677"),
+    ]
+    for name, email, phone in extra_customers:
+        cursor.execute("SELECT id FROM users WHERE email = ?;", (email,))
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            "INSERT INTO users (email, password_hash, full_name, phone, role) "
+            "VALUES (?, ?, ?, ?, 'CUSTOMER');",
+            (email, generate_password_hash("customer123"), name, phone)
+        )
+
+    cursor.execute(
+        "SELECT id, full_name, email, phone FROM users WHERE role = 'CUSTOMER' ORDER BY id LIMIT 5;"
+    )
+    customers = [dict(r) for r in cursor.fetchall()]
+    if len(customers) < 5:
+        return  # Không đủ khách thì bỏ qua, tránh tạo dữ liệu sai lệch
+
+    # 2) Tạo đợt khởi hành đã diễn ra (ngày về trong quá khứ)
+    cursor.execute("SELECT id FROM tours WHERE slug LIKE ?;", ("phu-quoc%",))
+    row = cursor.fetchone()
+    tour_id = row["id"] if row else 1
+
+    cursor.execute(
+        "SELECT id FROM tour_schedules WHERE tour_id = ? AND departure_date = ?;",
+        (tour_id, COMPLETED_TRIP_DATE)
+    )
+    if cursor.fetchone():
+        return  # Đã seed rồi -> không tạo trùng
+
+    adult_price = 5200000
+    child_price = adult_price * 0.7
+    total_seats = 20
+    booked_seats = 5 * 2  # 5 khách, mỗi khách 2 người lớn
+    available_seats = total_seats - booked_seats
+
+    cursor.execute(
+        """INSERT INTO tour_schedules
+           (tour_id, departure_date, return_date, adult_price, child_price,
+            total_seats, available_seats, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'FULL');""",
+        (tour_id, COMPLETED_TRIP_DATE, "2026-09-15",
+         adult_price, child_price, total_seats, available_seats)
+    )
+    schedule_id = cursor.lastrowid
+
+    cursor.execute("SELECT id FROM tour_guides ORDER BY id LIMIT 1;")
+    guide = cursor.fetchone()
+    if guide:
+        cursor.execute(
+            "INSERT INTO guide_assignments (schedule_id, guide_id, role_in_tour, notes) "
+            "VALUES (?, ?, 'LEAD_GUIDE', 'Dẫn đoàn Phú Quốc tháng 9');",
+            (schedule_id, guide["id"])
+        )
+
+    # 3) 5 khách đặt chỗ, đã HOÀN THÀNH chuyến đi và để lại đánh giá
+    num_adults = 2
+    total_amount = num_adults * adult_price
+    reviews = [
+        (5, "Chuyến đi tuyệt vời! Du thuyền thuận gió, nước trong vắt nhìn thấy tận đáy. "
+            "Nhà hàng phục vụ nhiệt tình, hướng dẫn viên vui vẻ kể chuyện thú vị."),
+        (4, "Đợt tour hài lòng. Resort đẹp, bãi biển riêng tư, ăn uống ổn. "
+            "Chỉ hơi tiếc vì chiều cuối trời mưa bão nên lịch tham quan bị rút ngắn."),
+        (5, "Kỷ niệm đáng nhớ nhất năm nay. Lặn san hô ngắm cá đầu màu rực rỡ, "
+            "đội ngũ chuyên nghiệp, xe đưa đón đúng giờ."),
+        (4, "Cảnh biển Phú Quốc buổi sáng rất đẹp. Tour hợp lý với giá tiền, "
+            "lịch trình không quá tải nên đi rất thoải mái."),
+        (5, "Rất hài lòng! Đặt vé nhanh gọn qua hệ thống, hướng dẫn viên tên Hải "
+            "cực nhiệt tình, resort chuẩn bị chu đáo."),
+    ]
+
+    for idx, (rating, comment) in enumerate(reviews, start=1):
+        customer = customers[idx - 1]
+        booking_code = f"BK-20260912-{idx:02d}"
+        cursor.execute("SELECT id FROM bookings WHERE booking_code = ?;", (booking_code,))
+        if cursor.fetchone():
+            continue
+
+        cursor.execute(
+            """INSERT INTO bookings
+               (booking_code, user_id, schedule_id, customer_name, customer_email,
+                customer_phone, num_adults, num_children, total_amount, status, notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 'COMPLETED', ?);""",
+            (booking_code, customer["id"], schedule_id, customer["full_name"],
+             customer["email"], customer["phone"], num_adults, total_amount,
+             "Chuyến đi đã hoàn thành, đã thanh toán toàn bộ")
+        )
+        booking_id = cursor.lastrowid
+
+        # Đã thanh toán đầy đủ
+        cursor.execute(
+            """INSERT INTO payments
+               (booking_id, amount, payment_method, payment_type, transaction_id,
+                payment_status, verified_by, verified_at, notes)
+               VALUES (?, ?, 'BANK_TRANSFER', 'FULL', ?, 'SUCCESS', 3,
+                       '2026-09-10 10:00:00', 'Thanh toán trọn đợt Phú Quốc');""",
+            (booking_id, total_amount, f"TXN-PQ2026-{idx:02d}")
+        )
+
+        # Khách đánh giá sau chuyến đi (gắn đúng booking đã hoàn thành)
+        cursor.execute(
+            "INSERT INTO feedbacks (user_id, tour_id, booking_id, rating, comment) "
+            "VALUES (?, ?, ?, ?, ?);",
+            (customer["id"], tour_id, booking_id, rating, comment)
+        )
+
+
 def seed_all(force=False):
     init_db()
     
@@ -97,6 +223,10 @@ def seed_all(force=False):
                 print("Seeding missing Tour Expenses & Additional Bookings...")
                 seed_accounting_addon(cursor)
                 conn.commit()
+            # Bảo đảm luôn có chuyến đi hoàn thành + 5 đánh giá
+            print("Seeding Completed Trip with 5 Customer Reviews...")
+            seed_completed_trip_with_reviews(cursor)
+            conn.commit()
             print("Database already contains data. Skipping seeder.")
             return
 
@@ -317,6 +447,9 @@ def seed_all(force=False):
             "INSERT INTO feedbacks (user_id, tour_id, booking_id, rating, comment) VALUES (?, ?, ?, ?, ?);",
             feedbacks
         )
+
+        print("Seeding Completed Trip with 5 Customer Reviews...")
+        seed_completed_trip_with_reviews(cursor)
 
         print("Seeding completed successfully!")
 

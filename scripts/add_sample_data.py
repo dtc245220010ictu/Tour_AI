@@ -240,7 +240,7 @@ def main():
                        (tour_id, departure_date, return_date, adult_price, child_price,
                         total_seats, available_seats, status)
                        VALUES (?, ?, ?, ?, ?, 20, 20, 'OPEN');""",
-                    (tour_id, dep.isoformat(), ret.isoformat(), price, round(price * 0.7)),
+                    (tour_id, dep.isoformat(), ret.isoformat(), price, price * 0.7),
                 )
                 stats["schedules"] += 1
 

@@ -54,8 +54,14 @@ def create_app():
     # Custom Jinja filters
     @app.template_filter("format_currency")
     def format_currency_filter(value):
+        """Hiển thị tiền kiểu Việt Nam, giữ nguyên phần thập phân (không làm tròn)."""
         try:
-            return f"{int(value):,}".replace(",", ".") + " ₫"
+            number = float(value)
+            # Tách phần nguyên / thập phân để định dạng đúng kiểu VN
+            integer_part, _, decimal_part = f"{number:.2f}".partition(".")
+            grouped = f"{int(integer_part):,}".replace(",", ".")
+            decimal_part = decimal_part.rstrip("0")
+            return grouped + ("," + decimal_part if decimal_part else "") + " ₫"
         except (ValueError, TypeError):
             return str(value)
 

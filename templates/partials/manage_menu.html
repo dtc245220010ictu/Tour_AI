@@ -1,47 +1,89 @@
-{% macro mlink(endpoint, label) %}
-    <a href="{{ url_for(endpoint) }}" class="btn"
-        style="padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 8px; border: 1px solid #e2e8f0; {% if request.endpoint == endpoint %}background: #0284c7; border-color: #0284c7; color: #fff;{% else %}background: #f8fafc; color: #475569;{% endif %}">{{ label }}</a>
-{% endmacro %}
+{# ==============================================================
+   Segmented Navigation Bar - Thanh điều hướng theo VAI TRÒ
+   - Gom tất cả tab vào 1 thanh duy nhất, liền mạch (nền #F2F4F7, bo góc).
+   - Mỗi tab: icon bên trên, nhãn chữ bên dưới, có divider dọc phân cách.
+   - Tab đang chọn: nền xanh đậm #2B6CB0, chữ & icon trắng.
+   - Tự động lọc tab theo quyền của tài khoản đang đăng nhập.
+   Dùng chung cho mọi trang quản trị: {% include "partials/manage_menu.html" %}
+   ============================================================== #}
+
+{% macro seg_tab(endpoint, icon, label, matches) %}
+{%- set ep = request.endpoint or '' -%}
+{%- set ns = namespace(active=false) -%}
+{%- for m in matches -%}
+{%- if not ns.active and (ep == m or ep.startswith(m)) -%}{%- set ns.active = true -%}{%- endif -%}
+{%- endfor -%}
+<a href="{{ url_for(endpoint) }}" class="seg-tab{% if ns.active %} active{% endif %}">
+    <span class="seg-icon" aria-hidden="true">{{ icon }}</span>
+    <span class="seg-label">{{ label }}</span>
+</a>
+{%- endmacro %}
+
 {% set role = session.get('role') %}
 {% if role %}
-<!-- Menu quản trị theo VAI TRÒ (chỉ hiển thị chức năng đúng quyền) -->
-<div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px 14px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+<nav class="seg-nav" aria-label="Điều hướng chức năng theo vai trò">
+    <div class="seg-nav-track">
         {% if role == 'ADMIN' %}
-        {{ mlink('admin.dashboard', '📊 Dashboard') }}
-        {{ mlink('admin.manage_tours', '🎫 Quản lý Tour') }}
-        {{ mlink('admin.manage_destinations', '📍 Điểm đến') }}
-        {{ mlink('admin.manage_schedules', '📅 Lịch khởi hành') }}
-        {{ mlink('admin.manage_bookings', '🧾 Duyệt đơn đặt chỗ') }}
-        {{ mlink('admin.manage_customers', '👥 Quản lý Khách hàng') }}
-        {{ mlink('admin.manage_guides', '🧭 Hướng dẫn viên') }}
-        {{ mlink('admin.manage_feedbacks', '⭐ Đánh giá AI') }}
-        {{ mlink('accounting.dashboard', '💼 Kế toán') }}
+        {# ADMIN: quyền hạn đầy đủ - 9 tab #}
+        {{ seg_tab('admin.dashboard', '📊', 'Dashboard', ['admin.dashboard']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_tours', '🎫', 'Quản lý Tour', ['admin.manage_tours', 'admin.edit_tour', 'admin.delete_tour']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_destinations', '📍', 'Điểm đến', ['admin.manage_destinations', 'admin.edit_destination', 'admin.delete_destination']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_schedules', '📅', 'Lịch khởi hành', ['admin.manage_schedules', 'admin.edit_schedule', 'admin.delete_schedule']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_bookings', '🧾', 'Duyệt đơn đặt chỗ', ['admin.manage_bookings', 'admin.update_booking_status']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_customers', '👥', 'Quản lý Khách hàng', ['admin.manage_customers', 'admin.create_customer', 'admin.update_customer', 'admin.delete_customer']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_guides', '🧭', 'Hướng dẫn viên', ['admin.manage_guides', 'admin.assign_guide', 'admin.delete_guide', 'admin.delete_guide_assignment']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_feedbacks', '⭐', 'Đánh giá AI', ['admin.manage_feedbacks']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('accounting.dashboard', '💼', 'Kế toán', ['accounting.']) }}
+
         {% elif role == 'STAFF' %}
-        {{ mlink('admin.manage_tours', '🎫 Quản lý Tour') }}
-        {{ mlink('admin.manage_destinations', '📍 Điểm đến') }}
-        {{ mlink('admin.manage_schedules', '📅 Lịch khởi hành') }}
-        {{ mlink('admin.manage_bookings', '🧾 Duyệt đơn đặt chỗ') }}
-        {{ mlink('admin.manage_customers', '👥 Khách hàng (chỉ xem)') }}
+        {# STAFF: vận hành tour / lịch / đơn / khách hàng (không có Dashboard) #}
+        {{ seg_tab('admin.manage_tours', '🎫', 'Quản lý Tour', ['admin.manage_tours', 'admin.edit_tour']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_destinations', '📍', 'Điểm đến', ['admin.manage_destinations', 'admin.edit_destination']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_schedules', '📅', 'Lịch khởi hành', ['admin.manage_schedules', 'admin.edit_schedule']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_bookings', '🧾', 'Duyệt đơn đặt chỗ', ['admin.manage_bookings', 'admin.update_booking_status']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('admin.manage_customers', '👥', 'Khách hàng (chỉ xem)', ['admin.manage_customers']) }}
+
         {% elif role == 'ACCOUNTANT' %}
-        {{ mlink('admin.dashboard', '📊 Thống kê') }}
-        {{ mlink('accounting.dashboard', '💼 Kế toán') }}
-        {{ mlink('accounting.transactions', 'Phiếu thu & Đối soát') }}
-        {{ mlink('accounting.debts', 'Công nợ') }}
-        {{ mlink('accounting.expenses', '📈 Chi phí tour') }}
-        {{ mlink('accounting.tours_pnl', 'Báo cáo P&L') }}
-        {{ mlink('accounting.refunds', 'Hoàn tiền') }}
+        {# KẾ TOÁN: Dashboard, duyệt thanh toán (đối soát), Kế toán #}
+        {{ seg_tab('admin.dashboard', '📊', 'Dashboard', ['admin.dashboard']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('accounting.transactions', '🧾', 'Duyệt đơn đặt chỗ', ['accounting.transactions', 'accounting.verify_transaction']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('accounting.dashboard', '💼', 'Kế toán', ['accounting.dashboard', 'accounting.debts', 'accounting.record_debt_collection', 'accounting.expenses', 'accounting.tours_pnl', 'accounting.refunds']) }}
+
         {% elif role == 'GUIDE' %}
-        {{ mlink('guide.schedule', '🧭 Bảng phân công (chỉ xem)') }}
-        {{ mlink('tour.catalog', '🎫 Danh sách Tour') }}
-        {{ mlink('chat.chatbot_page', '🤖 Trợ lý AI') }}
+        {# HƯỚNG DẪN VIÊN: lịch phân công, danh sách tour, trợ lý AI #}
+        {{ seg_tab('guide.schedule', '🧭', 'Lịch Phân Công', ['guide.schedule']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('tour.catalog', '🎫', 'Danh sách Tour', ['tour.catalog', 'tour.detail']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('chat.chatbot_page', '🤖', 'Trợ lý AI', ['chat.chatbot_page']) }}
+
         {% elif role == 'CUSTOMER' %}
-        {{ mlink('booking.my_bookings', '🎒 Tour của tôi') }}
-        {{ mlink('tour.catalog', '🎫 Khám phá Tour') }}
-        {{ mlink('chat.chatbot_page', '🤖 Trợ lý AI') }}
+        {# KHÁCH HÀNG: tour của tôi, khám phá tour, trợ lý AI #}
+        {{ seg_tab('booking.my_bookings', '🎒', 'Tour của tôi', ['booking.my_bookings']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('tour.catalog', '🎫', 'Khám phá Tour', ['tour.catalog', 'tour.detail']) }}
+        <span class="seg-divider" aria-hidden="true"></span>
+        {{ seg_tab('chat.chatbot_page', '🤖', 'Trợ lý AI', ['chat.chatbot_page']) }}
         {% endif %}
     </div>
-    <p style="font-size: 12px; color: #94a3b8; margin: 8px 0 0;">Bạn đang đăng nhập với vai trò
-        <strong>{{ role }}</strong> - hệ thống chỉ hiển thị các chức năng theo quyền của bạn.</p>
-</div>
+</nav>
+
+<p class="seg-role-note">
+    {% if role == 'ADMIN' %}VAI TRÒ: <strong>ADMIN</strong> - Quyền hạn đầy đủ.
+    {% else %}VAI TRÒ: <strong>{{ role }}</strong> - Hệ thống chỉ hiển thị các chức năng theo quyền của bạn.{% endif %}
+</p>
 {% endif %}

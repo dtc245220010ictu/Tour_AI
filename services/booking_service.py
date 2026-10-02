@@ -113,7 +113,7 @@ class BookingService:
     def get_user_bookings(user_id: int):
         return execute_query(
             """SELECT b.*, s.departure_date, s.return_date,
-                      t.title AS tour_title, t.image_url AS tour_image,
+                      t.title AS tour_title, t.slug AS tour_slug, t.image_url AS tour_image,
                       d.name AS destination_name
                FROM bookings b
                JOIN tour_schedules s ON b.schedule_id = s.id
@@ -143,8 +143,14 @@ class BookingService:
         return execute_query(query, params, fetch_all=True)
 
     @staticmethod
-    def cancel_booking(booking_id: int, user_id: int | None = None):
-        """Cancels a booking and automatically restores seats."""
+    def cancel_booking(booking_id: int, user_id: int | None = None, reason: str = ""):
+        """Cancels a booking, restores seats and opens a refund request.
+
+        Nếu khách đã thanh toán, hệ thống tự tạo phiếu "báo hoàn toàn" ở trạng
+        thái PENDING để Kế toán / Admin duyệt (xem services/refund_service.py).
+        """
+        from services.refund_service import RefundService
+
         with get_db() as conn:
             cursor = conn.cursor()
             
@@ -165,8 +171,17 @@ class BookingService:
 
             total_passengers = booking["num_adults"] + booking["num_children"]
 
-            # 1. Update booking status
-            cursor.execute("UPDATE bookings SET status = 'CANCELLED' WHERE id = ?;", (booking_id,))
+            # 1. Update booking status (ghi kèm lý do khách hủy nếu có)
+            if reason and reason.strip():
+                cursor.execute(
+                    """UPDATE bookings
+                       SET status = 'CANCELLED',
+                           notes = COALESCE(notes || ' | ', '') || ?
+                       WHERE id = ?;""",
+                    (f"Lý do hủy: {reason.strip()}", booking_id)
+                )
+            else:
+                cursor.execute("UPDATE bookings SET status = 'CANCELLED' WHERE id = ?;", (booking_id,))
 
             # 2. Restore seats
             cursor.execute(
@@ -175,6 +190,9 @@ class BookingService:
                    WHERE id = ?;""",
                 (total_passengers, booking["schedule_id"])
             )
+
+        # 3. Khách đã thanh toán -> tự động báo hoàn toàn cho Kế toán/Admin duyệt
+        RefundService.create_request(booking_id, reason=reason)
 
         return True
 

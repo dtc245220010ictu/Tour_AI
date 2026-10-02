@@ -180,8 +180,14 @@ def manage_schedules():
             flash(f"Lỗi khi tạo lịch trình: {str(e)}", "danger")
 
     tours = TourService.get_tours(limit=100)
-    occupancy_rates = AnalyticsService.get_occupancy_rates()
-    return render_template("admin/schedules_manage.html", tours=tours, schedules=occupancy_rates)
+    schedule_filter = request.args.get("filter", "all")
+    occupancy_rates = AnalyticsService.get_occupancy_rates(schedule_filter)
+    return render_template(
+        "admin/schedules_manage.html",
+        tours=tours,
+        schedules=occupancy_rates,
+        schedule_filter=schedule_filter
+    )
 
 
 @admin_bp.route("/schedules/<int:schedule_id>/edit", methods=["GET", "POST"])
@@ -201,7 +207,8 @@ def edit_schedule(schedule_id):
                 adult_price=request.form.get("adult_price", 0, type=float),
                 child_price=request.form.get("child_price", 0, type=float),
                 total_seats=request.form.get("total_seats", 20, type=int),
-                status=request.form.get("status", "OPEN")
+                status=request.form.get("status", "OPEN"),
+                postpone_reason=request.form.get("postpone_reason", "")
             )
             flash("Đã cập nhật lịch khởi hành. Số chỗ còn lại được tính tự động từ các đơn đã giữ chỗ.", "success")
             return redirect(url_for("admin.manage_schedules"))
@@ -209,6 +216,31 @@ def edit_schedule(schedule_id):
             flash(str(e), "danger")
 
     return render_template("admin/schedule_edit.html", schedule=schedule)
+
+
+@admin_bp.route("/schedules/<int:schedule_id>/postpone", methods=["POST"])
+@roles_required("ADMIN", "STAFF")
+def postpone_schedule(schedule_id):
+    """Tạm hoãn một đợt khởi hành - BẮT BUỘC kèm lý do để thông báo cho khách hàng."""
+    reason = request.form.get("postpone_reason", "").strip()
+    try:
+        TourService.postpone_schedule(schedule_id, reason)
+        flash("Đã tạm hoãn lịch khởi hành. Lý do tạm hoãn đã được lưu và hiển thị cho khách hàng.", "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("admin.manage_schedules"))
+
+
+@admin_bp.route("/schedules/<int:schedule_id>/resume", methods=["POST"])
+@roles_required("ADMIN", "STAFF")
+def resume_schedule(schedule_id):
+    """Khôi phục đợt khởi hành đang tạm hoãn về trạng thái mở bán."""
+    try:
+        TourService.resume_schedule(schedule_id)
+        flash("Đã khôi phục lịch khởi hành về trạng thái mở bán.", "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("admin.manage_schedules"))
 
 
 @admin_bp.route("/schedules/<int:schedule_id>/delete", methods=["POST"])

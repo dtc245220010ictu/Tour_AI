@@ -10,6 +10,22 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+# Timeout gọi Gemini (giây). Sinh mô tả tour cần sinh lượng lớn (mô tả +
+# lịch trình từng ngày, maxOutputTokens=4096) nên thường mất 15-25 giây;
+# timeout cũ 12s khiến mọi lần gọi đều hết giờ và rơi về nội dung mẫu.
+DEFAULT_TIMEOUT = float(os.environ.get("GEMINI_TIMEOUT", "60"))
+
+
+def _resolve_timeout(timeout: float | None) -> float:
+    """Cho phép ghi đè timeout theo từng lần gọi, kèm giá trị mặc định an toàn."""
+    if timeout is None:
+        return DEFAULT_TIMEOUT
+    try:
+        value = float(timeout)
+    except (TypeError, ValueError):
+        return DEFAULT_TIMEOUT
+    return max(5.0, value)
+
 class GeminiService:
     @staticmethod
     def get_api_key():
@@ -25,7 +41,8 @@ class GeminiService:
         return not key.lower().startswith("your_")
 
     @staticmethod
-    def generate_content(prompt: str, temperature: float = 0.4, fallback_answer: str | None = None) -> str:
+    def generate_content(prompt: str, temperature: float = 0.4, fallback_answer: str | None = None,
+                     timeout: float | None = None) -> str:
         """
         Sends prompt to Gemini API.
         If API key is missing or request fails, falls back gracefully to the
@@ -62,7 +79,9 @@ class GeminiService:
         }
 
         try:
-            response = requests.post(url, headers=headers, json=payload, timeout=12.0)
+            response = requests.post(
+                url, headers=headers, json=payload, timeout=_resolve_timeout(timeout)
+            )
             if response.status_code == 200:
                 data = response.json()
                 candidates = data.get("candidates", [])

@@ -2,7 +2,7 @@
 Public Tour Catalog and Detail Routes.
 """
 
-from flask import Blueprint, render_template, request, abort
+from flask import Blueprint, render_template, request, abort, session
 from services.tour_service import TourService
 from services.feedback_service import FeedbackService
 from services.guide_service import GuideService
@@ -51,6 +51,7 @@ def detail(slug):
         abort(404)
 
     schedules = TourService.get_tour_schedules(tour["id"], only_open=True)
+    postponed_schedules = TourService.get_postponed_schedules(tour["id"])
     feedbacks = FeedbackService.get_feedbacks_by_tour(tour["id"])
     guides = GuideService.get_guides_for_tour(tour["id"])
 
@@ -59,12 +60,20 @@ def detail(slug):
     if feedbacks:
         avg_rating = round(sum([f["rating"] for f in feedbacks]) / len(feedbacks), 1)
 
+    # Bảng đánh giá chỉ mở khi khách đã HOÀN THÀNH chuyến đi của tour này
+    # và chưa từng đánh giá đơn đó (mỗi đơn chỉ nhận 1 đánh giá).
+    review_booking = None
+    if session.get("user_id") and session.get("role") == "CUSTOMER":
+        review_booking = FeedbackService.get_reviewable_booking(session["user_id"], tour["id"])
+
     return render_template(
         "tour_detail.html",
         tour=tour,
         schedules=schedules,
+        postponed_schedules=postponed_schedules,
         feedbacks=feedbacks,
         avg_rating=avg_rating,
-        guides=guides
+        guides=guides,
+        review_booking=review_booking
     )
 

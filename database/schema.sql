@@ -53,7 +53,9 @@ CREATE TABLE IF NOT EXISTS tour_schedules (
     child_price DECIMAL(12, 2) NOT NULL,
     total_seats INTEGER NOT NULL DEFAULT 20,
     available_seats INTEGER NOT NULL DEFAULT 20,
-    status VARCHAR(20) NOT NULL DEFAULT 'OPEN', -- 'OPEN', 'FULL', 'CLOSED', 'CANCELLED'
+    status VARCHAR(20) NOT NULL DEFAULT 'OPEN', -- 'OPEN', 'FULL', 'CLOSED', 'CANCELLED', 'POSTPONED'
+    postpone_reason TEXT,                       -- Lý do tạm hoãn (bắt buộc khi status = 'POSTPONED')
+    postponed_at DATETIME,                      -- Thời điểm tạm hoãn gần nhất
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tour_id) REFERENCES tours (id) ON DELETE CASCADE,
     CHECK (available_seats >= 0 AND available_seats <= total_seats)
@@ -93,6 +95,26 @@ CREATE TABLE IF NOT EXISTS payments (
     notes TEXT,
     FOREIGN KEY (booking_id) REFERENCES bookings (id) ON DELETE CASCADE,
     FOREIGN KEY (verified_by) REFERENCES users (id) ON DELETE SET NULL
+);
+
+-- 6b. Bảng REFUND_REQUESTS (Yêu cầu hoàn tiền do khách báo khi hủy tour)
+-- Khi khách hủy tour đã thanh toán, hệ thống tự tạo 1 yêu cầu ở trạng thái
+-- 'PENDING' (báo hoàn toàn số tiền khách đã trả). Kế toán / Admin duyệt
+-- ('APPROVED' -> sinh phiếu chi REFUND) hoặc từ chối ('REJECTED').
+CREATE TABLE IF NOT EXISTS refund_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    booking_id INTEGER NOT NULL UNIQUE,      -- Mỗi đơn chỉ có 1 yêu cầu hoàn tiền
+    paid_amount DECIMAL(12, 2) NOT NULL,     -- Khách đã thanh toán bao nhiêu
+    request_amount DECIMAL(12, 2) NOT NULL,  -- Khách yêu cầu hoàn (báo hoàn toàn)
+    reason TEXT,                             -- Lý do khách hủy tour
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- 'PENDING', 'APPROVED', 'REJECTED'
+    requested_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    processed_by INTEGER,                    -- Admin/Kế toán xử lý
+    processed_at DATETIME,
+    decision_amount DECIMAL(12, 2),          -- Số tiền thực trả khi duyệt
+    decision_notes TEXT,                     -- Ghi chú khi duyệt/từ chối
+    FOREIGN KEY (booking_id) REFERENCES bookings (id) ON DELETE CASCADE,
+    FOREIGN KEY (processed_by) REFERENCES users (id) ON DELETE SET NULL
 );
 
 -- 7. Bảng TOUR_GUIDES (Hồ sơ hướng dẫn viên)
@@ -174,4 +196,6 @@ CREATE INDEX IF NOT EXISTS idx_feedbacks_tour ON feedbacks (tour_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_schedule ON tour_expenses (schedule_id);
 CREATE INDEX IF NOT EXISTS idx_payments_booking ON payments (booking_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments (payment_status);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_status ON refund_requests (status);
+CREATE INDEX IF NOT EXISTS idx_refund_requests_booking ON refund_requests (booking_id);
 

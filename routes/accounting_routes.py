@@ -8,6 +8,7 @@ Restricted to ADMIN and ACCOUNTANT roles.
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from routes.auth_routes import roles_required
 from services.accounting_service import AccountingService
+from services.refund_service import RefundService
 
 accounting_bp = Blueprint("accounting", __name__, url_prefix="/accounting")
 
@@ -174,5 +175,50 @@ def refunds():
         return redirect(url_for("accounting.refunds"))
 
     refund_requests = AccountingService.get_refund_requests()
-    return render_template("accounting/refunds.html", refund_requests=refund_requests)
+    pending_refunds = RefundService.get_requests(status="PENDING")
+    history_refunds = RefundService.get_requests()
+    return render_template(
+        "accounting/refunds.html",
+        refund_requests=refund_requests,
+        pending_refunds=pending_refunds,
+        history_refunds=history_refunds
+    )
+
+
+@accounting_bp.route("/refunds/<int:request_id>/approve", methods=["POST"])
+@roles_required("ADMIN", "ACCOUNTANT")
+def approve_refund(request_id):
+    """Duyệt phiếu báo hoàn toàn của khách -> xuất quỹ hoàn tiền."""
+    decision_amount = request.form.get("decision_amount", type=float)
+    notes = request.form.get("notes", "").strip()
+
+    try:
+        RefundService.approve_request(
+            request_id=request_id,
+            approver_id=session["user_id"],
+            decision_amount=decision_amount,
+            notes=notes
+        )
+        flash("Đã duyệt hoàn tiền và lập phiếu chi thành công!", "success")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("accounting.refunds"))
+
+
+@accounting_bp.route("/refunds/<int:request_id>/reject", methods=["POST"])
+@roles_required("ADMIN", "ACCOUNTANT")
+def reject_refund(request_id):
+    """Từ chối phiếu báo hoàn tiền - bắt buộc nhập lý do."""
+    notes = request.form.get("notes", "").strip()
+
+    try:
+        RefundService.reject_request(
+            request_id=request_id,
+            approver_id=session["user_id"],
+            notes=notes
+        )
+        flash("Đã từ chối yêu cầu hoàn tiền. Lý do sẽ được hiển thị cho khách hàng.", "info")
+    except ValueError as e:
+        flash(str(e), "danger")
+    return redirect(url_for("accounting.refunds"))
 

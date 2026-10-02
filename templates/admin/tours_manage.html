@@ -71,7 +71,7 @@
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Giá
                         tiêu chuẩn (VNĐ) *</label>
-                    <input type="number" name="base_price" value="3500000" step="50000" required
+                    <input type="number" name="base_price" value="3500000" step="any" required
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                 </div>
                 <div>
@@ -167,7 +167,6 @@
     document.getElementById("btn-ai-gen").addEventListener("click", async () => {
         const title = document.getElementById("tour-title").value.trim();
         const destSelect = document.getElementById("tour-dest");
-        const destName = destSelect.options[destSelect.selectedIndex].text;
         const days = document.getElementById("tour-days").value;
         const highlights = document.getElementById("tour-highlights").value.trim();
 
@@ -175,15 +174,26 @@
             alert("Vui lòng nhập Tên chuyến tour trước khi yêu cầu AI sinh nội dung!");
             return;
         }
+        // selectedIndex = -1 khi chưa có điểm đến nào -> options[-1] là undefined
+        const destName = destSelect.selectedIndex >= 0
+            ? destSelect.options[destSelect.selectedIndex].text.trim()
+            : "";
 
         const btn = document.getElementById("btn-ai-gen");
+        const originalLabel = btn.innerText;
         btn.disabled = true;
-        btn.innerText = "⏳ AI đang sinh nội dung...";
+        btn.innerText = "⏳ AI đang sinh nội dung (có thể mất 15-30 giây)...";
+
+        // AI sinh mô tả + lịch trình cần ~15-25 giây; đặt giới hạn 120s ở
+        // phía trình duyệt để không treo vô hạn nếu mạng chết giữa chừng.
+        const controller = new AbortController();
+        const clientTimer = setTimeout(() => controller.abort(), 120000);
 
         try {
             const res = await fetch("/api/ai/generate-description", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                signal: controller.signal,
                 body: JSON.stringify({
                     title: title,
                     destination: destName,
@@ -192,11 +202,16 @@
                 })
             });
             const data = await res.json();
+
+            if (res.status === 401 || res.status === 302) {
+                window.location.href = "/login?next=" + encodeURIComponent(window.location.pathname);
+                return;
+            }
             if (data.description && data.itinerary) {
                 document.getElementById("tour-desc").value = data.description;
                 document.getElementById("tour-itinerary").value = data.itinerary;
                 if (data.source === "template") {
-                    alert("⚠️ AI tạm thời gián đoạn nên hệ thống đã tự động tạo mô tả & lịch trình theo mẫu cấu trúc.\nBạn có thể chỉnh sửa nội dung trước khi bấm Lưu Tour!");
+                    alert("⚠️ Dịch vụ AI đang bận hoặc gián đoạn nên hệ thống đã tự động tạo mô tả & lịch trình theo mẫu cấu trúc.\nBạn có thể chỉnh sửa nội dung trước khi bấm Lưu Tour!");
                 } else {
                     alert("✨ AI đã sinh thành công mô tả và lịch trình!");
                 }
@@ -204,10 +219,15 @@
                 alert("Lỗi: " + (data.error || "Không thể sinh nội dung"));
             }
         } catch (e) {
-            alert("Lỗi kết nối tới AI API!");
+            if (e.name === "AbortError") {
+                alert("⏰ AI phản hồi quá lâu (>2 phút). Vui lòng thử lại hoặc nhập nội dung thủ công.");
+            } else {
+                alert("Lỗi kết nối tới máy chủ khi gọi AI. Vui lòng thử lại!");
+            }
         } finally {
+            clearTimeout(clientTimer);
             btn.disabled = false;
-            btn.innerText = "✨ AI Sinh Mô Tả & Lịch Trình Tự Động";
+            btn.innerText = originalLabel;
         }
     });
 </script>

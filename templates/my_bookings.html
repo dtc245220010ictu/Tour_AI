@@ -10,6 +10,9 @@
         <p style="color: #64748b;">Quản lý danh sách các chuyến du lịch bạn đã đặt chỗ</p>
     </div>
 
+    {% set my_feedbacks_by_booking = {} %}
+    {% for f in my_feedbacks %}{% if f.booking_id %}{% set _ = my_feedbacks_by_booking.update({f.booking_id: f.id}) %}{% endif %}{% endfor %}
+
     {% if bookings %}
     <div
         style="background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
@@ -22,6 +25,7 @@
                     <th style="padding: 14px 18px;">Số khách</th>
                     <th style="padding: 14px 18px;">Tổng tiền</th>
                     <th style="padding: 14px 18px;">Trạng thái</th>
+                    <th style="padding: 14px 18px;">Hoàn tiền</th>
                     <th style="padding: 14px 18px; text-align: center;">Thao tác</th>
                 </tr>
             </thead>
@@ -48,6 +52,10 @@
                         <span
                             style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">ĐÃ
                             HỦY</span>
+                        {% elif b.status == 'COMPLETED' %}
+                        <span
+                            style="background: #e0f2fe; color: #075985; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">ĐÃ
+                            HOÀN THÀNH</span>
                         {% else %}
                         <span
                             style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700;">{{
@@ -58,14 +66,66 @@
                         <a href="{{ url_for('booking.booking_success', booking_code=b.booking_code) }}"
                             class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; margin-right: 6px;">Chi
                             tiết</a>
+                        {% if b.status == 'COMPLETED' %}
+                        {% if b.id in reviewed_booking_ids %}
+                        <a href="{{ url_for('feedback.edit_feedback', feedback_id=my_feedbacks_by_booking.get(b.id)) }}"
+                            class="btn btn-outline"
+                            style="padding: 4px 10px; font-size: 12px; margin-right: 6px; color: #047857; border-color: #047857;">✓
+                            Đã đánh giá</a>
+                        {% else %}
+                        <a href="{{ url_for('tour.detail', slug=b.tour_slug) }}#feedback-section" class="btn btn-primary"
+                            style="padding: 4px 10px; font-size: 12px; margin-right: 6px;">⭐ Đánh giá</a>
+                        {% endif %}
+                        {% endif %}
                         {% if b.status in ['PENDING', 'CONFIRMED'] %}
-                        <form action="{{ url_for('booking.cancel_booking', booking_id=b.id) }}" method="POST"
-                            style="display: inline;"
-                            onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn đặt tour này? Số chỗ sẽ được hoàn trả về hệ thống. Nếu đã thanh toán, phí hoàn tiền áp dụng theo chính sách hủy tour.');">
-                            <button type="submit" class="btn"
-                                style="background: #ef4444; color: #fff; padding: 4px 10px; font-size: 12px;">Hủy
-                                tour</button>
-                        </form>
+                        <details style="display: inline-block;">
+                            <summary class="btn"
+                                style="background: #ef4444; color: #fff; padding: 4px 10px; font-size: 12px; cursor: pointer;">Hủy
+                                tour</summary>
+                            <form action="{{ url_for('booking.cancel_booking', booking_id=b.id) }}" method="POST"
+                                style="margin-top: 8px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; text-align: left; min-width: 280px; box-shadow: 0 8px 20px rgba(0,0,0,0.12);">
+                                <p style="font-size: 12.5px; color: #334155; margin-bottom: 8px; line-height: 1.5;">Bạn
+                                    xác nhận hủy đơn <strong>{{ b.booking_code }}</strong>?</p>
+                                <label
+                                    style="font-size: 12px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Lý
+                                    do hủy (để Kế toán xử lý hoàn tiền):</label>
+                                <textarea name="cancel_reason" rows="2"
+                                    placeholder="Ví dụ: Đi công tác đột xuất, thời tiết xấu..."
+                                    style="width: 100%; padding: 7px 9px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12.5px; font-family: inherit; margin-bottom: 9px;"></textarea>
+                                <p style="font-size: 11.5px; color: #92400e; background: #fef3c7; padding: 7px 9px; border-radius: 6px; margin-bottom: 9px; line-height: 1.45;">💡
+                                    Nếu bạn đã thanh toán, hệ thống sẽ <strong>báo hoàn toàn</strong> số tiền
+                                    đó và gửi tới Kế toán/Quản trị duyệt.</p>
+                                <button type="submit" class="btn"
+                                    style="background: #dc2626; color: #fff; padding: 6px 14px; font-size: 12.5px;">Xác nhận
+                                    hủy tour</button>
+                            </form>
+                        </details>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 16px 18px;">
+                        {% set rf = refund_by_booking.get(b.id) %}
+                        {% if rf %}
+                        {% if rf.status == 'PENDING' %}
+                        <span
+                            style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 700; display: block;">⏳
+                            CHỜ DUYỆT HOÀN</span>
+                        <div style="font-size: 11.5px; color: #64748b; margin-top: 4px;">Báo hoàn {{
+                            rf.request_amount | format_currency }}</div>
+                        {% elif rf.status == 'APPROVED' %}
+                        <span
+                            style="background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 700; display: block;">✅
+                            ĐÃ HOÀN TIỀN</span>
+                        <div style="font-size: 11.5px; color: #64748b; margin-top: 4px;">Thực nhận {{
+                            rf.decision_amount | format_currency }}</div>
+                        {% else %}
+                        <span
+                            style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 700; display: block;">❌
+                            TỪ CHỐI HOÀN</span>
+                        {% if rf.decision_notes %}
+                        <div style="font-size: 11.5px; color: #991b1b; margin-top: 4px; line-height: 1.45;">“{{
+                            rf.decision_notes }}”</div>
+                        {% endif %}
+                        {% endif %}
                         {% endif %}
                     </td>
                 </tr>
@@ -83,5 +143,64 @@
         <a href="{{ url_for('tour.catalog') }}" class="btn btn-primary">Khám phá tour ngay</a>
     </div>
     {% endif %}
+
+    {# ==========================================================
+       ĐÁNH GIÁ CỦA TÔI - xem / sửa / xóa đánh giá đã gửi
+       Chỉ hiển thị với khách hàng đã hoàn thành chuyến đi và đánh giá.
+       ========================================================== #}
+    <div style="margin-top: 35px;">
+        <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">⭐ Đánh Giá Của Tôi
+        </h2>
+        <p style="color: #64748b; margin-bottom: 18px;">Quản lý các đánh giá bạn đã gửi sau khi hoàn thành chuyến
+            đi.</p>
+
+        {% if my_feedbacks %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px;">
+            {% for f in my_feedbacks %}
+            <div
+                style="background: #ffffff; border: 2px solid #cbd5e1; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(2,6,23,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px;">
+                    <div style="min-width: 0;">
+                        <a href="{{ url_for('tour.detail', slug=f.tour_slug) }}"
+                            style="font-size: 16px; font-weight: 700; color: #0f172a; display: block; line-height: 1.35;">{{
+                            f.tour_title }}</a>
+                        {% if f.destination_name %}
+                        <div style="font-size: 12.5px; color: #64748b; margin-top: 3px;">📍 {{ f.destination_name }}
+                            · 🗓️ {{ f.departure_date }} &rarr; {{ f.return_date }}</div>
+                        {% endif %}
+                    </div>
+                    <div style="font-size: 18px; color: #d97706; font-weight: 700; white-space: nowrap;">{{ "⭐" *
+                        f.rating }}</div>
+                </div>
+
+                <p style="font-size: 14px; color: #334155; line-height: 1.65; flex: 1; margin-bottom: 14px;">{{
+                    f.comment }}</p>
+
+                <div style="display: flex; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid #e2e8f0;">
+                    <a href="{{ url_for('feedback.edit_feedback', feedback_id=f.id) }}" class="btn btn-primary"
+                        style="padding: 6px 14px; font-size: 13px;">✏️ Sửa</a>
+                    <form action="{{ url_for('feedback.delete_feedback', feedback_id=f.id) }}" method="POST"
+                        style="display: inline;"
+                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này? Thao tác không thể hoàn tác.');">
+                        <button type="submit" class="btn"
+                            style="background: #dc2626; color: #fff; padding: 6px 14px; font-size: 13px;">🗑️
+                            Xóa</button>
+                    </form>
+                    <span style="font-size: 11.5px; color: #94a3b8; margin-left: auto;">{{ f.created_at }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div
+            style="background: #ffffff; padding: 40px 20px; border-radius: 16px; text-align: center; border: 2px dashed #cbd5e1;">
+            <div style="font-size: 40px; margin-bottom: 10px;">📝</div>
+            <h3 style="font-size: 16px; font-weight: 700; color: #334155; margin-bottom: 6px;">Bạn chưa có đánh giá
+                nào</h3>
+            <p style="color: #64748b; font-size: 14px;">Sau khi hoàn thành chuyến đi, bạn có thể đánh giá tại cột
+                <strong>Thao tác</strong> của đơn tương ứng.</p>
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

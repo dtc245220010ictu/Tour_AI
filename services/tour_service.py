@@ -5,6 +5,7 @@ Provides catalog searching, filtering, and schedule management.
 
 import re
 import unicodedata
+from decimal import Decimal
 from database.db import get_db, execute_query
 
 def generate_slug(text: str) -> str:
@@ -193,10 +194,13 @@ class TourService:
     def sync_schedule_prices(tour_id: int, base_price: float) -> int:
         """Đồng bộ giá vé của TẤT CẢ lịch khởi hành theo giá tour hiện tại.
         Giá trẻ em = 70% giá người lớn (quy ước toàn hệ thống).
+        Không làm tròn giá trị - chỉ cắt sai số thực tế của float
+        (ví dụ 2333333.0999999996 -> 2333333.1) để giá đúng về mặt toán học.
         Trả về số lịch khởi hành đã cập nhật.
         """
         adult = float(base_price)
-        child = round(adult * 0.7)
+        # decimal chính xác: 70% = 0.7, tránh nhân trực tiếp gây lỗi float
+        child = float(Decimal(str(adult)) * Decimal("0.7"))
         with get_db() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -221,7 +225,8 @@ class TourService:
     @staticmethod
     def get_schedule_by_id(schedule_id: int):
         return execute_query(
-            """SELECT s.*, t.title AS tour_title, t.slug AS tour_slug, 
+            """SELECT s.*, t.title AS tour_title, t.slug AS tour_slug,
+                      t.duration_days, t.duration_nights,
                       d.name AS destination_name
                FROM tour_schedules s
                JOIN tours t ON s.tour_id = t.id
@@ -245,7 +250,7 @@ class TourService:
     @staticmethod
     def update_schedule(schedule_id: int, departure_date: str, return_date: str,
                         adult_price: float, child_price: float, total_seats: int,
-                        status: str = "OPEN"):
+                        status: str = "OPEN", postpone_reason: str = ""):
         """Cập nhật lịch khởi hành mà không cho phép ghi đè số ghế đã giữ.
 
         `available_seats` luôn được suy ra từ tổng số ghế trừ số hành khách của
@@ -291,23 +296,39 @@ class TourService:
                 )
             available_seats = total_seats - reserved_seats
 
-            if status not in ("OPEN", "FULL", "CLOSED", "CANCELLED"):
+            if status not in ("OPEN", "FULL", "CLOSED", "CANCELLED", "POSTPONED"):
                 status = "OPEN"
             # OPEN/FULL is always determined from the derived availability.
-            # CLOSED and CANCELLED remain explicit operational decisions.
+            # CLOSED / CANCELLED / POSTPONED remain explicit operational decisions.
             if status == "OPEN" and available_seats == 0:
                 status = "FULL"
             elif status == "FULL" and available_seats > 0:
                 status = "OPEN"
 
-            cursor.execute(
-                """UPDATE tour_schedules SET
-                   departure_date = ?, return_date = ?, adult_price = ?, child_price = ?,
-                   total_seats = ?, available_seats = ?, status = ?
-                   WHERE id = ?;""",
-                (departure_date, return_date, adult_price, child_price,
-                 total_seats, available_seats, status, schedule_id),
-            )
+            # Tạm hoãn bắt buộc phải kèm lý do; các trạng thái khác xóa lý do cũ.
+            postpone_reason = (postpone_reason or "").strip()
+            if status == "POSTPONED":
+                if not postpone_reason:
+                    raise ValueError("Vui lòng nhập lý do tạm hoãn lịch khởi hành.")
+                cursor.execute(
+                    """UPDATE tour_schedules SET
+                       departure_date = ?, return_date = ?, adult_price = ?, child_price = ?,
+                       total_seats = ?, available_seats = ?, status = ?,
+                       postpone_reason = ?, postponed_at = CURRENT_TIMESTAMP
+                       WHERE id = ?;""",
+                    (departure_date, return_date, adult_price, child_price,
+                     total_seats, available_seats, status, postpone_reason, schedule_id),
+                )
+            else:
+                cursor.execute(
+                    """UPDATE tour_schedules SET
+                       departure_date = ?, return_date = ?, adult_price = ?, child_price = ?,
+                       total_seats = ?, available_seats = ?, status = ?,
+                       postpone_reason = NULL, postponed_at = NULL
+                       WHERE id = ?;""",
+                    (departure_date, return_date, adult_price, child_price,
+                     total_seats, available_seats, status, schedule_id),
+                )
         return True
 
     @staticmethod
@@ -331,4 +352,71 @@ class TourService:
 
         execute_query("DELETE FROM tour_schedules WHERE id = ?;", (schedule_id,), commit=True)
         return True
+# ==========================================================
+    # Tạm hoãn đợt khởi hành (POSTPONED) - bắt buộc kèm lý do
+    # ==========================================================
+    @staticmethod
+    def postpone_schedule(schedule_id: int, reason: str):
+        """Tạm hoãn một đợt khởi hành.
+
+        Yêu cầu bắt buộc: phải kèm lý do cụ thể để thông báo cho khách hàng.
+        Đợt bị tạm hoãn sẽ không còn nhận đặt chỗ mới (không nằm trong danh
+        sách lịch mở bán) nhưng vẫn được lưu để tra cứu lý do.
+        """
+        reason = (reason or "").strip()
+        if not reason:
+            raise ValueError("Vui lòng nhập lý do tạm hoãn lịch khởi hành.")
+
+        schedule = execute_query(
+            "SELECT id, status FROM tour_schedules WHERE id = ?;",
+            (schedule_id,),
+            fetch_one=True
+        )
+        if not schedule:
+            raise ValueError("Không tìm thấy lịch khởi hành.")
+        if schedule["status"] == "POSTPONED":
+            raise ValueError("Lịch khởi hành này đã ở trạng thái tạm hoãn.")
+
+        execute_query(
+            """UPDATE tour_schedules
+               SET status = 'POSTPONED', postpone_reason = ?, postponed_at = CURRENT_TIMESTAMP
+               WHERE id = ?;""",
+            (reason, schedule_id),
+            commit=True
+        )
+        return True
+
+    @staticmethod
+    def resume_schedule(schedule_id: int):
+        """Khôi phục đợt khởi hành đang tạm hoãn (tự tính lại OPEN/FULL)."""
+        schedule = execute_query(
+            "SELECT id, status, available_seats FROM tour_schedules WHERE id = ?;",
+            (schedule_id,),
+            fetch_one=True
+        )
+        if not schedule:
+            raise ValueError("Không tìm thấy lịch khởi hành.")
+        if schedule["status"] != "POSTPONED":
+            raise ValueError("Chỉ có thể khôi phục lịch khởi hành đang ở trạng thái tạm hoãn.")
+
+        new_status = "FULL" if schedule["available_seats"] <= 0 else "OPEN"
+        execute_query(
+            """UPDATE tour_schedules
+               SET status = ?, postpone_reason = NULL, postponed_at = NULL
+               WHERE id = ?;""",
+            (new_status, schedule_id),
+            commit=True
+        )
+        return True
+
+    @staticmethod
+    def get_postponed_schedules(tour_id: int):
+        """Danh sách các đợt khởi hành đang tạm hoãn của một tour (kèm lý do)."""
+        return execute_query(
+            """SELECT * FROM tour_schedules
+               WHERE tour_id = ? AND status = 'POSTPONED'
+               ORDER BY departure_date ASC;""",
+            (tour_id,),
+            fetch_all=True
+        )
 

@@ -13,15 +13,6 @@
                 Hoạt Động</h1>
             <p style="color: #64748b;">Tổng quan tình hình kinh doanh, số chỗ và phân tích tour</p>
         </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            {% if session.get('role') == 'ADMIN' %}
-            <a href="{{ url_for('admin.manage_tours') }}" class="btn btn-primary">Quản lý Tour</a>
-            <a href="{{ url_for('admin.manage_schedules') }}" class="btn btn-outline">Lịch Khởi Hành</a>
-            <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-outline">Đơn Đặt Chỗ</a>
-            <a href="{{ url_for('admin.manage_guides') }}" class="btn btn-outline">🧭 Hướng Dẫn Viên</a>
-            <a href="{{ url_for('admin.manage_feedbacks') }}" class="btn btn-outline">Đánh Giá AI</a>
-            {% endif %}
-        </div>
     </div>
     <!-- 4 Stats Cards -->
     <div

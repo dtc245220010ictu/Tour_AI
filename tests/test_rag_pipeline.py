@@ -216,7 +216,14 @@ def test_api_chat_feedback_summary_admin_returns_feedback_report(client, monkeyp
     answer = data["answer"]
     assert "ĐIỂM KHEN NGỢI" in answer
     assert "ĐIỂM CẦN CẢI THIỆN" in answer
-    # Header must be grounded in the seeded test database (4 feedbacks, avg 4.8/5)
-    assert "4 phản hồi" in answer
-    assert "4.8/5" in answer
+    # Header must be grounded in the actual seeded feedbacks, not hardcoded numbers.
+    from database.db import execute_query
+
+    row = execute_query(
+        "SELECT COUNT(*) AS c, AVG(rating) AS avg FROM feedbacks;", fetch_one=True
+    )
+    expected_count = row["c"]
+    expected_avg = round(row["avg"], 1)
+    assert f"{expected_count} phản hồi" in answer
+    assert f"{expected_avg}/5" in answer
 

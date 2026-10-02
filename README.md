@@ -4,7 +4,7 @@
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-orange.svg)](https://www.sqlite.org/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-103%2F103%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-172%2F172%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -13,7 +13,7 @@
 
 ### Các Tính Năng Nổi Bật:
 1. **Quản Lý Tour & Điểm Đến:** Quản lý điểm đến, tour du lịch, lịch trình chi tiết và phương tiện di chuyển. Hỗ trợ thêm ảnh đại diện bằng cách **chọn file, dán ảnh trực tiếp (Ctrl+V)** hoặc nhập URL.
-2. **Lịch Khởi Hành & Chống Overbooking Tuyệt Đối:** Kiểm soát số chỗ khả dụng bằng giao dịch nguyên tử (Atomic Database Transaction), ngăn chặn hoàn toàn việc bán vượt quá số chỗ trống khi có nhiều khách cùng đặt. Tự động hoàn lại chỗ khi đơn tour bị hủy. **Giá vé đợt khởi hành được liên kết tự động với giá tour** (tự điền khi mở đợt, đồng bộ khi sửa giá tour) để tránh dữ liệu lệch.
+2. **Lịch Khởi Hành & Chống Overbooking Tuyệt Đối:** Kiểm soát số chỗ khả dụng bằng giao dịch nguyên tử (Atomic Database Transaction), ngăn chặn hoàn toàn việc bán vượt quá số chỗ trống khi có nhiều khách cùng đặt. Tự động hoàn lại chỗ khi đơn tour bị hủy. **Giá vé đợt khởi hành được liên kết tự động với giá tour** (tự điền khi mở đợt, đồng bộ khi sửa giá tour) để tránh dữ liệu lệch. **Ngày về tự động tính theo thời lượng tour** khi chọn ngày khởi hành, **không làm tròn số tiền** (giá trẻ em giữ nguyên phần thập phân, hiển thị theo chuẩn `1.234.567,89 ₫`). **Đợt khởi hành có thể tạm hoãn (POSTPONED) bắt buộc kèm lý do**; lý do được hiển thị cho khách trên trang chi tiết tour. Bảng quản lý có bộ lọc **Tất cả / Sắp diễn ra / Đã hoàn thành / Đang tạm hoãn**.
 3. **Trợ Lý AI Tư Vấn Tour (RAG Chatbot):**
    - Phân tích câu hỏi tự nhiên bằng tiếng Việt (ngân sách, số ngày, điểm đến, sở thích đi biển, leo núi, nghỉ dưỡng).
    - Truy vấn CSDL thực tế bằng Parameterized SQL an toàn.
@@ -23,14 +23,18 @@
 4. **Công Cụ AI Sinh Nội Dung Cho Nhân Viên:**
    - Tự động sinh mô tả tour chuẩn SEO và gợi ý lịch trình chi tiết theo ngày.
    - Tự động phân tích và tóm tắt toàn bộ phản hồi, đánh giá của khách hàng thành báo cáo chất lượng dịch vụ.
-5. **Phân Hệ Kế Toán & Tài Chính Toàn Diện (4 Trụ Cột):**
+   - **Timeout & fallback thông minh:** sinh nội dung cần 15–25 giây nên timeout được cấu hình qua `GEMINI_TIMEOUT` (mặc định 60s); khi Gemini quá tải (503) hoặc gián đoạn, hệ thống tự sinh nội dung theo mẫu cấu trúc để nhân viên vẫn có dữ liệu dùng được.
+5. **Đánh Giá & Quản Lý Phản Hồi Khách Hàng:**
+   - Bảng đánh giá **chỉ mở khi khách đã hoàn thành chuyến đi** (đơn `COMPLETED`) và mỗi đơn chỉ nhận **1 đánh giá** — chống đánh giá trước khi đi và đánh giá trùng.
+   - Khách có thể **xem / sửa / xóa** đánh giá của chính mình tại trang *Tour của tôi*; hệ thống kiểm tra sở hữu ở tầng service chống thao tác chéo.
+6. **Phân Hệ Kế Toán & Tài Chính Toàn Diện (4 Trụ Cột):**
    - **Thu & Công Nợ Khách Hàng:** Đặt cọc, thanh toán nhiều đợt, duyệt giao dịch chuyển khoản, theo dõi công nợ còn lại.
    - **Chi Phí Vận Hành Tour:** Ghi nhận chi phí xe, khách sạn, nhà hàng, vé tham quan, thù lao HDV theo từng lịch khởi hành.
-   - **Hoàn Tiền Hủy Tour:** Tính tỷ lệ hoàn tiền theo chính sách (90% / 50% / 0%) và lập phiếu chi hoàn tiền.
+   - **Hoàn Tiền Hủy Tour:** Khách hủy tour đã thanh toán sẽ **báo hoàn toàn** kèm lý do; Kế toán/Admin **duyệt hoặc từ chối** phiếu hoàn (có gợi ý tỷ lệ theo chính sách 90% / 50% / 0%) trước khi xuất quỹ.
    - **Báo Cáo Tài Chính:** P&L từng đoàn tour (Doanh thu − Chi phí = Lợi nhuận gộp, kèm Margin %) và Sổ quỹ Thu/Chi.
-6. **Báo Cáo & Thống Kê:** Thống kê doanh thu, tỷ lệ lấp đầy chỗ (Occupancy Rate) của các đợt khởi hành và top tour bán chạy nhất.
-7. **Phân Hệ Quản Trị & Phân Công Hướng Dẫn Viên:** CRUD Điểm đến, Tour, Lịch khởi hành, Khách hàng và Hướng dẫn viên; phân công HDV theo từng lịch khởi hành; phân quyền chi tiết từng thao tác (ví dụ: STAFF chỉ xem khách hàng, chỉ ADMIN được xóa tour/điểm đến). HDV xem bảng phân công dẫn tour tại `/guide/schedule`.
-8. **Bảo Mật Cao Cấp:** Băm mật khẩu bằng PBKDF2:SHA256, phân quyền 5 vai trò (Admin, Staff, Accountant, Guide, Customer), cô lập tuyệt đối API key và không cho LLM truy cập trực tiếp CSDL.
+7. **Báo Cáo & Thống Kê:** Thống kê doanh thu, tỷ lệ lấp đầy chỗ (Occupancy Rate) của các đợt khởi hành và top tour bán chạy nhất.
+8. **Phân Hệ Quản Trị & Phân Công Hướng Dẫn Viên:** CRUD Điểm đến, Tour, Lịch khởi hành, Khách hàng và Hướng dẫn viên; phân công HDV theo từng lịch khởi hành; phân quyền chi tiết từng thao tác (ví dụ: STAFF chỉ xem khách hàng, chỉ ADMIN được xóa tour/điểm đến). HDV xem bảng phân công dẫn tour tại `/guide/schedule`.
+9. **Bảo Mật Cao Cấp:** Băm mật khẩu bằng PBKDF2:SHA256, phân quyền 5 vai trò (Admin, Staff, Accountant, Guide, Customer), cô lập tuyệt đối API key và không cho LLM truy cập trực tiếp CSDL.
 
 ---
 
@@ -102,9 +106,10 @@ TourAI/
 ├── services/                           # Business Logic & AI Services
 │   ├── auth_service.py                 # Xác thực & mã hóa mật khẩu
 │   ├── tour_service.py                 # Nghiệp vụ tour, điểm đến, lịch khởi hành & sync giá đợt theo giá tour
-│   ├── booking_service.py              # Xử lý đặt chỗ & khóa nguyên tử chống overbooking
+│   ├── booking_service.py              # Xử lý đặt chỗ, khóa nguyên tử chống overbooking & hủy tour (tạo phiếu hoàn)
 │   ├── payment_service.py              # Ghi nhận thanh toán & đặt cọc
 │   ├── accounting_service.py           # Nghiệp vụ kế toán: đối soát, công nợ, chi phí, P&L, sổ quỹ
+│   ├── refund_service.py               # Quản lý phiếu báo hoàn: duyệt / từ chối & cấp giao dịch REFUND
 │   ├── feedback_service.py             # Quản lý đánh giá sao & nhận xét
 │   ├── analytics_service.py            # Doanh thu, tỷ lệ lấp đầy, top tour
 │   ├── guide_service.py                # Phân công HDV theo lịch khởi hành
@@ -145,7 +150,9 @@ TourAI/
 │   ├── guide/
 │   │   └── schedule.html               # Bảng phân công dẫn tour của HDV
 │   ├── partials/
-│   │   ├── manage_menu.html            # Menu điều khiển chung cho các trang quản trị
+│   │   ├── manage_menu.html            # Thanh điều hướng Segmented (lọc tab theo vai trò)
+│   │   ├── refund_requests_panel.html # Bảng phiếu báo hoàn toàn chờ Kế toán/Admin duyệt
+│   │   ├── refund_history_panel.html  # Lịch sử phiếu hoàn đã duyệt / từ chối
 │   │   └── image_field.html            # Ô upload/dán ảnh (Ctrl+V) dùng chung cho form admin
 │   └── accounting/                     # Giao diện Phân hệ Kế toán
 │       ├── dashboard.html              # Dashboard tài chính (thu, chi, tồn quỹ, công nợ)
@@ -153,7 +160,7 @@ TourAI/
 │       ├── expenses.html               # Kê chi phí vận hành & form thêm khoản chi
 │       ├── debts.html                  # Quản lý công nợ & thu nợ nhiều đợt
 │       ├── pnl_report.html             # Báo cáo lãi lỗ theo đoàn tour
-│       └── refunds.html                # Lập phiếu chi hoàn tiền khi hủy tour
+│       └── refunds.html                # Duyệt/từ chối phiếu báo hoàn toàn & lập phiếu chi hoàn tiền
 │
 ├── static/
 │   ├── css/
@@ -163,7 +170,7 @@ TourAI/
 │   │   └── chat.js                     # Xử lý fetch API chat, render cards, loading
 │   └── uploads/                        # Ảnh admin tải lên/dán (Ctrl+V) — gitignore, chỉ giữ file .gitkeep
 │
-├── tests/                              # Bộ kiểm thử tự động (Pytest) - 103 ca PASSED
+├── tests/                              # Bộ kiểm thử tự động (Pytest) - 172 ca PASSED
 │   ├── conftest.py                     # Cấu hình test database cô lập
 │   ├── test_auth.py                    # Kiểm thử xác thực, băm mật khẩu & đăng nhập nhanh (6)
 │   ├── test_rbac.py                    # Kiểm thử phân quyền 5 vai trò trên mọi route (22)
@@ -235,8 +242,8 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả mong đợi:** 103/103 tests `PASSED` 100%.
-*(Bao gồm xác thực/RBAC, CRUD & đồng bộ tour–lịch, booking–thanh toán–hoàn tiền, chống overbooking, RAG zero-hallucination, phân nhánh tóm tắt phản hồi khách hàng cho ADMIN, AI content fallback và các truy vấn tư vấn mơ hồ.)*
+**Kết quả mong đợi:** 172/172 tests `PASSED` 100%.
+*(Bao gồm xác thực/RBAC, CRUD & đồng bộ tour–lịch, booking–thanh toán–duyệt hoàn tiền, chống overbooking, RAG zero-hallucination, phân nhánh tóm tắt phản hồi khách hàng cho ADMIN, AI content fallback, đăng ký đánh giá chỉ khi đã đi tour và các truy vấn tư vấn mơ hồ.)*
 
 ---
 
@@ -294,7 +301,9 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 | `/accounting/debts/<id>/pay` | POST | Kế toán ghi nhận một đợt thu nợ (tiền mặt/chuyển khoản) cho đơn đặt chỗ |
 | `/accounting/expenses` | GET, POST | Kê chi phí vận hành tour & form thêm khoản chi gắn với Lịch khởi hành |
 | `/accounting/tours-pnl` | GET | Báo cáo hiệu quả kinh doanh & lãi/lỗ (P&L) theo từng đoàn tour |
-| `/accounting/refunds` | GET, POST | Quản lý và lập phiếu chi hoàn tiền cho booking đã hủy |
+| `/accounting/refunds` | GET, POST | Duyệt / từ chối phiếu báo hoàn toàn của khách & lập phiếu chi hoàn tiền cho booking đã hủy |
+| `/accounting/refunds/<id>/approve` | POST | Duyệt phiếu hoàn: hệ thống tự tạo giao dịch `REFUND` trả về khách (tỷ lệ do kế toán quyết định) |
+| `/accounting/refunds/<id>/reject` | POST | Từ chối phiếu hoàn kèm lý do bắt buộc, khách nhận thông báo tại *Tour của tôi* |
 
 ### Quy tắc nghiệp vụ chính
 - **Công nợ** = `Tổng tiền tour − Tổng tiền đã thanh toán thành công`.
@@ -309,9 +318,16 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 ### Cấu trúc dữ liệu liên quan
 - Bảng **`tour_expenses`**: lưu chi phí theo `schedule_id` với `category` ∈ {HOTEL, TRANSPORT, MEAL, TICKETS, GUIDE_FEE, OTHER}.
 - Bảng **`payments`**: hỗ trợ `payment_type` ∈ {DEPOSIT, FULL, REMAINING, REFUND} cùng các trường xác nhận `verified_by`, `verified_at`.
+- Bảng **`refund_requests`**: phiếu báo hoàn của khách, **mỗi đơn đặt chỗ chỉ có 1 phiếu** (ràng buộc `UNIQUE(booking_id)`); lưu số tiền đã thanh toán, số tiền yêu cầu hoàn, lý do khách, trạng thái `PENDING / APPROVED / REJECTED`, đơn vị xử lý và ghi chú quyết định.
+
+### Quy trình duyệt hoàn tiền (báo hoàn toàn)
+1. Khách bấm **Hủy tour** tại `/my-bookings`, nhập lý do → hệ thống hoàn lại chỗ và tự tạo phiếu `PENDING` với số tiền bằng **tổng thanh toán thành công** (loại trừ giao dịch `REFUND`).
+2. Kế toán/Admin mở `/accounting/refunds`, xem tab **Chờ duyệt**, chọn tỷ lệ hoàn (mặc định 100% số tiền đã trả) và bấm **Duyệt** → hệ thống tạo giao dịch `REFUND`, chuyển phiếu sang `APPROVED`.
+3. Bấm **Từ chối** bắt buộc nhập lý do → phiếu chuyển `REJECTED`, khách thấy lý do tại *Tour của tôi*.
+4. Mọi trạng thái được hiển thị lại cho khách dưới dạng thẻ màu: **Chờ duyệt / Đã hoàn tiền / Đã từ chối** kèm ghi chú quyết định.
 
 ### Kiểm thử phân hệ kế toán
-Các test trong `tests/test_accounting.py` (nằm trong bộ 103 test):
+Các test trong `tests/test_accounting.py` (nằm trong tổng 172 test):
 - `test_record_and_verify_payment` — quy trình kế toán duyệt thanh toán chuyển khoản.
 - `test_debt_calculation` — tính công nợ khi khách mới đặt cọc một phần.
 - `test_tour_expense_and_pnl` — ghi nhận chi phí tour & kiểm tra công thức Lợi nhuận = Doanh thu − Chi phí.

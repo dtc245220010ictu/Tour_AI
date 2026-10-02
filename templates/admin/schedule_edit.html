@@ -23,14 +23,14 @@
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Ngày
                         khởi hành *</label>
-                    <input type="date" name="departure_date" value="{{ schedule.departure_date }}" required
+                    <input type="date" id="departure_date" name="departure_date" value="{{ schedule.departure_date }}" required
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                 </div>
                 <div>
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Ngày
-                        về *</label>
-                    <input type="date" name="return_date" value="{{ schedule.return_date }}" required
+                        về * <span id="duration-hint" style="color: #0284c7; font-weight: 500;"></span></label>
+                    <input type="date" id="return_date" name="return_date" value="{{ schedule.return_date }}" required
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                 </div>
             </div>
@@ -40,14 +40,14 @@
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Giá
                         người lớn (VNĐ) *</label>
-                    <input type="number" name="adult_price" value="{{ schedule.adult_price }}" step="50000" required
+                    <input type="number" name="adult_price" value="{{ schedule.adult_price }}" step="any" required
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                 </div>
                 <div>
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Giá
                         trẻ em (VNĐ) *</label>
-                    <input type="number" name="child_price" value="{{ schedule.child_price }}" step="50000" required
+                    <input type="number" name="child_price" value="{{ schedule.child_price }}" step="any" required
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px;">
                 </div>
                 <div>
@@ -68,13 +68,24 @@
                     <label
                         style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Trạng
                         thái</label>
-                    <select name="status"
+                    <select name="status" id="schedule_status"
                         style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fff;">
-                        {% for st in ['OPEN', 'FULL', 'CLOSED', 'CANCELLED'] %}
+                        {% for st in ['OPEN', 'FULL', 'CLOSED', 'POSTPONED', 'CANCELLED'] %}
                         <option value="{{ st }}" {% if schedule.status == st %}selected{% endif %}>{{ st }}</option>
                         {% endfor %}
                     </select>
                 </div>
+            </div>
+
+            {# Ô nhập lý do - bắt buộc khi chuyển sang trạng thái POSTPONED #}
+            <div id="postpone-reason-wrap" style="margin-bottom: 15px;">
+                <label style="font-size: 13px; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">Lý
+                    do tạm hoãn *</label>
+                <textarea name="postpone_reason" rows="2"
+                    placeholder="Ví dụ: Thời tiết xấu, đợt khởi hành dời sang ngày khác..."
+                    style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fffbeb;">{{ schedule.postpone_reason or '' }}</textarea>
+                <p style="font-size: 12px; color: #92400e; margin-top: 6px;">⚠️ Bắt buộc nhập lý do: khách hàng sẽ
+                    thấy lý do này trên trang chi tiết tour.</p>
             </div>
 
             <p style="font-size: 12.5px; color: #64748b; margin-bottom: 15px;">Đã giữ chỗ: {{ schedule.total_seats -
@@ -88,4 +99,42 @@
         </form>
     </div>
 </div>
+
+<!-- Tự điền ngày về theo thời lượng tour + chỉ hiện ô lý do khi POSTPONED -->
+<script>
+    (function () {
+        const statusSelect = document.getElementById("schedule_status");
+        const reasonWrap = document.getElementById("postpone-reason-wrap");
+        if (statusSelect && reasonWrap) {
+            function sync() {
+                reasonWrap.style.display = statusSelect.value === "POSTPONED" ? "block" : "none";
+            }
+            statusSelect.addEventListener("change", sync);
+            sync();
+        }
+
+        // Ngày về = ngày khởi hành + (số ngày - 1), theo thời lượng của tour
+        const depInput = document.getElementById("departure_date");
+        const retInput = document.getElementById("return_date");
+        const durationHint = document.getElementById("duration-hint");
+        const totalDays = {{ schedule.duration_days or 0 }};
+        const totalNights = {{ schedule.duration_nights or 0 }};
+
+        if (depInput && retInput) {
+            if (durationHint && totalDays > 0) {
+                durationHint.textContent = "(tự động: " + totalDays + " ngày " + totalNights + " đêm)";
+            }
+            depInput.addEventListener("change", function () {
+                if (!depInput.value || totalDays <= 0) return;
+                const dep = new Date(depInput.value + "T00:00:00");
+                if (isNaN(dep.getTime())) return;
+                dep.setDate(dep.getDate() + (totalDays - 1));
+                const y = dep.getFullYear();
+                const m = String(dep.getMonth() + 1).padStart(2, "0");
+                const d = String(dep.getDate()).padStart(2, "0");
+                retInput.value = y + "-" + m + "-" + d;
+            });
+        }
+    })();
+</script>
 {% endblock %}

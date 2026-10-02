@@ -3,6 +3,8 @@ Analytics and Reporting Service.
 Calculates revenue, top selling tours, and schedule occupancy rates.
 """
 
+from datetime import date
+
 from database.db import execute_query
 
 class AnalyticsService:
@@ -58,11 +60,19 @@ class AnalyticsService:
         )
 
     @staticmethod
-    def get_occupancy_rates():
+    def get_occupancy_rates(schedule_filter: str = "all"):
+        """Danh sách đợt khởi hành kèm tỷ lệ lấp đầy.
+
+        `schedule_filter`:
+          - 'all'       : tất cả đợt (mặc định)
+          - 'upcoming'  : đợt sắp diễn ra (ngày về >= hôm nay)
+          - 'completed' : tour đã hoàn thành (ngày về < hôm nay)
+          - 'postponed' : đợt đang tạm hoãn
+        """
         schedules = execute_query(
             """SELECT s.id, s.departure_date, s.return_date, s.total_seats, s.available_seats, s.status,
-                      s.adult_price, s.child_price,
-                      t.title AS tour_title
+                      s.adult_price, s.child_price, s.postpone_reason, s.postponed_at,
+                      t.title AS tour_title, t.duration_days, t.duration_nights
                FROM tour_schedules s
                JOIN tours t ON s.tour_id = t.id
                ORDER BY s.departure_date ASC;""",
@@ -73,5 +83,17 @@ class AnalyticsService:
             rate = (booked_seats / s["total_seats"] * 100) if s["total_seats"] > 0 else 0
             s["booked_seats"] = booked_seats
             s["occupancy_rate"] = round(rate, 1)
+            # Đợt đã kết thúc (ngày về < hôm nay) và không bị tạm hoãn/hủy -> tour đã hoàn thành
+            s["is_completed"] = bool(
+                s["return_date"] < date.today().isoformat()
+                and s["status"] not in ("POSTPONED", "CANCELLED")
+            )
+
+        if schedule_filter == "upcoming":
+            schedules = [s for s in schedules if not s["is_completed"]]
+        elif schedule_filter == "completed":
+            schedules = [s for s in schedules if s["is_completed"]]
+        elif schedule_filter == "postponed":
+            schedules = [s for s in schedules if s["status"] == "POSTPONED"]
         return schedules
 

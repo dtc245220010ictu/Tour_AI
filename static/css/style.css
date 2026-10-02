@@ -1,16 +1,17 @@
 /* Main Stylesheet for TourAI */
 :root {
-    --primary: #0284c7;
-    --primary-dark: #0369a1;
-    --primary-light: #e0f2fe;
-    --accent: #10b981;
-    --dark: #0f172a;
-    --gray-bg: #f8fafc;
-    --gray-border: #e2e8f0;
-    --text-main: #334155;
-    --text-muted: #64748b;
+    /* Bảng màu đậm: tone 700-900 cho chữ, 600-800 cho nền/nhấn mạnh */
+    --primary: #075985;
+    --primary-dark: #0c4a6e;
+    --primary-light: #7dd3fc;
+    --accent: #047857;
+    --dark: #020617;
+    --gray-bg: #e2e8f0;
+    --gray-border: #94a3b8;
+    --text-main: #0f172a;
+    --text-muted: #334155;
     --radius: 12px;
-    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    --shadow: 0 12px 20px -4px rgba(0, 0, 0, 0.14), 0 6px 8px -2px rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -45,63 +46,387 @@ a:hover {
     padding: 0 20px;
 }
 
-/* Navbar */
+/* ==========================================================
+   Navbar
+   ========================================================== */
 .navbar {
-    background: #ffffff;
-    border-bottom: 1px solid var(--gray-border);
+    background: rgba(255, 255, 255, 0.98);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+    backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 3px solid var(--primary);
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 3px 12px rgba(2, 6, 23, 0.16);
 }
 
 .navbar .nav-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 70px;
+    gap: 16px;
+    height: 72px;
 }
 
+/* Brand / Logo */
 .brand-logo {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
+    letter-spacing: -0.4px;
+    color: var(--dark);
+    white-space: nowrap;
+}
+
+.brand-logo .brand-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    box-shadow: 0 6px 14px rgba(2, 132, 199, 0.28);
+}
+
+.brand-logo .brand-accent {
     color: var(--primary);
 }
 
-.brand-logo span {
-    color: var(--accent);
-}
-
+/* Menu */
 .nav-menu {
     display: flex;
     align-items: center;
-    gap: 25px;
+    gap: 4px;
     list-style: none;
 }
 
 .nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--text-main);
     font-weight: 500;
     font-size: 15px;
-    padding: 8px 12px;
-    border-radius: 8px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    white-space: nowrap;
+    transition: color 0.2s, background-color 0.2s, transform 0.2s;
 }
 
-.nav-link:hover,
+.nav-link:hover {
+    color: var(--primary);
+    background-color: var(--primary-light);
+    transform: translateY(-1px);
+}
+
 .nav-link.active {
     color: var(--primary);
     background-color: var(--primary-light);
+    font-weight: 700;
 }
 
+/* Gạch chân gradient cho mục đang được chọn */
+.nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 2px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+}
+
+/* Liên kết nổi bật theo vai trò (thay cho inline style cũ) */
+.nav-link-ai {
+    color: #0369a1;
+    font-weight: 700;
+    background: linear-gradient(135deg, #e0f2fe, #f0f9ff);
+    border: 1px solid #bae6fd;
+}
+
+.nav-link-ai:hover,
+.nav-link-ai.active {
+    color: #075985;
+    background: #bae6fd;
+}
+
+.nav-link-accounting {
+    color: #059669;
+    font-weight: 600;
+}
+
+.nav-link-accounting:hover,
+.nav-link-accounting.active {
+    color: #047857;
+    background-color: #d1fae5;
+}
+
+.nav-link-admin {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.nav-link-admin:hover,
+.nav-link-admin.active {
+    color: #b45309;
+    background-color: #fef3c7;
+}
+
+.nav-link-guide {
+    color: #0d9488;
+    font-weight: 600;
+}
+
+.nav-link-guide:hover,
+.nav-link-guide.active {
+    color: #0f766e;
+    background-color: #ccfbf1;
+}
+
+/* Khối người dùng đã đăng nhập */
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 12px;
+    margin-left: 6px;
+    border-left: 1px solid var(--gray-border);
+}
+
+.nav-user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-logout {
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 999px;
+}
+
+/* Nút Đăng ký (CTA) */
 .nav-btn {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: #ffffff !important;
-    padding: 8px 18px;
-    border-radius: 20px;
-    font-weight: 600;
+    padding: 9px 20px;
+    border-radius: 999px;
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(3, 105, 161, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.nav-btn:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(2, 132, 199, 0.35);
+}
+
+/* Nút hamburger (chỉ hiện trên di động) */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 42px;
+    height: 42px;
+    padding: 0 10px;
+    background: #f1f5f9;
+    border: 1px solid var(--gray-border);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--text-main);
+    border-radius: 2px;
+    transition: transform 0.25s, opacity 0.25s;
+}
+
+.nav-toggle.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Responsive navbar */
+@media (max-width: 992px) {
+    .navbar .nav-container {
+        flex-wrap: wrap;
+        height: auto;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
+    .nav-toggle {
+        display: flex;
+    }
+
+    .nav-menu {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        width: 100%;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--gray-border);
+    }
+
+    .nav-menu.open {
+        display: flex;
+    }
+
+    .nav-link {
+        width: 100%;
+    }
+
+    .nav-link.active::after {
+        display: none;
+    }
+
+    .nav-user {
+        justify-content: space-between;
+        width: 100%;
+        padding: 10px 0 0;
+        margin: 6px 0 0;
+        border-left: none;
+        border-top: 1px solid var(--gray-border);
+    }
+
+    .nav-user-name {
+        max-width: none;
+    }
+}
+
+/* ==========================================================
+   Segmented Navigation Bar (thanh điều hướng theo vai trò)
+   - 1 thanh duy nhất, liền mạch, nền xám nhạt #F2F4F7
+   - Mỗi tab: icon bên trên, nhãn chữ bên dưới
+   - Tab đang chọn: nền xanh đậm #2B6CB0, chữ & icon trắng
+   ========================================================== */
+.seg-nav {
+    background: #cbd5e1;
+    border: 1px solid #94a3b8;
+    border-radius: 14px;
+    padding: 6px;
+    margin: 0 0 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: inset 0 2px 5px rgba(15, 23, 42, 0.14);
+}
+
+.seg-nav-track {
+    display: flex;
+    align-items: stretch;
+    min-width: max-content;
+}
+
+/* Đường kẻ phân cách dọc giữa các tab */
+.seg-divider {
+    flex: 0 0 1px;
+    width: 1px;
+    align-self: stretch;
+    margin: 9px 5px;
+    background: #64748b;
+}
+
+.seg-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 104px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: #1e293b;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.seg-tab .seg-icon {
+    font-size: 19px;
+    line-height: 1;
+    filter: grayscale(1) opacity(0.72);
+    transition: filter 0.2s;
+}
+
+.seg-tab:hover {
+    background: #a8b6c8;
+    color: #020617;
+    transform: translateY(-1px);
+}
+
+.seg-tab:hover .seg-icon {
+    filter: grayscale(0.5) opacity(0.9);
+}
+
+/* Tab đang được chọn */
+.seg-tab.active {
+    background: linear-gradient(135deg, #1D4E89 0%, #0c4a6e 100%);
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(12, 74, 110, 0.6);
+}
+
+/* Ép icon (emoji) sang màu trắng bằng filter */
+.seg-tab.active .seg-icon {
+    filter: brightness(0) invert(1);
+    opacity: 1;
+}
+
+/* Làm mờ đường phân cách sát tab đang chọn để khối active liền mạch */
+.seg-tab.active + .seg-divider,
+.seg-divider:has(+ .seg-tab.active) {
+    background: transparent;
+}
+
+/* Dòng chữ phụ báo trạng thái quyền hạn theo vai trò */
+.seg-role-note {
+    font-size: 12.5px;
+    color: #334155;
+    margin: 0 4px 22px;
+    font-weight: 500;
+}
+
+.seg-role-note strong {
+    color: #1D4E89;
+    letter-spacing: 0.3px;
+}
+
+@media (max-width: 576px) {
+    .seg-tab {
+        min-width: 88px;
+        padding: 9px 12px;
+        font-size: 12px;
+    }
+
+    .seg-tab .seg-icon {
+        font-size: 17px;
+    }
 }
 
 /* Flash alerts */
@@ -116,27 +441,27 @@ a:hover {
 }
 
 .alert-success {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
+    background: #86efac;
+    color: #052e16;
+    border: 1px solid #22c55e;
 }
 
 .alert-danger {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+    background: #fca5a5;
+    color: #450a0a;
+    border: 1px solid #ef4444;
 }
 
 .alert-warning {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
+    background: #fcd34d;
+    color: #451a03;
+    border: 1px solid #f59e0b;
 }
 
 .alert-info {
-    background: #e0f2fe;
-    color: #075985;
-    border: 1px solid #bae6fd;
+    background: #7dd3fc;
+    color: #082f49;
+    border: 1px solid #0ea5e9;
 }
 
 /* Tour Card */
@@ -152,7 +477,7 @@ a:hover {
     border-radius: var(--radius);
     overflow: hidden;
     box-shadow: var(--shadow);
-    border: 1px solid var(--gray-border);
+    border: 2px solid var(--gray-border);
     transition: transform 0.25s, box-shadow 0.25s;
     display: flex;
     flex-direction: column;
@@ -177,10 +502,10 @@ a:hover {
 }
 
 .tour-badge {
-    background: var(--primary-light);
-    color: var(--primary-dark);
+    background: var(--primary);
+    color: #ffffff;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     padding: 4px 10px;
     border-radius: 12px;
     display: inline-block;
@@ -226,7 +551,7 @@ a:hover {
 .tour-price {
     font-size: 20px;
     font-weight: 800;
-    color: #e11d48;
+    color: #be123c;
 }
 
 .btn {
@@ -241,8 +566,9 @@ a:hover {
 }
 
 .btn-primary {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: #ffffff;
+    font-weight: 700;
 }
 
 .btn-primary:hover {
@@ -264,10 +590,11 @@ a:hover {
 /* Footer */
 .footer {
     margin-top: auto;
-    background: #0f172a;
-    color: #94a3b8;
+    background: #020617;
+    color: #cbd5e1;
     padding: 40px 0 20px;
     font-size: 14px;
+    border-top: 5px solid var(--primary);
 }
 
 .footer-content {
@@ -297,7 +624,7 @@ a:hover {
    và tách biệt phần trình bày khỏi logic template.
    ========================================================== */
 .text-info {
-    color: #0284c7;
+    color: #0369a1;
 }
 
 .text-teal {
@@ -305,15 +632,15 @@ a:hover {
 }
 
 .text-danger {
-    color: #ef4444;
-}
-
-.text-danger-dark {
     color: #dc2626;
 }
 
+.text-danger-dark {
+    color: #b91c1c;
+}
+
 .text-success {
-    color: #16a34a;
+    color: #15803d;
 }
 
 .margin-badge {
@@ -325,8 +652,8 @@ a:hover {
 }
 
 .margin-badge-high {
-    background: #dcfce7;
-    color: #15803d;
+    background: #86efac;
+    color: #14532d;
 }
 
 
@@ -359,11 +686,11 @@ a:hover {
 
 
 .margin-badge-medium {
-    background: #fef3c7;
-    color: #b45309;
+    background: #fcd34d;
+    color: #78350f;
 }
 
 .margin-badge-low {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: #fca5a5;
+    color: #7f1d1d;
 }

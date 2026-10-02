@@ -6,7 +6,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from routes.auth_routes import login_required, roles_required
 from services.tour_service import TourService
 from services.booking_service import BookingService, OverbookingError
+from services.feedback_service import FeedbackService
 from services.payment_service import PaymentService
+from services.refund_service import RefundService
 
 booking_bp = Blueprint("booking", __name__)
 
@@ -102,7 +104,18 @@ def pay_booking(booking_id):
 def my_bookings():
     """Tour của tôi - CHỈ Khách hàng mới được truy cập (dữ liệu lọc theo chính người đang đăng nhập)."""
     bookings = BookingService.get_user_bookings(session["user_id"])
-    return render_template("my_bookings.html", bookings=bookings)
+    reviewed_booking_ids = FeedbackService.get_reviewed_booking_ids(session["user_id"])
+    my_feedbacks = FeedbackService.get_user_feedbacks(session["user_id"])
+    refund_by_booking = {
+        r["booking_id"]: r for r in RefundService.get_customer_requests(session["user_id"])
+    }
+    return render_template(
+        "my_bookings.html",
+        bookings=bookings,
+        reviewed_booking_ids=reviewed_booking_ids,
+        my_feedbacks=my_feedbacks,
+        refund_by_booking=refund_by_booking
+    )
 
 @booking_bp.route("/booking/<int:booking_id>/cancel", methods=["POST"])
 @login_required
@@ -136,9 +149,17 @@ def cancel_booking(booking_id):
         return redirect(url_for("tour.index"))
 
     try:
-        BookingService.cancel_booking(booking_id, user_id=target_user_id)
-        flash("Đã hủy đơn đặt tour thành công. Số chỗ trống đã được hoàn trả về hệ thống. "
-              "Nếu bạn đã thanh toán, khoản hoàn tiền sẽ được xử lý theo chính sách hủy tour.", "info")
+        cancel_reason = request.form.get("cancel_reason", "").strip()
+        BookingService.cancel_booking(booking_id, user_id=target_user_id, reason=cancel_reason)
+
+        # Báo cho khách biết đơn đã vào hàng chờ duyệt hoàn tiền
+        refund = RefundService.get_request_by_booking(booking_id)
+        if refund:
+            amount_text = f"{int(refund['request_amount']):,}".replace(",", ".")
+            flash(f"Đã hủy đơn đặt tour. Yêu cầu hoàn toàn {amount_text} ₫ đã được gửi tới "
+                  "Kế toán/Quản trị để duyệt. Vui lòng theo dõi tại 'Tour của tôi'.", "info")
+        else:
+            flash("Đã hủy đơn đặt tour thành công. Số chỗ trống đã được hoàn trả về hệ thống.", "info")
     except ValueError as e:
         flash(str(e), "danger")
 

@@ -62,6 +62,31 @@ def init_db():
         except Exception:
             pass
 
+        # Backward-compatible migration: thông tin tạm hoãn đợt khởi hành
+        # (status 'POSTPONED' luôn đi kèm lý do tạm hoãn).
+        try:
+            cursor.execute("PRAGMA table_info(tour_schedules);")
+            schedule_columns = [row[1] for row in cursor.fetchall()]
+            if "postpone_reason" not in schedule_columns:
+                cursor.execute("ALTER TABLE tour_schedules ADD COLUMN postpone_reason TEXT;")
+            if "postponed_at" not in schedule_columns:
+                cursor.execute("ALTER TABLE tour_schedules ADD COLUMN postponed_at DATETIME;")
+        except Exception:
+            pass
+
+        # Bảng phiếu báo hoàn tiền được tạo bởi schema.sql (CREATE TABLE IF NOT
+        # EXISTS) nên đã có sẵn ở đây; phần này chỉ bảo đảm index tồn tại
+        # với database cũ được tạo trước khi có bảng này.
+        try:
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_refund_requests_status ON refund_requests (status);"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_refund_requests_booking ON refund_requests (booking_id);"
+            )
+        except Exception:
+            pass
+
 @overload
 def execute_query(
     query: str,

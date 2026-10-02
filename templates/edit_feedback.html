@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Sửa Đánh Giá - {{ feedback.tour_title }} - TourAI{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 720px; padding: 40px 20px 60px;">
+    {% include "partials/manage_menu.html" %}
+
+    <div style="margin-bottom: 25px;">
+        <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">✏️ Sửa Đánh Giá Của
+            Bạn</h1>
+        <p style="color: #64748b;">
+            <strong style="color: #0284c7;">{{ feedback.tour_title }}</strong>
+            {% if feedback.booking_code %}
+            · Đơn {{ feedback.booking_code }}
+            {% endif %}
+        </p>
+    </div>
+
+    <div
+        style="background: #ffffff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.04);">
+        {# Đánh giá cũ của khách #}
+        <div
+            style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; margin-bottom: 25px;">
+            <div style="font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 6px;">ĐÁNH GIÁ HIỆN TẠI
+                CỦA BẠN</div>
+            <div style="font-size: 20px; color: #d97706; font-weight: 700; margin-bottom: 8px;">{{ "⭐" *
+                feedback.rating }}</div>
+            <p style="font-size: 14px; color: #334155; line-height: 1.6;">{{ feedback.comment }}</p>
+        </div>
+
+        <form method="POST">
+            <div style="margin-bottom: 18px;">
+                <label
+                    style="font-size: 14px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 8px;">Số
+                    sao đánh giá *</label>
+                <select name="rating" required
+                    style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; background: #fff;">
+                    {% for i in [5, 4, 3, 2, 1] %}
+                    <option value="{{ i }}" {% if feedback.rating == i %}selected{% endif %}>
+                        {{ "⭐" * i }} ({{ i }} sao{% if i == 5 %} - Tuyệt vời{% elif i == 4 %} - Rất tốt{% elif i == 3 %} - Bình thường{% elif i == 2 %} - Cần cải thiện{% else %} - Thất vọng{% endif %})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label
+                    style="font-size: 14px; font-weight: 700; color: #1e293b; display: block; margin-bottom: 8px;">Nội
+                    dung đánh giá *</label>
+                <textarea name="comment" rows="5" required
+                    placeholder="Chia sẻ cảm nhận của bạn về hướng dẫn viên, khách sạn, điểm tham quan..."
+                    style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; font-family: inherit;">{{ feedback.comment }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="padding: 12px 26px; font-size: 15px;">💾 Lưu
+                thay đổi</button>
+            <a href="{{ url_for('booking.my_bookings') }}" class="btn btn-outline"
+                style="padding: 12px 26px; font-size: 15px; margin-left: 8px;">Hủy</a>
+        </form>
+    </div>
+
+    {# Xóa đánh giá #}
+    <div
+        style="background: #fff; border: 1px solid #fecaca; border-radius: 14px; padding: 20px 25px; margin-top: 25px;">
+        <h3 style="font-size: 16px; font-weight: 700; color: #991b1b; margin-bottom: 6px;">🗑️ Xóa đánh giá này?</h3>
+        <p style="font-size: 13.5px; color: #7f1d1d; margin-bottom: 14px;">Đánh giá sẽ bị gỡ khỏi trang tour và
+            bạn có thể đánh giá lại chuyến đi này sau.</p>
+        <form action="{{ url_for('feedback.delete_feedback', feedback_id=feedback.id) }}" method="POST"
+            onsubmit="return confirm('Bạn có chắc chắn muốn xóa đánh giá này? Thao tác không thể hoàn tác.');">
+            <button type="submit" class="btn"
+                style="background: #dc2626; color: #ffffff; padding: 10px 22px; font-size: 14px;">🗑️ Xóa đánh
+                giá</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
