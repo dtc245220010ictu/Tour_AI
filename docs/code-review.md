@@ -52,3 +52,15 @@ Tài liệu này ghi nhận kết quả đánh giá chất lượng toàn bộ m
 | `ISSUE-02` | LOW | `app.py` | Khi triển khai trên môi trường Production HTTPS, nên cấu hình thêm `SESSION_COOKIE_SECURE = True` và `SESSION_COOKIE_HTTPONLY = True`. |
 | `ISSUE-03` | LOW | `tour_service.py` | Có thể bổ sung cache tầng in-memory (ví dụ Redis hoặc lru_cache) cho danh mục `get_all_destinations()` để giảm bớt số lần đọc đĩa khi lưu lượng truy cập lớn. |
 
+---
+
+## 4. Rà soát điều hướng theo vai trò (2026-10-27)
+
+| Mức độ | Phát hiện | Bằng chứng | Trạng thái xử lý |
+|---|---|---|---|
+| HIGH | Chọn nhóm đổi màu nhưng không đổi phần nội dung. | JavaScript tìm `[data-workspace-panel]`, trong khi section panel chưa có thuộc tính này. | Đã gắn `data-workspace-panel` cho mọi panel và bổ sung kiểm thử xác nhận mọi tab đều ánh xạ tới panel tương ứng. |
+| MEDIUM | Thanh điều hướng chung lặp lại các lối vào theo vai trò (Kế toán, Quản trị, Lịch phân công, Tour của tôi) vốn đã có trong Không gian làm việc. | `base.html` và `partials/manage_menu.html` cùng hiển thị các chức năng nghiệp vụ. | Đã giữ Trang chủ, Khám phá Tour, Trợ lý AI và một lối quay lại Không gian làm việc; các chức năng nghiệp vụ chi tiết chỉ có trong Không gian làm việc. |
+| LOW | CSS của các liên kết vai trò cũ không còn được sử dụng sau khi bỏ menu lặp. | `.nav-link-accounting`, `.nav-link-admin`, `.nav-link-guide`. | Đã loại bỏ các selector không còn dùng. |
+
+Kết quả sau khắc phục: các tab nhóm chỉ thay đổi panel chức năng tương ứng; các thẻ chức năng trong panel vẫn là liên kết điều hướng thực đến endpoint có RBAC.
+

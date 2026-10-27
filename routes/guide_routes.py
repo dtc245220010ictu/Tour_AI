@@ -21,3 +21,11 @@ def schedule():
         assignments=assignments,
         current_guide=None  # Bảng hiển thị toàn bộ (mình + đồng nghiệp) theo CN6
     )
+
+
+@guide_bp.route("/customers")
+@roles_required("GUIDE", "ADMIN")
+def assigned_customers():
+    """Danh sách khách theo các đoàn có phân công HDV, chỉ đọc."""
+    customers = GuideService.get_assigned_group_customers()
+    return render_template("guide/customers.html", customers=customers)

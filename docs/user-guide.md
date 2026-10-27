@@ -4,6 +4,13 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
 
 ---
 
+## Thanh điều hướng chung
+
+- Mọi người dùng có thể mở **Trang chủ**, **Khám phá Tour** và **Trợ lý AI**.
+- Khi đã đăng nhập, nhấn **Không gian làm việc** để quay lại các chức năng đúng vai trò sau khi xem các trang chung. Riêng Khách hàng, nút này hiển thị là **Tour của tôi**.
+
+---
+
 ## PHẦN I. HƯỚNG DẪN DÀNH CHO KHÁCH HÀNG
 
 ### 1. Khám Phá & Tìm Kiếm Tour Du Lịch
@@ -39,7 +46,7 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
    - Nếu số chỗ không đủ: Hệ thống sẽ hiển thị thông báo lỗi hết chỗ rõ ràng và ngăn chặn việc đặt quá số chỗ (Overbooking).
 
 ### 4. Quản Lý Đơn & Hủy Tour
-1. Nhấn vào mục **Đơn của tôi** trên thanh menu để xem danh sách các chuyến đi đã đặt.
+1. Nhấn **🎒 Tour của tôi** trên thanh menu để xem danh sách các chuyến đi đã đặt.
 2. Khách hàng có thể nhấn **Chi tiết** để xem lại biên nhận hoặc bấm **Hủy tour** khi có việc đột xuất.
 3. Bạn được **tự hủy trực tiếp** các đơn ở trạng thái **Chờ thanh toán** hoặc **Đã xác nhận** mà không cần chờ nhân viên tư vấn phê duyệt. Đơn đã hoàn thành hoặc đã hủy trước đó sẽ không thể hủy thêm lần nữa.
 4. Khi bạn nhấn Hủy tour, hệ thống sẽ tự động giải phóng và cộng trả lại số chỗ trống vào lịch trình để khách hàng khác có thể đặt.
@@ -92,9 +99,18 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
 
 ---
 
-## PHẦN III. HƯỚNG DẪN DÀNH CHO KẾ TOÁN (ACCOUNTANT / ADMIN)
+## PHẦN III. HƯỚNG DẪN DÀNH CHO HƯỚNG DẪN VIÊN
 
-Đăng nhập bằng tài khoản kế toán (`accountant@tourai.vn` / `accountant123`) hoặc quản trị viên (`admin@tourai.vn` / `admin123`), sau đó nhấn mục **💼 Kế toán** trên thanh menu.
+1. Đăng nhập bằng tài khoản Hướng dẫn viên và mở **Không gian làm việc → Đoàn được phân công** để xem lịch dẫn đoàn và tra cứu tour. Các màn hình này chỉ cho phép xem.
+2. Mở **Không gian làm việc → Khách trong đoàn → Danh sách khách** để xem khách còn hiệu lực của tất cả đoàn đã được phân công hướng dẫn viên, gồm thông tin liên hệ, số lượng khách, lịch đi và ghi chú.
+3. Danh sách khách không có nút thêm, sửa, xóa hay cập nhật trạng thái đơn. Nếu cần thay đổi booking, liên hệ Nhân viên tư vấn hoặc Quản trị viên.
+4. Mọi vai trò, gồm Hướng dẫn viên, đều có thể dùng **Trợ lý AI** từ thanh điều hướng chung; trợ lý không cấp thêm quyền quản lý dữ liệu.
+
+---
+
+## PHẦN IV. HƯỚNG DẪN DÀNH CHO KẾ TOÁN (ACCOUNTANT / ADMIN)
+
+Đăng nhập bằng tài khoản kế toán (`accountant@tourai.vn` / `accountant123`) hoặc quản trị viên (`admin@tourai.vn` / `admin123`), sau đó mở **Không gian làm việc → Tài chính**.
 
 ### 1. Dashboard Tài Chính Kế Toán
 1. Truy cập **Kế toán → Bảng điều khiển**.

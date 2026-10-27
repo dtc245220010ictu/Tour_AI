@@ -221,6 +221,56 @@ def test_all_roles_can_use_ai_chatbot(client):
         assert resp.status_code == 200, f"API chat lỗi với vai trò {role}"
 
 
+def test_workspace_navigation_groups_functions_for_every_role(client):
+    """Mỗi vai trò có không gian làm việc riêng, còn Trang chủ/Tour/AI vẫn hiện ở menu chung."""
+    cases = [
+        ("ADMIN", 1, "Quản Trị Viên", "/admin/dashboard", "Vận hành tour", "Không gian làm việc"),
+        ("STAFF", 2, "Tư Vấn Viên", "/admin/tours", "Hỗ trợ đặt chỗ", "Không gian làm việc"),
+        ("ACCOUNTANT", 3, "Kế Toán", "/accounting/dashboard", "Duyệt thanh toán", "Không gian làm việc"),
+        ("GUIDE", 4, "Hướng Dẫn Viên", "/guide/schedule", "Khách trong đoàn", "Không gian làm việc"),
+        ("CUSTOMER", 5, "Khách Hàng", "/my-bookings", "Chuyến đi của tôi", "Tour của tôi"),
+    ]
+    for role, user_id, name, url, role_action, workspace_label in cases:
+        _login_as(client, user_id, name, role)
+        html = _page_text(client.get(url))
+        assert "workspace-menu" in html
+        assert role_action in html
+        assert "Trợ lý AI" in html
+        assert "Trang chủ" in html
+        assert "Khám phá Tour" in html
+        assert "nav-link-admin" not in html
+        assert "nav-link-accounting" not in html
+        assert html.count("nav-link-ai") == 1
+        assert html.count("nav-link-workspace") == 1
+        assert workspace_label in html
+
+        targets = re.findall(r'data-workspace-target="([^"]+)"', html)
+        assert targets
+        for target in targets:
+            assert re.search(
+                rf'<section[^>]*id="{re.escape(target)}"[^>]*data-workspace-panel',
+                html,
+            )
+
+
+def test_logged_in_users_can_return_to_workspace_from_common_pages(client):
+    """Trang chủ và Khám phá Tour phải có lối trở về đúng khu vực nghiệp vụ."""
+    cases = [
+        ("ADMIN", 1, "Quản Trị Viên", "/admin/dashboard", "Không gian làm việc"),
+        ("STAFF", 2, "Tư Vấn Viên", "/admin/tours", "Không gian làm việc"),
+        ("ACCOUNTANT", 3, "Kế Toán", "/accounting/dashboard", "Không gian làm việc"),
+        ("GUIDE", 4, "Hướng Dẫn Viên", "/guide/schedule", "Không gian làm việc"),
+        ("CUSTOMER", 5, "Khách Hàng", "/my-bookings", "Tour của tôi"),
+    ]
+    for role, user_id, name, workspace_url, workspace_label in cases:
+        _login_as(client, user_id, name, role)
+        for page_url in ["/", "/tours"]:
+            html = _page_text(client.get(page_url))
+            assert 'class="nav-link nav-link-workspace' in html
+            assert f'href="{workspace_url}"' in html
+            assert workspace_label in html
+
+
 def test_anonymous_redirected_on_management_pages(client):
     """Khách chưa đăng nhập: bị chuyển hướng đăng nhập."""
     for url in ["/admin/dashboard", "/admin/tours", "/accounting/dashboard", "/my-bookings"]:
@@ -264,6 +314,21 @@ def test_guide_can_view_assignment_board_readonly(client):
     # Read-only: không có form thao tác nào trên trang
     assert "Hủy phân công" not in html
     assert "admin.delete_guide" not in resp.data.decode("utf-8")
+
+
+def test_guide_can_view_group_customers_readonly(client):
+    """GUIDE xem khách trong các đoàn đã được phân công, không có thao tác chỉnh sửa."""
+    _login_as(client, 4, "Hướng Dẫn Viên", "GUIDE")
+    resp = client.get("/guide/customers")
+    assert resp.status_code == 200
+    html = _page_text(resp)
+    assert "Khách Trong Đoàn" in html
+    assert "Chỉ xem" in html
+    assert "<form" not in html
+    assert "<select" not in html
+
+    _login_as(client, 5, "Khách Hàng", "CUSTOMER")
+    assert client.get("/guide/customers").status_code == 302
 
 
 def test_customer_can_view_guides_on_tour_detail(client):

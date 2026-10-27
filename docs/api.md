@@ -136,9 +136,18 @@ Tất cả các endpoints kế toán đều được bảo vệ bằng cơ chế
 
 ---
 
-## 5. Upload Ảnh Cho Form Admin
+## 5. Hướng Dẫn Viên & Danh Sách Khách Trong Đoàn
 
-### 5.1 Tải ảnh đại diện (tour / điểm đến)
+| Phương thức | Đường dẫn URL | Mô tả chức năng | Quyền hạn |
+|---|---|---|---|
+| `GET` | `/guide/schedule` | Bảng phân công nhiệm vụ, chỉ đọc | `GUIDE`, `ADMIN` |
+| `GET` | `/guide/customers` | Danh sách khách còn hiệu lực thuộc tất cả đoàn có phân công hướng dẫn viên; không có thao tác chỉnh sửa booking | `GUIDE`, `ADMIN` |
+
+---
+
+## 6. Upload Ảnh Cho Form Admin
+
+### 6.1 Tải ảnh đại diện (tour / điểm đến)
 - **Endpoint:** `POST /admin/upload-image`
 - **Xác thực:** Yêu cầu quyền `ADMIN` hoặc `STAFF`.
 - **Headers:** `Content-Type: multipart/form-data`

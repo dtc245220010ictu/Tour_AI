@@ -78,6 +78,34 @@ class GuideService:
         return execute_query(query, params, fetch_all=True)
 
     @staticmethod
+    def get_assigned_group_customers():
+        """Danh sách khách thuộc các đoàn đã được phân công HDV, chỉ để tra cứu.
+
+        Theo phân quyền đã phê duyệt, Hướng dẫn viên được xem thông tin cần thiết
+        để phục vụ đoàn nhưng không được thay đổi booking. Chỉ các booking còn
+        hiệu lực của những lịch khởi hành có phân công HDV mới được trả về; các
+        đơn đã hủy không thuộc danh sách phục vụ đoàn.
+        """
+        return execute_query(
+            """SELECT b.id, b.booking_code, b.customer_name, b.customer_email,
+                      b.customer_phone, b.num_adults, b.num_children, b.status,
+                      b.notes, s.departure_date, s.return_date,
+                      t.title AS tour_title, d.name AS destination_name
+               FROM bookings b
+               JOIN tour_schedules s ON b.schedule_id = s.id
+               JOIN tours t ON s.tour_id = t.id
+               JOIN destinations d ON t.destination_id = d.id
+               WHERE b.status IN ('PENDING', 'CONFIRMED', 'COMPLETED')
+                 AND EXISTS (
+                     SELECT 1
+                     FROM guide_assignments ga
+                     WHERE ga.schedule_id = b.schedule_id
+                 )
+               ORDER BY s.departure_date ASC, t.title ASC, b.customer_name ASC;""",
+            fetch_all=True,
+        )
+
+    @staticmethod
     def get_all_schedules():
         return execute_query(
             """SELECT s.id, s.departure_date, s.return_date, s.status, t.title AS tour_title

@@ -90,6 +90,7 @@ Kế toán **được sử dụng Trợ lý AI** (không đi kèm quyền quản
 * Lịch khởi hành.
 * Bảng phân công nhiệm vụ của chính mình.
 * Bảng phân công nhiệm vụ của các hướng dẫn viên đồng nghiệp.
+* Danh sách khách của các đoàn đã được phân công hướng dẫn viên (chỉ đọc).
 
 **Không có quyền** thêm, sửa hoặc xóa dữ liệu và **không có quyền** quản lý các chức năng khác.
 
@@ -110,7 +111,7 @@ Hướng dẫn viên **được sử dụng Trợ lý AI** (không đi kèm quy�
 | 1. Đăng nhập và phân quyền quản lý, nhân viên tư vấn, kế toán | Xem, Thêm, Sửa, Xóa, Xử lý (quản lý tài khoản và phân quyền người dùng) | Đăng nhập: Có quyền — Xem, Thêm, Sửa, Xóa, Xử lý tài khoản/phân quyền: **Không có quyền** | Đăng nhập: Có quyền — Xem, Thêm, Sửa, Xóa, Xử lý tài khoản/phân quyền: **Không có quyền** | Đăng nhập: Có quyền — Xem, Thêm, Sửa, Xóa, Xử lý tài khoản/phân quyền: **Không có quyền** | Đăng nhập: Có quyền — Xem, Thêm, Sửa, Xóa, Xử lý tài khoản/phân quyền: **Không có quyền** |
 | 2. Quản lý tour, điểm đến, lịch trình, giá tour | Xem, Thêm, Sửa, Xóa, Xử lý | Xem, Thêm, Sửa, Xử lý — Xóa: **Không có quyền** | Xem (thông tin tour, điểm đến) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** | Xem — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** | Xem — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
 | 3. Quản lý lịch khởi hành và số chỗ | Xem, Thêm, Sửa, Xóa, Xử lý | Xem, Thêm, Sửa, Xử lý — Xóa: **Không có quyền** | **Không có quyền** | Xem — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** | Xem — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
-| 4. Quản lý khách hàng và đặt chỗ | Xem, Thêm, Sửa, Xóa, Xử lý | Xem, Thêm, Sửa, Xử lý (khách hàng và tiếp nhận đặt chỗ, không gồm các bước tài chính) — Xóa: **Không có quyền** | **Không có quyền** | Xem (các tour mà chính mình đã đặt), Thêm (đặt tour) — Sửa, Xóa, Xử lý: **Không có quyền** | **Không có quyền** |
+| 4. Quản lý khách hàng và đặt chỗ | Xem, Thêm, Sửa, Xóa, Xử lý | Xem, Thêm, Sửa, Xử lý (khách hàng và tiếp nhận đặt chỗ, không gồm các bước tài chính) — Xóa: **Không có quyền** | **Không có quyền** | Xem (các tour mà chính mình đã đặt), Thêm (đặt tour) — Sửa, Xóa, Xử lý: **Không có quyền** | Xem (khách thuộc tất cả đoàn có phân công hướng dẫn viên) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
 | 5. Theo dõi thanh toán, đặt cọc, hủy tour | Xem, Thêm, Sửa, Xóa, Xử lý | **Không có quyền** | Xem, Thêm, Sửa, Xử lý (quản lý thanh toán, hoàn tiền, các khoản tiền liên quan hủy tour) — Xóa: **Không có quyền** | **Không có quyền** | **Không có quyền** |
 | 6. Quản lý hướng dẫn viên và phân công tour | Xem, Thêm, Sửa, Xóa, Xử lý | **Không có quyền** | **Không có quyền** | Xem (hướng dẫn viên) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** | Xem (bảng phân công của chính mình và của đồng nghiệp) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
 | 7. Thu thập phản hồi sau tour | Xem, Thêm, Sửa, Xóa, Xử lý | **Không có quyền** | **Không có quyền** | Thêm (gửi đánh giá/phản hồi của chính mình sau tour) — Xem, Sửa, Xóa, Xử lý: **Không có quyền** | **Không có quyền** |
@@ -123,6 +124,6 @@ Hướng dẫn viên **được sử dụng Trợ lý AI** (không đi kèm quy�
 2. Chữ "quản lý" trong phạm vi của Nhân viên tư vấn và Kế toán được hiểu theo đúng danh sách quyền đã liệt kê tại mục 3.2.2 và 3.2.3; mọi thao tác ngoài danh sách đó đều là **Không có quyền**.
 3. Mọi vai trò đăng nhập bằng tài khoản của chính mình (chức năng 1); chỉ Quản trị viên được quản lý tài khoản và phân quyền người dùng.
 4. Nhân viên tư vấn không tham gia các bước tài chính trong nghiệp vụ đặt chỗ (thanh toán, đặt cọc, hoàn tiền, hủy tour về mặt tài chính).
-5. Khách hàng chỉ thao tác trên dữ liệu thuộc chính mình; Hướng dẫn viên chỉ thực hiện quyền xem theo danh sách tại mục 3.2.5.
+5. Khách hàng chỉ thao tác trên dữ liệu thuộc chính mình; Hướng dẫn viên chỉ thực hiện quyền xem theo danh sách tại mục 3.2.5, gồm danh sách khách của các đoàn có phân công hướng dẫn viên.
 6. **Giải thích về self-service của Khách hàng:** Việc khách hàng tự thanh toán và tự hủy được thực hiện **chỉ trên đơn đặt chỗ của chính mình**, được xem là một phần của quyền "Đặt tour" (chức năng 4) và "Xem các tour mà chính mình đã đặt"; khách hàng tuyệt đối không được can thiệp vào thanh toán/hủy của đơn hàng khác. Các thao tác tài chính trên đơn của khách hàng khác thuộc trách nhiệm của Kế toán và Quản trị viên theo chức năng 5.
 

@@ -33,7 +33,7 @@
    - **Hoàn Tiền Hủy Tour:** Khách hủy tour đã thanh toán sẽ **báo hoàn toàn** kèm lý do; Kế toán/Admin **duyệt hoặc từ chối** phiếu hoàn (có gợi ý tỷ lệ theo chính sách 90% / 50% / 0%) trước khi xuất quỹ.
    - **Báo Cáo Tài Chính:** P&L từng đoàn tour (Doanh thu − Chi phí = Lợi nhuận gộp, kèm Margin %) và Sổ quỹ Thu/Chi.
 7. **Báo Cáo & Thống Kê:** Thống kê doanh thu, tỷ lệ lấp đầy chỗ (Occupancy Rate) của các đợt khởi hành và top tour bán chạy nhất.
-8. **Phân Hệ Quản Trị & Phân Công Hướng Dẫn Viên:** CRUD Điểm đến, Tour, Lịch khởi hành, Khách hàng và Hướng dẫn viên; phân công HDV theo từng lịch khởi hành; phân quyền chi tiết từng thao tác (ví dụ: STAFF chỉ xem khách hàng, chỉ ADMIN được xóa tour/điểm đến). HDV xem bảng phân công dẫn tour tại `/guide/schedule`.
+8. **Phân Hệ Quản Trị & Phân Công Hướng Dẫn Viên:** CRUD Điểm đến, Tour, Lịch khởi hành, Khách hàng và Hướng dẫn viên; phân công HDV theo từng lịch khởi hành; phân quyền chi tiết từng thao tác (ví dụ: STAFF chỉ xem khách hàng, chỉ ADMIN được xóa tour/điểm đến). HDV chỉ đọc bảng phân công tại `/guide/schedule` và danh sách khách của các đoàn có phân công HDV tại `/guide/customers`.
 9. **Bảo Mật Cao Cấp:** Băm mật khẩu bằng PBKDF2:SHA256, phân quyền 5 vai trò (Admin, Staff, Accountant, Guide, Customer), cô lập tuyệt đối API key và không cho LLM truy cập trực tiếp CSDL.
 
 ---
@@ -98,7 +98,7 @@ TourAI/
 │   ├── booking_routes.py               # Đặt chỗ, thanh toán, hủy đơn
 │   ├── feedback_routes.py              # Đánh giá sau chuyến đi
 │   ├── admin_routes.py                 # Dashboard, CRUD tour, điểm đến, khách hàng, HDV
-│   ├── guide_routes.py                 # Phân hệ HDV: bảng phân công dẫn tour (/guide/schedule)
+│   ├── guide_routes.py                 # Phân hệ HDV: bảng phân công & khách trong đoàn (chỉ đọc)
 │   ├── accounting_routes.py            # Phân hệ kế toán: thu/chi, công nợ, P&L, hoàn tiền
 │   ├── chat_routes.py                  # API Chatbot (POST /api/chat)
 │   └── ai_tools_routes.py              # Công cụ AI sinh nội dung & tóm tắt phản hồi
@@ -264,7 +264,7 @@ Mở trình duyệt và truy cập:
 | **Quản trị viên (Admin)** | `admin@tourai.vn` | `admin123` | Toàn quyền quản trị, xem doanh thu, xóa tour, quản lý lịch khởi hành |
 | **Nhân viên tư vấn (Staff)** | `staff@tourai.vn` | `staff123` | Quản lý tour, điểm đến, lịch khởi hành, khách hàng & đặt chỗ, dùng AI sinh mô tả (không có quyền xóa tour, thống kê, tài chính, phản hồi) |
 | **Kế toán (Accountant)** | `accountant@tourai.vn` | `accountant123` | Duyệt thanh toán, theo dõi công nợ, ghi chi phí tour, xem báo cáo P&L, lập phiếu chi hoàn tiền |
-| **Hướng dẫn viên (Guide)** | `guide@tourai.vn` | `guide123` | Xem lịch trình dẫn tour được phân công |
+| **Hướng dẫn viên (Guide)** | `guide@tourai.vn` | `guide123` | Xem lịch trình, tour và khách của các đoàn có phân công HDV (chỉ đọc) |
 | **Khách hàng (Customer)** | `customer@tourai.vn` | `customer123` | Tìm kiếm tour, đặt tour, trò chuyện với Chatbot, hủy đơn, gửi đánh giá |
 
 > ⚡ **Đăng nhập nhanh (Quick Login):** Tại trang **http://127.0.0.1:5000/login** có sẵn khu vực **"Đăng nhập nhanh (Demo)"** — chỉ cần bấm vào vai trò (Quản trị / Nhân viên / **Kế toán** / Hướng dẫn viên / Khách hàng) là đăng nhập ngay, không cần gõ tài khoản & mật khẩu. Tính năng này phục vụ kiểm thử/học tập và có thể tắt bằng biến môi trường `ENABLE_DEMO_QUICK_LOGIN=0`.
