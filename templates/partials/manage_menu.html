@@ -1,89 +1,219 @@
-{# ==============================================================
-   Segmented Navigation Bar - Thanh điều hướng theo VAI TRÒ
-   - Gom tất cả tab vào 1 thanh duy nhất, liền mạch (nền #F2F4F7, bo góc).
-   - Mỗi tab: icon bên trên, nhãn chữ bên dưới, có divider dọc phân cách.
-   - Tab đang chọn: nền xanh đậm #2B6CB0, chữ & icon trắng.
-   - Tự động lọc tab theo quyền của tài khoản đang đăng nhập.
-   Dùng chung cho mọi trang quản trị: {% include "partials/manage_menu.html" %}
-   ============================================================== #}
+{#
+  Điều hướng không gian làm việc theo vai trò.
+  Thanh điều hướng chính (Trang chủ / Khám phá Tour / Trợ lý AI) vẫn nằm ở base.html.
+  Thành phần này chỉ nhóm các chức năng chuyên biệt để tránh một hàng tab dài phải cuộn.
+#}
 
-{% macro seg_tab(endpoint, icon, label, matches) %}
+{% macro workspace_link(endpoint, icon, label, description, matches, view_only=false) %}
 {%- set ep = request.endpoint or '' -%}
 {%- set ns = namespace(active=false) -%}
-{%- for m in matches -%}
-{%- if not ns.active and (ep == m or ep.startswith(m)) -%}{%- set ns.active = true -%}{%- endif -%}
+{%- for match in matches -%}
+    {%- if not ns.active and (ep == match or ep.startswith(match)) -%}{%- set ns.active = true -%}{%- endif -%}
 {%- endfor -%}
-<a href="{{ url_for(endpoint) }}" class="seg-tab{% if ns.active %} active{% endif %}">
-    <span class="seg-icon" aria-hidden="true">{{ icon }}</span>
-    <span class="seg-label">{{ label }}</span>
+<a href="{{ url_for(endpoint) }}" class="workspace-action{% if ns.active %} active{% endif %}">
+    <span class="workspace-action-icon" aria-hidden="true">{{ icon }}</span>
+    <span class="workspace-action-copy">
+        <span class="workspace-action-name">{{ label }}{% if view_only %}<span class="workspace-view-only">Chỉ xem</span>{% endif %}</span>
+        <span class="workspace-action-description">{{ description }}</span>
+    </span>
 </a>
-{%- endmacro %}
+{% endmacro %}
+
+{% macro workspace_tab(id, icon, label, active) %}
+<button type="button" class="workspace-tab{% if active %} is-active{% endif %}" role="tab"
+    id="{{ id }}-tab" aria-controls="{{ id }}-panel" aria-selected="{{ 'true' if active else 'false' }}"
+    data-workspace-target="{{ id }}-panel">
+    <span aria-hidden="true">{{ icon }}</span><span>{{ label }}</span>
+</button>
+{% endmacro %}
+
+{% macro workspace_panel(id, title, description, active) %}
+<section class="workspace-panel{% if active %} is-active{% endif %}" id="{{ id }}-panel" role="tabpanel"
+    data-workspace-panel
+    aria-labelledby="{{ id }}-tab"{% if not active %} hidden{% endif %}>
+    <div class="workspace-panel-heading">
+        <div>
+            <h2>{{ title }}</h2>
+            <p>{{ description }}</p>
+        </div>
+    </div>
+    <div class="workspace-actions">{{ caller() }}</div>
+</section>
+{% endmacro %}
 
 {% set role = session.get('role') %}
+{% set ep = request.endpoint or '' %}
+{% set role_labels = {
+    'ADMIN': 'Quản trị viên',
+    'STAFF': 'Nhân viên tư vấn',
+    'ACCOUNTANT': 'Kế toán',
+    'GUIDE': 'Hướng dẫn viên',
+    'CUSTOMER': 'Khách hàng'
+} %}
+{% set role_scopes = {
+    'ADMIN': 'Toàn quyền hệ thống',
+    'STAFF': 'Tư vấn và hỗ trợ đặt chỗ',
+    'ACCOUNTANT': 'Tài chính và đối soát',
+    'GUIDE': 'Thông tin đoàn, chỉ xem',
+    'CUSTOMER': 'Kế hoạch du lịch của bạn'
+} %}
+
 {% if role %}
-<nav class="seg-nav" aria-label="Điều hướng chức năng theo vai trò">
-    <div class="seg-nav-track">
-        {% if role == 'ADMIN' %}
-        {# ADMIN: quyền hạn đầy đủ - 9 tab #}
-        {{ seg_tab('admin.dashboard', '📊', 'Dashboard', ['admin.dashboard']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_tours', '🎫', 'Quản lý Tour', ['admin.manage_tours', 'admin.edit_tour', 'admin.delete_tour']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_destinations', '📍', 'Điểm đến', ['admin.manage_destinations', 'admin.edit_destination', 'admin.delete_destination']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_schedules', '📅', 'Lịch khởi hành', ['admin.manage_schedules', 'admin.edit_schedule', 'admin.delete_schedule']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_bookings', '🧾', 'Duyệt đơn đặt chỗ', ['admin.manage_bookings', 'admin.update_booking_status']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_customers', '👥', 'Quản lý Khách hàng', ['admin.manage_customers', 'admin.create_customer', 'admin.update_customer', 'admin.delete_customer']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_guides', '🧭', 'Hướng dẫn viên', ['admin.manage_guides', 'admin.assign_guide', 'admin.delete_guide', 'admin.delete_guide_assignment']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_feedbacks', '⭐', 'Đánh giá AI', ['admin.manage_feedbacks']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('accounting.dashboard', '💼', 'Kế toán', ['accounting.']) }}
+<section class="workspace-menu" data-workspace-menu aria-label="Không gian làm việc theo vai trò">
+    <header class="workspace-menu-head">
+        <div class="workspace-menu-title">
+            <span class="workspace-menu-mark" aria-hidden="true">☰</span>
+            <div>
+                <p>Không gian làm việc</p>
+                <h1>{{ role_labels.get(role, role) }}</h1>
+            </div>
+        </div>
+        <span class="workspace-role-chip"><span aria-hidden="true"></span>{{ role }} · {{ role_scopes.get(role, '') }}</span>
+    </header>
 
-        {% elif role == 'STAFF' %}
-        {# STAFF: vận hành tour / lịch / đơn / khách hàng (không có Dashboard) #}
-        {{ seg_tab('admin.manage_tours', '🎫', 'Quản lý Tour', ['admin.manage_tours', 'admin.edit_tour']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_destinations', '📍', 'Điểm đến', ['admin.manage_destinations', 'admin.edit_destination']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_schedules', '📅', 'Lịch khởi hành', ['admin.manage_schedules', 'admin.edit_schedule']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_bookings', '🧾', 'Duyệt đơn đặt chỗ', ['admin.manage_bookings', 'admin.update_booking_status']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('admin.manage_customers', '👥', 'Khách hàng (chỉ xem)', ['admin.manage_customers']) }}
-
-        {% elif role == 'ACCOUNTANT' %}
-        {# KẾ TOÁN: Dashboard, duyệt thanh toán (đối soát), Kế toán #}
-        {{ seg_tab('admin.dashboard', '📊', 'Dashboard', ['admin.dashboard']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('accounting.transactions', '🧾', 'Duyệt đơn đặt chỗ', ['accounting.transactions', 'accounting.verify_transaction']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('accounting.dashboard', '💼', 'Kế toán', ['accounting.dashboard', 'accounting.debts', 'accounting.record_debt_collection', 'accounting.expenses', 'accounting.tours_pnl', 'accounting.refunds']) }}
-
-        {% elif role == 'GUIDE' %}
-        {# HƯỚNG DẪN VIÊN: lịch phân công, danh sách tour, trợ lý AI #}
-        {{ seg_tab('guide.schedule', '🧭', 'Lịch Phân Công', ['guide.schedule']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('tour.catalog', '🎫', 'Danh sách Tour', ['tour.catalog', 'tour.detail']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('chat.chatbot_page', '🤖', 'Trợ lý AI', ['chat.chatbot_page']) }}
-
-        {% elif role == 'CUSTOMER' %}
-        {# KHÁCH HÀNG: tour của tôi, khám phá tour, trợ lý AI #}
-        {{ seg_tab('booking.my_bookings', '🎒', 'Tour của tôi', ['booking.my_bookings']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('tour.catalog', '🎫', 'Khám phá Tour', ['tour.catalog', 'tour.detail']) }}
-        <span class="seg-divider" aria-hidden="true"></span>
-        {{ seg_tab('chat.chatbot_page', '🤖', 'Trợ lý AI', ['chat.chatbot_page']) }}
-        {% endif %}
+    {% if role == 'ADMIN' %}
+    {% set overview_active = ep == 'admin.dashboard' %}
+    {% set operations_active = ep.startswith('admin.manage_tours') or ep.startswith('admin.edit_tour') or ep.startswith('admin.manage_destinations') or ep.startswith('admin.edit_destination') or ep.startswith('admin.manage_schedules') or ep.startswith('admin.edit_schedule') or ep.startswith('admin.manage_bookings') %}
+    {% set people_active = ep.startswith('admin.manage_customers') or ep.startswith('admin.create_customer') or ep.startswith('admin.update_customer') or ep.startswith('admin.manage_guides') %}
+    {% set finance_active = ep.startswith('accounting.') or ep.startswith('admin.manage_feedbacks') %}
+    <div class="workspace-tabs" role="tablist" aria-label="Nhóm chức năng quản trị">
+        {{ workspace_tab('admin-overview', '📊', 'Tổng quan', overview_active) }}
+        {{ workspace_tab('admin-operations', '🧳', 'Vận hành tour', operations_active) }}
+        {{ workspace_tab('admin-people', '👥', 'Khách & đội ngũ', people_active) }}
+        {{ workspace_tab('admin-finance', '💼', 'Tài chính & đánh giá', finance_active) }}
     </div>
-</nav>
+    <div class="workspace-panels">
+        {% call workspace_panel('admin-overview', 'Tổng quan', 'Theo dõi nhanh hoạt động hệ thống.', overview_active) %}
+            {{ workspace_link('admin.dashboard', '📊', 'Dashboard', 'Báo cáo và chỉ số hoạt động', ['admin.dashboard']) }}
+        {% endcall %}
+        {% call workspace_panel('admin-operations', 'Vận hành tour', 'Thiết lập tour, lịch khởi hành và đơn đặt chỗ.', operations_active) %}
+            {{ workspace_link('admin.manage_tours', '🎫', 'Quản lý tour', 'Danh sách và thông tin tour', ['admin.manage_tours', 'admin.edit_tour']) }}
+            {{ workspace_link('admin.manage_destinations', '📍', 'Điểm đến', 'Danh mục địa điểm du lịch', ['admin.manage_destinations', 'admin.edit_destination']) }}
+            {{ workspace_link('admin.manage_schedules', '📅', 'Lịch khởi hành', 'Đợt khởi hành và sức chứa', ['admin.manage_schedules', 'admin.edit_schedule']) }}
+            {{ workspace_link('admin.manage_bookings', '🧾', 'Đơn đặt chỗ', 'Duyệt và cập nhật trạng thái đơn', ['admin.manage_bookings']) }}
+        {% endcall %}
+        {% call workspace_panel('admin-people', 'Khách & đội ngũ', 'Quản lý khách hàng và hướng dẫn viên.', people_active) %}
+            {{ workspace_link('admin.manage_customers', '👥', 'Khách hàng', 'Hồ sơ và thông tin liên hệ', ['admin.manage_customers', 'admin.create_customer', 'admin.update_customer']) }}
+            {{ workspace_link('admin.manage_guides', '🧭', 'Hướng dẫn viên', 'Hồ sơ và phân công tour', ['admin.manage_guides']) }}
+        {% endcall %}
+        {% call workspace_panel('admin-finance', 'Tài chính & đánh giá', 'Đối soát, báo cáo tài chính và phản hồi về AI.', finance_active) %}
+            {{ workspace_link('accounting.dashboard', '💼', 'Kế toán', 'Tổng quan tài chính và nghiệp vụ', ['accounting.']) }}
+            {{ workspace_link('admin.manage_feedbacks', '⭐', 'Đánh giá AI', 'Phản hồi về Trợ lý AI', ['admin.manage_feedbacks']) }}
+        {% endcall %}
+    </div>
 
-<p class="seg-role-note">
-    {% if role == 'ADMIN' %}VAI TRÒ: <strong>ADMIN</strong> - Quyền hạn đầy đủ.
-    {% else %}VAI TRÒ: <strong>{{ role }}</strong> - Hệ thống chỉ hiển thị các chức năng theo quyền của bạn.{% endif %}
-</p>
+    {% elif role == 'STAFF' %}
+    {% set tour_active = ep.startswith('admin.manage_tours') or ep.startswith('admin.edit_tour') or ep.startswith('admin.manage_destinations') or ep.startswith('admin.edit_destination') or ep.startswith('admin.manage_schedules') or ep.startswith('admin.edit_schedule') %}
+    {% set bookings_active = ep.startswith('admin.manage_bookings') or ep.startswith('admin.manage_customers') %}
+    <div class="workspace-tabs" role="tablist" aria-label="Nhóm chức năng tư vấn">
+        {{ workspace_tab('staff-tour', '🎫', 'Tư vấn tour', tour_active) }}
+        {{ workspace_tab('staff-bookings', '🧾', 'Hỗ trợ đặt chỗ', bookings_active) }}
+    </div>
+    <div class="workspace-panels">
+        {% call workspace_panel('staff-tour', 'Tư vấn tour', 'Tra cứu và cập nhật thông tin phục vụ tư vấn.', tour_active) %}
+            {{ workspace_link('admin.manage_tours', '🎫', 'Danh mục tour', 'Thông tin và lựa chọn tour', ['admin.manage_tours', 'admin.edit_tour']) }}
+            {{ workspace_link('admin.manage_destinations', '📍', 'Điểm đến', 'Thông tin điểm đến du lịch', ['admin.manage_destinations', 'admin.edit_destination']) }}
+            {{ workspace_link('admin.manage_schedules', '📅', 'Lịch khởi hành', 'Ngày đi và tình trạng chỗ', ['admin.manage_schedules', 'admin.edit_schedule']) }}
+        {% endcall %}
+        {% call workspace_panel('staff-bookings', 'Hỗ trợ đặt chỗ', 'Theo dõi yêu cầu và thông tin khách hàng.', bookings_active) %}
+            {{ workspace_link('admin.manage_bookings', '🧾', 'Đơn đặt chỗ', 'Hỗ trợ và cập nhật trạng thái đơn', ['admin.manage_bookings']) }}
+            {{ workspace_link('admin.manage_customers', '👥', 'Khách hàng', 'Hồ sơ và thông tin liên hệ', ['admin.manage_customers'], true) }}
+        {% endcall %}
+    </div>
+
+    {% elif role == 'ACCOUNTANT' %}
+    {% set overview_active = ep == 'admin.dashboard' %}
+    {% set reconciliation_active = ep.startswith('accounting.transactions') %}
+    {% set finance_active = ep.startswith('accounting.') and not reconciliation_active %}
+    <div class="workspace-tabs" role="tablist" aria-label="Nhóm chức năng kế toán">
+        {{ workspace_tab('accountant-overview', '📊', 'Tổng quan', overview_active) }}
+        {{ workspace_tab('accountant-reconciliation', '🧾', 'Đối soát', reconciliation_active) }}
+        {{ workspace_tab('accountant-finance', '💼', 'Tài chính', finance_active) }}
+    </div>
+    <div class="workspace-panels">
+        {% call workspace_panel('accountant-overview', 'Tổng quan', 'Theo dõi chỉ số hoạt động và tài chính.', overview_active) %}
+            {{ workspace_link('admin.dashboard', '📊', 'Dashboard', 'Tổng quan hoạt động và tài chính', ['admin.dashboard']) }}
+        {% endcall %}
+        {% call workspace_panel('accountant-reconciliation', 'Đối soát', 'Xác nhận các giao dịch thanh toán.', reconciliation_active) %}
+            {{ workspace_link('accounting.transactions', '🧾', 'Duyệt thanh toán', 'Đối soát giao dịch đặt chỗ', ['accounting.transactions']) }}
+        {% endcall %}
+        {% call workspace_panel('accountant-finance', 'Tài chính', 'Quản lý thu chi, công nợ và lợi nhuận.', finance_active) %}
+            {{ workspace_link('accounting.dashboard', '💼', 'Tổng quan kế toán', 'Dòng tiền và việc cần xử lý', ['accounting.dashboard']) }}
+            {{ workspace_link('accounting.debts', '💳', 'Công nợ', 'Theo dõi và thu hồi công nợ', ['accounting.debts']) }}
+            {{ workspace_link('accounting.expenses', '🧾', 'Chi phí tour', 'Ghi nhận chi phí vận hành', ['accounting.expenses']) }}
+            {{ workspace_link('accounting.tours_pnl', '📈', 'Lãi / lỗ tour', 'Báo cáo hiệu quả từng đợt', ['accounting.tours_pnl']) }}
+            {{ workspace_link('accounting.refunds', '↩️', 'Hoàn tiền', 'Xử lý yêu cầu hoàn tiền', ['accounting.refunds']) }}
+        {% endcall %}
+    </div>
+
+    {% elif role == 'GUIDE' %}
+    {% set assignment_active = ep.startswith('guide.schedule') or ep.startswith('tour.') %}
+    {% set customers_active = ep.startswith('guide.assigned_customers') %}
+    <div class="workspace-tabs" role="tablist" aria-label="Nhóm chức năng hướng dẫn viên">
+        {{ workspace_tab('guide-assignment', '🧭', 'Đoàn được phân công', assignment_active) }}
+        {{ workspace_tab('guide-customers', '👥', 'Khách trong đoàn', customers_active) }}
+    </div>
+    <div class="workspace-panels">
+        {% call workspace_panel('guide-assignment', 'Đoàn được phân công', 'Thông tin phục vụ đoàn tour, chỉ xem.', assignment_active) %}
+            {{ workspace_link('guide.schedule', '🧭', 'Lịch phân công', 'Lịch và đoàn được giao', ['guide.schedule'], true) }}
+            {{ workspace_link('tour.catalog', '🎫', 'Danh sách tour', 'Tra cứu thông tin tour', ['tour.catalog', 'tour.detail'], true) }}
+        {% endcall %}
+        {% call workspace_panel('guide-customers', 'Khách trong đoàn', 'Khách của tất cả đoàn đã được phân công, chỉ xem.', customers_active) %}
+            {{ workspace_link('guide.assigned_customers', '👥', 'Danh sách khách', 'Thông tin liên hệ và số lượng khách', ['guide.assigned_customers'], true) }}
+        {% endcall %}
+    </div>
+
+    {% elif role == 'CUSTOMER' %}
+    {% set trips_active = ep.startswith('booking.my_bookings') %}
+    <div class="workspace-tabs" role="tablist" aria-label="Nhóm chức năng khách hàng">
+        {{ workspace_tab('customer-trips', '🎒', 'Chuyến đi của tôi', trips_active) }}
+    </div>
+    <div class="workspace-panels">
+        {% call workspace_panel('customer-trips', 'Chuyến đi của tôi', 'Theo dõi lịch sử và trạng thái đặt chỗ.', trips_active) %}
+            {{ workspace_link('booking.my_bookings', '🎒', 'Tour của tôi', 'Các tour bạn đã đặt', ['booking.my_bookings']) }}
+        {% endcall %}
+    </div>
+    {% endif %}
+</section>
+
+<script>
+    (function () {
+        document.querySelectorAll('[data-workspace-menu]').forEach(function (menu) {
+            var tabs = Array.prototype.slice.call(menu.querySelectorAll('[data-workspace-target]'));
+            var panels = Array.prototype.slice.call(menu.querySelectorAll('[data-workspace-panel]'));
+
+            function selectTab(tab) {
+                var targetId = tab.getAttribute('data-workspace-target');
+                tabs.forEach(function (item) {
+                    var selected = item === tab;
+                    item.classList.toggle('is-active', selected);
+                    item.setAttribute('aria-selected', selected ? 'true' : 'false');
+                    item.tabIndex = selected ? 0 : -1;
+                });
+                panels.forEach(function (panel) {
+                    var selected = panel.id === targetId;
+                    panel.classList.toggle('is-active', selected);
+                    panel.hidden = !selected;
+                });
+            }
+
+            tabs.forEach(function (tab) {
+                tab.addEventListener('click', function () { selectTab(tab); });
+                tab.addEventListener('keydown', function (event) {
+                    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+                    event.preventDefault();
+                    var index = tabs.indexOf(tab);
+                    var next = event.key === 'ArrowRight'
+                        ? (index + 1) % tabs.length
+                        : (index - 1 + tabs.length) % tabs.length;
+                    tabs[next].focus();
+                    selectTab(tabs[next]);
+                });
+            });
+
+            var selectedTab = tabs.find(function (tab) { return tab.getAttribute('aria-selected') === 'true'; }) || tabs[0];
+            if (selectedTab) selectTab(selectedTab);
+        });
+    }());
+</script>
 {% endif %}

@@ -44,40 +44,28 @@
                 </li>
 
                 {% if session.get('user_id') %}
-                {# "Tour của tôi" - CHỈ Khách hàng (CUSTOMER) mới được thấy menu này #}
-                {% if session.get('role') == 'CUSTOMER' %}
+                {% set role = session.get('role') %}
+                {% set workspace_endpoints = {
+                    'ADMIN': 'admin.dashboard',
+                    'STAFF': 'admin.manage_tours',
+                    'ACCOUNTANT': 'accounting.dashboard',
+                    'GUIDE': 'guide.schedule',
+                    'CUSTOMER': 'booking.my_bookings'
+                } %}
+                {% set workspace_endpoint = workspace_endpoints.get(role, 'tour.index') %}
+                {% set workspace_active =
+                    (role == 'ADMIN' and (ep.startswith('admin.') or ep.startswith('accounting.'))) or
+                    (role == 'STAFF' and ep.startswith('admin.')) or
+                    (role == 'ACCOUNTANT' and (ep.startswith('accounting.') or ep == 'admin.dashboard')) or
+                    (role == 'GUIDE' and ep.startswith('guide.')) or
+                    (role == 'CUSTOMER' and ep.startswith('booking.'))
+                %}
                 <li>
-                    <a href="{{ url_for('booking.my_bookings') }}"
-                        class="nav-link {% if ep == 'booking.my_bookings' %}active{% endif %}">🎒 Tour của tôi</a>
+                    <a href="{{ url_for(workspace_endpoint) }}"
+                        class="nav-link nav-link-workspace {% if workspace_active %}active{% endif %}">
+                        {% if role == 'CUSTOMER' %}🎒 Tour của tôi{% else %}☰ Không gian làm việc{% endif %}
+                    </a>
                 </li>
-                {% endif %}
-                {% if session.get('role') in ['ADMIN', 'ACCOUNTANT'] %}
-                <li>
-                    <a href="{{ url_for('accounting.dashboard') }}"
-                        class="nav-link nav-link-accounting {% if ep.startswith('accounting.') %}active{% endif %}">💼 Kế toán</a>
-                </li>
-                {% endif %}
-                {% if session.get('role') == 'ADMIN' %}
-                <li>
-                    <a href="{{ url_for('admin.dashboard') }}"
-                        class="nav-link nav-link-admin {% if ep.startswith('admin.') %}active{% endif %}">📊 Quản trị</a>
-                </li>
-                {% elif session.get('role') == 'ACCOUNTANT' %}
-                <li>
-                    <a href="{{ url_for('admin.dashboard') }}"
-                        class="nav-link nav-link-admin {% if ep.startswith('admin.') %}active{% endif %}">📊 Thống Kê</a>
-                </li>
-                {% elif session.get('role') == 'STAFF' %}
-                <li>
-                    <a href="{{ url_for('admin.manage_tours') }}"
-                        class="nav-link nav-link-admin {% if ep.startswith('admin.') %}active{% endif %}">📊 Quản trị</a>
-                </li>
-                {% elif session.get('role') == 'GUIDE' %}
-                <li>
-                    <a href="{{ url_for('guide.schedule') }}"
-                        class="nav-link nav-link-guide {% if ep.startswith('guide.') %}active{% endif %}">🧭 Lịch Phân Công</a>
-                </li>
-                {% endif %}
                 <li class="nav-user">
                     <span class="nav-user-name" title="{{ session.get('user_name') }}">👤 {{ session.get('user_name') }}</span>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-outline nav-logout">Đăng xuất</a>

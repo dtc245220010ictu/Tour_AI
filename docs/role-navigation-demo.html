@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demo điều hướng theo vai trò — TourAI</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #637083;
+      --line: #d9e2ee;
+      --panel: #ffffff;
+      --canvas: #f2f6fb;
+      --blue: #075985;
+      --blue-soft: #e0f2fe;
+      --green: #047857;
+      --green-soft: #d1fae5;
+      --amber: #a16207;
+      --amber-soft: #fef3c7;
+      --purple: #6d28d9;
+      --purple-soft: #ede9fe;
+      --shadow: 0 16px 40px rgba(15, 23, 42, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background: var(--canvas);
+      font: 15px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 42px auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 { margin: 0; font-size: clamp(25px, 3vw, 36px); letter-spacing: -.035em; }
+    .intro { max-width: 720px; margin: 10px 0 25px; color: var(--muted); }
+
+    .demo-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .demo-switcher button {
+      cursor: pointer;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: #334155;
+      background: #fff;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .demo-switcher button:hover { border-color: #7dd3fc; color: var(--blue); }
+    .demo-switcher button[aria-pressed="true"] { border-color: var(--blue); color: #fff; background: var(--blue); }
+
+    .shared-nav {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 9px;
+      background: rgba(255, 255, 255, .85);
+      box-shadow: 0 5px 16px rgba(15, 23, 42, .05);
+    }
+
+    .shared-nav a {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 36px;
+      border-radius: 9px;
+      padding: 7px 11px;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .shared-nav a.active { color: var(--blue); background: var(--blue-soft); }
+    .shared-nav .shared-note { margin-left: auto; color: var(--muted); font-size: 12px; font-weight: 700; }
+
+    .workspace-menu {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .workspace-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .workspace-title { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .workspace-mark {
+      display: grid;
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      place-items: center;
+      border-radius: 12px;
+      color: var(--blue);
+      background: var(--blue-soft);
+      font-size: 20px;
+    }
+    .workspace-kicker { margin: 0; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .workspace-name { margin: 1px 0 0; font-size: 18px; font-weight: 800; }
+
+    .role-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 7px 11px;
+      color: var(--blue);
+      background: var(--blue-soft);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .role-chip span { display: inline-grid; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    .primary-nav {
+      display: grid;
+      grid-template-columns: repeat(var(--group-count), minmax(0, 1fr));
+      gap: 8px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfdff;
+    }
+
+    .primary-tab {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 46px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      padding: 9px 10px;
+      color: #475569;
+      background: transparent;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 750;
+      text-align: center;
+    }
+    .primary-tab:hover { color: var(--blue); background: #f0f9ff; }
+    .primary-tab[aria-selected="true"] { border-color: #bae6fd; color: var(--blue); background: var(--blue-soft); }
+    .primary-tab .icon { font-size: 17px; }
+
+    .section-area { padding: 18px 22px 22px; }
+    .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 13px; }
+    .section-heading h2 { margin: 0; font-size: 16px; letter-spacing: -.01em; }
+    .section-heading p { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+    .count { padding-top: 2px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+    .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(195px, 1fr)); gap: 10px; }
+    .action {
+      display: flex;
+      align-items: center;
+      min-height: 64px;
+      gap: 11px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 1px 1px rgba(15, 23, 42, .02);
+    }
+    .action:hover { border-color: #7dd3fc; box-shadow: 0 8px 18px rgba(14, 116, 144, .10); }
+    .action.active { border-color: var(--blue); background: #f0f9ff; box-shadow: inset 3px 0 var(--blue); }
+    .action-icon { display: grid; place-items: center; width: 35px; height: 35px; flex: 0 0 auto; border-radius: 10px; background: #f1f5f9; font-size: 18px; }
+    .action.active .action-icon { background: var(--blue-soft); }
+    .action-copy { min-width: 0; }
+    .action-name { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; }
+    .action-description { overflow: hidden; margin-top: 2px; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .view-only { border-radius: 999px; padding: 2px 6px; color: #0369a1; background: #e0f2fe; font-size: 10px; font-weight: 800; white-space: nowrap; }
+
+    .note {
+      display: flex;
+      gap: 10px;
+      margin: 20px 2px 0;
+      color: #475569;
+      font-size: 13px;
+    }
+    .note strong { color: var(--ink); }
+
+    @media (max-width: 680px) {
+      .page { width: min(100% - 24px, 600px); margin: 26px auto; }
+      .workspace-head { align-items: flex-start; padding: 16px; }
+      .role-chip { margin-top: 2px; }
+      .primary-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 10px; }
+      .primary-tab { justify-content: flex-start; }
+      .section-area { padding: 16px; }
+      .section-heading { display: block; }
+      .count { display: block; margin-top: 5px; }
+      .action-grid { grid-template-columns: 1fr; }
+      .shared-nav .shared-note { width: 100%; margin: 2px 4px 0; }
+    }
+
+    @media (max-width: 405px) {
+      .workspace-head { gap: 10px; }
+      .workspace-mark { width: 34px; height: 34px; border-radius: 10px; }
+      .workspace-name { font-size: 16px; }
+      .role-chip { padding: 6px 8px; font-size: 11px; }
+      .primary-nav { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">Bản demo giao diện · chưa áp dụng vào hệ thống</p>
+    <h1>Danh mục theo vai trò, gọn và có ngữ cảnh</h1>
+    <p class="intro">Trang chủ và Khám phá Tour luôn hiển thị cho tất cả. Chọn một vai trò để xem phần điều hướng công việc riêng: nhóm công việc ở hàng đầu, các tác vụ thuộc nhóm đang chọn ở hàng dưới.</p>
+
+    <nav class="shared-nav" aria-label="Điều hướng chung cho mọi vai trò">
+      <a class="active" href="#demo" aria-current="page"><span aria-hidden="true">🏠</span>Trang chủ</a>
+      <a href="#demo"><span aria-hidden="true">🎫</span>Khám phá Tour</a>
+      <span class="shared-note">Hiển thị với mọi vai trò</span>
+    </nav>
+
+    <div id="roleSwitcher" class="demo-switcher" aria-label="Chọn vai trò để xem bản demo"></div>
+
+    <section class="workspace-menu" aria-label="Bản demo điều hướng theo vai trò">
+      <header class="workspace-head">
+        <div class="workspace-title">
+          <div class="workspace-mark" aria-hidden="true">☰</div>
+          <div>
+            <p class="workspace-kicker">Không gian làm việc</p>
+            <p id="workspaceName" class="workspace-name"></p>
+          </div>
+        </div>
+        <div id="roleChip" class="role-chip"><span aria-hidden="true"></span></div>
+      </header>
+
+      <div id="primaryNav" class="primary-nav" role="tablist" aria-label="Nhóm công việc"></div>
+
+      <div class="section-area">
+        <div class="section-heading">
+          <div>
+            <h2 id="sectionTitle"></h2>
+            <p id="sectionDescription"></p>
+          </div>
+          <span id="actionCount" class="count"></span>
+        </div>
+        <div id="actionGrid" class="action-grid"></div>
+      </div>
+    </section>
+
+    <p class="note"><span aria-hidden="true">ℹ️</span><span><strong>Nguyên tắc:</strong> không có mục bị ẩn trong thanh cuộn ngang; chỉ hiển thị chức năng đúng quyền. Các mục có nhãn “Chỉ xem” vẫn dùng cùng màn hình, nhưng quyền thao tác phía sau không thay đổi.</span></p>
+  </main>
+
+  <script>
+    const roles = {
+      ADMIN: {
+        label: 'Quản trị viên', chip: 'ADMIN · Toàn quyền',
+        groups: [
+          { icon: '📊', name: 'Tổng quan', description: 'Theo dõi nhanh hoạt động hệ thống', actions: [
+            ['📊', 'Dashboard', 'Báo cáo và chỉ số hoạt động', true]
+          ]},
+          { icon: '🧳', name: 'Vận hành tour', description: 'Thiết lập tour, lịch khởi hành và đơn đặt chỗ', actions: [
+            ['🎫', 'Quản lý tour', 'Danh sách và thông tin tour'],
+            ['📍', 'Điểm đến', 'Danh mục địa điểm du lịch'],
+            ['📅', 'Lịch khởi hành', 'Đợt khởi hành và sức chứa'],
+            ['🧾', 'Đơn đặt chỗ', 'Duyệt và cập nhật trạng thái đơn']
+          ]},
+          { icon: '👥', name: 'Khách & đội ngũ', description: 'Quản lý khách hàng và hướng dẫn viên', actions: [
+            ['👥', 'Khách hàng', 'Hồ sơ và thông tin liên hệ'],
+            ['🧭', 'Hướng dẫn viên', 'Hồ sơ và phân công tour']
+          ]},
+          { icon: '💼', name: 'Tài chính & đánh giá', description: 'Đối soát, báo cáo tài chính và phản hồi về AI', actions: [
+            ['💼', 'Kế toán', 'Tổng quan tài chính và nghiệp vụ'],
+            ['⭐', 'Đánh giá AI', 'Phản hồi về trợ lý AI']
+          ]},
+          { icon: '🤖', name: 'Trợ lý AI', description: 'Hỗ trợ tra cứu và tư vấn nhanh cho mọi vai trò', actions: [
+            ['🤖', 'Trợ lý AI', 'Đặt câu hỏi và nhận hỗ trợ thông minh', true]
+          ]}
+        ]
+      },
+      STAFF: {
+        label: 'Nhân viên tư vấn', chip: 'STAFF · Tư vấn khách hàng',
+        groups: [
+          { icon: '🎫', name: 'Tư vấn tour', description: 'Tra cứu thông tin để tư vấn hành trình phù hợp', actions: [
+            ['🎫', 'Danh mục tour', 'Thông tin và lựa chọn tour', true],
+            ['📍', 'Điểm đến', 'Thông tin điểm đến du lịch'],
+            ['📅', 'Lịch khởi hành', 'Ngày đi và tình trạng chỗ']
+          ]},
+          { icon: '🧾', name: 'Hỗ trợ đặt chỗ', description: 'Theo dõi yêu cầu và thông tin khách hàng', actions: [
+            ['🧾', 'Đơn đặt chỗ', 'Hỗ trợ và cập nhật trạng thái đơn'],
+            ['👥', 'Khách hàng', 'Hồ sơ và thông tin liên hệ', false, 'Chỉ xem']
+          ]},
+          { icon: '🤖', name: 'Trợ lý AI', description: 'Hỗ trợ tra cứu và tư vấn nhanh cho mọi vai trò', actions: [
+            ['🤖', 'Trợ lý AI', 'Đặt câu hỏi và nhận hỗ trợ thông minh', true]
+          ]}
+        ]
+      },
+      ACCOUNTANT: {
+        label: 'Kế toán', chip: 'ACCOUNTANT · Tài chính',
+        groups: [
+          { icon: '📊', name: 'Tổng quan', description: 'Theo dõi các chỉ số tài chính quan trọng', actions: [
+            ['📊', 'Dashboard', 'Tổng quan hoạt động và tài chính', true]
+          ]},
+          { icon: '🧾', name: 'Đối soát', description: 'Xác nhận các giao dịch thanh toán', actions: [
+            ['🧾', 'Duyệt thanh toán', 'Đối soát giao dịch đặt chỗ', true]
+          ]},
+          { icon: '💼', name: 'Tài chính', description: 'Quản lý thu chi, công nợ và lợi nhuận', actions: [
+            ['💼', 'Tổng quan kế toán', 'Dòng tiền và việc cần xử lý'],
+            ['💳', 'Công nợ', 'Theo dõi và thu hồi công nợ'],
+            ['🧾', 'Chi phí tour', 'Ghi nhận chi phí vận hành'],
+            ['📈', 'Lãi / lỗ tour', 'Báo cáo hiệu quả từng đợt'],
+            ['↩️', 'Hoàn tiền', 'Xử lý yêu cầu hoàn tiền']
+          ]},
+          { icon: '🤖', name: 'Trợ lý AI', description: 'Hỗ trợ tra cứu và tư vấn nhanh cho mọi vai trò', actions: [
+            ['🤖', 'Trợ lý AI', 'Đặt câu hỏi và nhận hỗ trợ thông minh', true]
+          ]}
+        ]
+      },
+      GUIDE: {
+        label: 'Hướng dẫn viên', chip: 'GUIDE · Công việc được phân công',
+        groups: [
+          { icon: '🧭', name: 'Đoàn được phân công', description: 'Thông tin phục vụ các đoàn tour được giao', actions: [
+            ['🧭', 'Lịch phân công', 'Lịch và đoàn được giao', true, 'Chỉ xem'],
+            ['🎫', 'Tour được phân công', 'Thông tin hành trình của các đoàn phụ trách', false, 'Chỉ xem'],
+            ['👥', 'Khách trong đoàn', 'Danh sách khách thuộc các đoàn được phân công', false, 'Chỉ xem']
+          ]},
+          { icon: '🤖', name: 'Trợ lý AI', description: 'Hỗ trợ tra cứu thông tin nhanh', actions: [
+            ['🤖', 'Trợ lý AI', 'Đặt câu hỏi và nhận hỗ trợ', true]
+          ]}
+        ]
+      },
+      CUSTOMER: {
+        label: 'Khách hàng', chip: 'CUSTOMER · Kế hoạch du lịch',
+        groups: [
+          { icon: '🎒', name: 'Chuyến đi của tôi', description: 'Theo dõi các tour đã đặt', actions: [
+            ['🎒', 'Tour của tôi', 'Lịch sử và trạng thái đặt chỗ', true]
+          ]},
+          { icon: '🤖', name: 'Trợ lý AI', description: 'Tư vấn tour dựa trên nhu cầu', actions: [
+            ['🤖', 'Trợ lý AI', 'Nhận gợi ý tour thông minh', true]
+          ]}
+        ]
+      }
+    };
+
+    let activeRole = 'ADMIN';
+    let activeGroup = 0;
+    const switcher = document.getElementById('roleSwitcher');
+    const primaryNav = document.getElementById('primaryNav');
+
+    function render() {
+      const role = roles[activeRole];
+      const group = role.groups[activeGroup];
+      document.getElementById('workspaceName').textContent = role.label;
+      document.getElementById('roleChip').innerHTML = `<span aria-hidden="true"></span>${role.chip}`;
+      document.getElementById('sectionTitle').textContent = group.name;
+      document.getElementById('sectionDescription').textContent = group.description;
+      document.getElementById('actionCount').textContent = `${group.actions.length} chức năng`;
+
+      switcher.innerHTML = Object.keys(roles).map(key => `
+        <button type="button" aria-pressed="${key === activeRole}" data-role="${key}">${roles[key].label}</button>
+      `).join('');
+
+      primaryNav.style.setProperty('--group-count', role.groups.length);
+      primaryNav.innerHTML = role.groups.map((item, index) => `
+        <button type="button" class="primary-tab" role="tab" aria-selected="${index === activeGroup}" data-group="${index}">
+          <span class="icon" aria-hidden="true">${item.icon}</span><span>${item.name}</span>
+        </button>
+      `).join('');
+
+      document.getElementById('actionGrid').innerHTML = group.actions.map(([icon, name, description, current, badge]) => `
+        <div class="action${current ? ' active' : ''}">
+          <span class="action-icon" aria-hidden="true">${icon}</span>
+          <div class="action-copy">
+            <div class="action-name">${name}${badge ? `<span class="view-only">${badge}</span>` : ''}</div>
+            <div class="action-description">${description}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    switcher.addEventListener('click', event => {
+      const button = event.target.closest('[data-role]');
+      if (!button) return;
+      activeRole = button.dataset.role;
+      activeGroup = 0;
+      render();
+    });
+
+    primaryNav.addEventListener('click', event => {
+      const button = event.target.closest('[data-group]');
+      if (!button) return;
+      activeGroup = Number(button.dataset.group);
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
