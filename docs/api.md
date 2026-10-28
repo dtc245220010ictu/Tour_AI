@@ -131,8 +131,10 @@ Tất cả các endpoints kế toán đều được bảo vệ bằng cơ chế
 | `GET` | `/accounting/expenses` | Xem danh sách chi phí vận hành đoàn tour (xe, phòng KS, ăn uống, vé, thù lao HDV) | Query: `?schedule_id=<id>` |
 | `POST` | `/accounting/expenses` | Lập phiếu chi mới gắn với Lịch khởi hành đoàn tour | Form: `schedule_id`, `category`, `title`, `amount`, `supplier_name`, `invoice_code`, `expense_date`, `notes` |
 | `GET` | `/accounting/tours-pnl` | Báo cáo Lợi nhuận (P&L): Doanh thu - Chi phí = Lợi nhuận gộp & Biên lợi nhuận (%) theo từng chuyến đi | Query: `?schedule_id=<id>` |
-| `GET` | `/accounting/refunds` | Danh sách đơn hủy tour, đối soát theo chính sách hoàn tiền 3 mốc (>=7 ngày: 90%, 3-6 ngày: 50%, <3 ngày: 0%) | Không |
-| `POST` | `/accounting/refunds` | Lập phiếu chi xuất quỹ hoàn tiền hủy tour cho khách hàng | Form: `booking_id`, `refund_amount`, `notes` |
+| `GET` | `/accounting/refunds` | Danh sách booking đã hủy, phiếu báo hoàn `PENDING` và lịch sử phiếu đã xử lý; mức 90% / 50% / 0% chỉ là gợi ý | Không |
+| `POST` | `/accounting/refunds` | Luồng phiếu chi thủ công cũ cho booking đã hủy | Form: `booking_id`, `refund_amount`, `notes` |
+| `POST` | `/accounting/refunds/<request_id>/approve` | Duyệt phiếu báo hoàn, ghi payment `REFUND` và lưu số tiền quyết định | Form: `decision_amount` (tùy chọn), `notes` |
+| `POST` | `/accounting/refunds/<request_id>/reject` | Từ chối phiếu báo hoàn; bắt buộc nêu lý do | Form: `notes` |
 
 ---
 
@@ -167,5 +169,67 @@ Tất cả các endpoints kế toán đều được bảo vệ bằng cơ chế
 > Các form tạo/sửa tour & điểm đến (`POST /admin/tours`, `/admin/tours/<id>/edit`, `/admin/destinations`, `/admin/destinations/<id>/edit`) nhận thêm trường `image_file` (multipart). Nếu có file tải lên thì **ưu tiên dùng file**, ngược lại dùng giá trị trường `image_url`.
 
 > Ô nhập URL trên form là `type="text"` (không dùng `type="url"`): hệ thống lưu ảnh upload dưới dạng đường dẫn tương đối `/static/uploads/...`, nếu dùng `type="url"` trình duyệt sẽ chặn submit và bắt người dùng nhập lại URL mỗi khi mở form Sửa tour/điểm đến đã có ảnh.
+
+---
+
+## 7. Danh mục đầy đủ các web endpoint
+
+Ngoài ba endpoint JSON (`/api/chat`, `/api/ai/generate-description`, `/api/ai/summarize-feedbacks`) và upload-image, các endpoint dưới đây trả HTML hoặc redirect sau khi xử lý form. Chúng dùng session cookie và flash message, không phải REST JSON API.
+
+### 7.1 Xác thực, công khai và đặt chỗ
+
+| Phương thức | Đường dẫn | Quyền |
+|---|---|---|
+| GET, POST | `/register` | Public |
+| GET, POST | `/login` | Public |
+| GET | `/logout` | Đã đăng nhập |
+| GET | `/` | Public |
+| GET | `/tours` | Public |
+| GET | `/tours/<slug>` | Public |
+| GET | `/chat` | Public |
+| GET, POST | `/booking/new/<schedule_id>` | `CUSTOMER`, `STAFF`, `ADMIN` |
+| GET | `/booking/success/<booking_code>` | Chủ booking hoặc `ADMIN`/`STAFF`/`ACCOUNTANT` |
+| POST | `/booking/<booking_id>/pay` | Chủ booking `CUSTOMER`, `ADMIN`, `ACCOUNTANT` |
+| GET | `/my-bookings` | `CUSTOMER` |
+| POST | `/booking/<booking_id>/cancel` | Chủ booking `CUSTOMER` hoặc `ADMIN` |
+| POST | `/feedback/new` | `CUSTOMER`, `ADMIN` |
+| GET, POST | `/feedback/<feedback_id>/edit` | Chủ feedback |
+| POST | `/feedback/<feedback_id>/delete` | Chủ feedback |
+
+### 7.2 Quản trị tour, lịch và điểm đến
+
+| Phương thức | Đường dẫn | Quyền |
+|---|---|---|
+| GET | `/admin/dashboard` | `ADMIN`, `ACCOUNTANT` |
+| POST | `/admin/upload-image` | `ADMIN`, `STAFF` |
+| GET, POST | `/admin/tours` | `ADMIN`, `STAFF` |
+| GET, POST | `/admin/tours/<tour_id>/edit` | `ADMIN`, `STAFF` |
+| POST | `/admin/tours/<tour_id>/delete` | `ADMIN` |
+| GET, POST | `/admin/schedules` | `ADMIN`, `STAFF` |
+| GET, POST | `/admin/schedules/<schedule_id>/edit` | `ADMIN`, `STAFF` |
+| POST | `/admin/schedules/<schedule_id>/postpone` | `ADMIN`, `STAFF` |
+| POST | `/admin/schedules/<schedule_id>/resume` | `ADMIN`, `STAFF` |
+| POST | `/admin/schedules/<schedule_id>/delete` | `ADMIN` |
+| GET, POST | `/admin/destinations` | `ADMIN`, `STAFF` |
+| GET, POST | `/admin/destinations/<dest_id>/edit` | `ADMIN`, `STAFF` |
+| POST | `/admin/destinations/<dest_id>/delete` | `ADMIN` |
+
+### 7.3 Quản trị khách, booking, feedback và hướng dẫn viên
+
+| Phương thức | Đường dẫn | Quyền |
+|---|---|---|
+| GET | `/admin/customers` | `ADMIN`, `STAFF` (STAFF chỉ xem) |
+| POST | `/admin/customers/create` | `ADMIN` |
+| POST | `/admin/customers/<user_id>/update` | `ADMIN` |
+| POST | `/admin/customers/<user_id>/delete` | `ADMIN` |
+| GET | `/admin/bookings` | `ADMIN`, `STAFF` |
+| POST | `/admin/bookings/<booking_id>/status` | `ADMIN` |
+| GET | `/admin/feedbacks` | `ADMIN` |
+| GET, POST | `/admin/guides` | `ADMIN` |
+| POST | `/admin/guides/<guide_id>/delete` | `ADMIN` |
+| POST | `/admin/guides/assign` | `ADMIN` |
+| POST | `/admin/guides/assignments/<assignment_id>/delete` | `ADMIN` |
+| GET | `/guide/schedule` | `GUIDE`, `ADMIN` |
+| GET | `/guide/customers` | `GUIDE`, `ADMIN` |
 
 

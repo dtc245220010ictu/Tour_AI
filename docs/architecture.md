@@ -22,15 +22,20 @@ graph TD
         R_Booking["booking_routes.py"]
         R_Feedback["feedback_routes.py"]
         R_Admin["admin_routes.py"]
+        R_Guide["guide_routes.py"]
+        R_Accounting["accounting_routes.py"]
         R_Chat["chat_routes.py (POST /api/chat)"]
         R_AITools["ai_tools_routes.py"]
     end
 
     subgraph ServiceLayer["3. Core Business Service Layer"]
-        S_Auth["AuthService (Bcrypt, Session, Role RBAC)"]
+        S_Auth["AuthService (Werkzeug PBKDF2, Session, Role RBAC)"]
         S_Tour["TourService (Tours, Destinations, Schedules)"]
         S_Booking["BookingService (Seat reservation, Overbooking lock)"]
         S_Payment["PaymentService (Deposit, Status updates)"]
+        S_Refund["RefundService (Refund requests, approve/reject)"]
+        S_Accounting["AccountingService (Reconciliation, debts, P&L)"]
+        S_Guide["GuideService (Guides, assignments)"]
         S_Feedback["FeedbackService (Review collection)"]
         S_Analytics["AnalyticsService (Revenue, Occupancy rate)"]
         S_AIContent["AIContentService (Tour description, Itinerary generator)"]
@@ -47,7 +52,7 @@ graph TD
 
     subgraph DataLayer["5. Data Access & Persistence Layer"]
         DB_Manager["Database Manager (database/db.py)"]
-        DB_Storage[("MySQL / SQLite Database")]
+        DB_Storage[("SQLite Database")]
     end
 
     %% Flow connections
@@ -55,6 +60,8 @@ graph TD
     ControllerLayer --> ServiceLayer
     R_Chat --> RAG_Orchestrator
     R_AITools --> S_AIContent
+    R_Accounting --> S_Accounting
+    R_Guide --> S_Guide
     
     RAG_Orchestrator --> RAG_Analyzer
     RAG_Orchestrator --> RAG_Retriever
@@ -77,13 +84,17 @@ graph TD
 | **Routing** | Flask Blueprints | Tiếp nhận HTTP Request, xác thực quyền truy cập (RBAC), kiểm tra tính hợp lệ dữ liệu đầu vào (Input validation), trả về HTML hoặc JSON. |
 | **Service** | `booking_service.py` | Quản lý quy trình đặt chỗ, tính toán tiền, trừ số chỗ trống bằng database lock, hủy tour và hoàn trả chỗ. |
 | **Service** | `tour_service.py` | Quản lý điểm đến, tour, lịch trình và danh sách đợt khởi hành. |
-| **Service** | `auth_service.py` | Quản lý người dùng, băm mật khẩu bảo mật (bcrypt/pbkdf2), kiểm tra phân quyền người dùng. |
+| **Service** | `auth_service.py` | Quản lý người dùng, băm mật khẩu bằng Werkzeug PBKDF2, kiểm tra phân quyền người dùng. |
+| **Service** | `accounting_service.py`, `refund_service.py` | Đối soát thanh toán, công nợ, chi phí vận hành, P&L, sổ quỹ và quy trình duyệt/từ chối phiếu báo hoàn. |
+| **Service** | `guide_service.py`, `image_upload_service.py` | Quản lý hồ sơ/phân công hướng dẫn viên và kiểm tra–lưu ảnh upload nội bộ. |
 | **RAG** | `question_analyzer.py` | Phân tích câu hỏi tiếng Việt tự nhiên thành Structured Intent JSON (khoảng giá, điểm đến, số ngày, từ khóa). |
 | **RAG** | `tour_retriever.py` | Nhận Intent, tạo câu lệnh SQL có tham số (parameterized query) để tìm các tour còn chỗ (`available_seats > 0`). |
 | **RAG** | `context_builder.py` | Nhận kết quả từ Retriever, trích lọc thông tin cần thiết, định dạng thành văn bản ngắn gọn, chính xác. |
 | **RAG** | `prompt_builder.py` | Gắn context vào System Prompt với các quy tắc ràng buộc nghiêm ngặt: "Chỉ trả lời dựa trên CONTEXT, tuyệt đối không bịa tour/giá". |
 | **RAG** | `gemini_service.py` | Gửi prompt đến Gemini API qua biến môi trường an toàn, có timeout, xử lý ngoại lệ và fallback. |
-| **Data Access** | `database/db.py` | Quản lý kết nối CSDL (Connection pool, cursor), hỗ trợ linh hoạt cả MySQL và SQLite. |
+| **Data Access** | `database/db.py` | Mở kết nối SQLite theo thao tác, bật foreign keys, quản lý transaction và migration tương thích cho SQLite. |
+
+> Ngoại lệ hiện hữu: `accounting_routes.py` gọi `execute_query()` để nạp danh sách lịch cho dropdown của trang Chi phí và P&L. Đây là chi tiết triển khai hiện tại; khi tái cấu trúc nên chuyển các query này vào `AccountingService`.
 
 ---
 
@@ -92,7 +103,7 @@ graph TD
    - Client-side (JavaScript) tuyệt đối KHÔNG có quyền truy cập hay chứa Gemini API Key.
    - Toàn bộ lời gọi tới AI phải thông qua endpoint nội bộ `POST /api/chat`.
 2. **Ngăn chặn SQL Injection:**
-   - 100% các câu truy vấn cơ sở dữ liệu trong `TourRetriever` và các `Service` đều dùng Parameterized Query (`%s` hoặc `?`), không bao giờ ghép chuỗi (string concatenation).
+   - Các truy vấn nhận dữ liệu đầu vào trong `TourRetriever` và service dùng Parameterized Query SQLite (`?`), không ghép giá trị đầu vào trực tiếp vào SQL.
 3. **Kiểm soát truy cập (RBAC):**
    - Sử dụng decorator `@login_required` và `@roles_required(['ADMIN', 'STAFF'])` cho các route quản trị.
 4. **Cô lập RAG với Database:**
@@ -109,7 +120,7 @@ graph TD
 | FR-007 | `ai_tools_routes.py`, `ai_content_service.py`, `gemini_service.py` |
 | FR-008, FR-009, FR-010 | `booking_service.py`, `tour_schedules` (locking transaction) |
 | FR-011, FR-012, FR-013 | `booking_routes.py`, `booking_service.py`, bảng `bookings` |
-| FR-015, FR-016 | `payment_service.py`, `booking_service.py`, bảng `payments` |
+| FR-015, FR-016 | `payment_service.py`, `booking_service.py`, `refund_service.py`, `accounting_service.py`, bảng `payments`, `refund_requests` |
 | FR-017, FR-018 | `admin_routes.py`, bảng `tour_guides`, `guide_assignments` |
 | FR-019, FR-020 | `feedback_routes.py`, `feedback_service.py`, bảng `feedbacks` |
 | FR-021 | `admin_routes.py`, `analytics_service.py` |

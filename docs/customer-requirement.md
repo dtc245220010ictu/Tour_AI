@@ -1,5 +1,7 @@
 # Yêu Cầu Khách Hàng (Customer Requirements) - Đề Tài 17
 
+> **Trạng thái thực hiện:** Đây là hồ sơ yêu cầu đầu vào và được giữ nguyên để truy xuất nguồn gốc. Mã hiện tại đáp ứng bằng SQLite (chưa có MySQL runtime); trạng thái booking triển khai là `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`. Các chênh lệch và quyết định triển khai được ghi tại `docs/requirements-issues.md` và `docs/architecture-decisions.md`.
+
 ## 1. Bối cảnh dự án
 Công ty du lịch cần một hệ thống thông tin toàn diện để quản lý hoạt động kinh doanh lữ hành, bao gồm: tour du lịch, lịch khởi hành, quản lý khách hàng, đặt chỗ (booking), thanh toán, phân công hướng dẫn viên và tiếp nhận phản hồi sau chuyến đi.
 Trong thực tế, khách hàng thường gặp khó khăn khi tìm kiếm tour phù hợp với ngân sách, thời gian và sở thích cá nhân; trong khi nhân viên công ty mất rất nhiều thời gian để soạn thảo mô tả tour, lên lịch trình tóm tắt và tổng hợp đánh giá của du khách.

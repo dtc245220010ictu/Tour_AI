@@ -129,6 +129,12 @@ flowchart LR
 
 ## 2. Biểu đồ Lớp (Class Diagram)
 
+> **Phạm vi và cách đọc:** mã nguồn Flask hiện tại không khai báo các lớp entity/ORM riêng; dữ liệu được đọc từ SQLite dưới dạng `sqlite3.Row` và được xử lý bởi các lớp service tĩnh. Vì vậy, sơ đồ 2.1 là **mô hình lớp miền** ánh xạ 1-1 với `database/schema.sql`; sơ đồ 2.2 thể hiện các **lớp thực thi** trong thư mục `services/` và các phụ thuộc chính của chúng.
+
+### 2.1 Mô hình lớp miền
+
+Ảnh PNG đã xuất: [mở biểu đồ lớp](class-diagram-domain.png).
+
 ```mermaid
 classDiagram
     class User {
@@ -139,14 +145,13 @@ classDiagram
         +string phone
         +string role
         +datetime created_at
-        +check_password(password) bool
     }
 
     class Destination {
         +int id
         +string name
         +string region
-        +string description
+        +text description
         +string image_url
         +datetime created_at
     }
@@ -156,14 +161,15 @@ classDiagram
         +int destination_id
         +string title
         +string slug
-        +string description
+        +text description
         +int duration_days
         +int duration_nights
-        +float base_price
+        +decimal base_price
         +string transportation
-        +string itinerary_text
+        +text itinerary_text
         +string image_url
         +bool is_active
+        +datetime created_at
     }
 
     class TourSchedule {
@@ -171,14 +177,14 @@ classDiagram
         +int tour_id
         +date departure_date
         +date return_date
-        +float adult_price
-        +float child_price
+        +decimal adult_price
+        +decimal child_price
         +int total_seats
         +int available_seats
         +string status
-        +has_enough_seats(seats) bool
-        +reserve_seats(seats) void
-        +release_seats(seats) void
+        +text postpone_reason
+        +datetime postponed_at
+        +datetime created_at
     }
 
     class Booking {
@@ -191,16 +197,16 @@ classDiagram
         +string customer_phone
         +int num_adults
         +int num_children
-        +float total_amount
+        +decimal total_amount
         +string status
-        +string notes
+        +text notes
         +datetime created_at
     }
 
     class Payment {
         +int id
         +int booking_id
-        +float amount
+        +decimal amount
         +string payment_method
         +string payment_type
         +string transaction_id
@@ -208,7 +214,21 @@ classDiagram
         +datetime payment_date
         +int verified_by
         +datetime verified_at
-        +string notes
+        +text notes
+    }
+
+    class RefundRequest {
+        +int id
+        +int booking_id
+        +decimal paid_amount
+        +decimal request_amount
+        +text reason
+        +string status
+        +datetime requested_at
+        +int processed_by
+        +datetime processed_at
+        +decimal decision_amount
+        +text decision_notes
     }
 
     class TourGuide {
@@ -218,8 +238,9 @@ classDiagram
         +string email
         +string languages
         +int experience_years
-        +string bio
+        +text bio
         +bool is_active
+        +datetime created_at
     }
 
     class GuideAssignment {
@@ -227,7 +248,8 @@ classDiagram
         +int schedule_id
         +int guide_id
         +string role_in_tour
-        +string notes
+        +text notes
+        +datetime created_at
     }
 
     class Feedback {
@@ -236,30 +258,161 @@ classDiagram
         +int tour_id
         +int booking_id
         +int rating
-        +string comment
+        +text comment
+        +datetime created_at
+    }
+
+    class TourExpense {
+        +int id
+        +int schedule_id
+        +string category
+        +string title
+        +decimal amount
+        +string supplier_name
+        +string invoice_code
+        +date expense_date
+        +int created_by
+        +text notes
         +datetime created_at
     }
 
     class ChatLog {
         +int id
         +string session_id
-        +string user_message
-        +string intent_json
+        +text user_message
+        +text intent_json
         +string retrieved_tour_ids
-        +string bot_response
+        +text bot_response
         +datetime created_at
     }
 
-    Destination "1" --> "*" Tour : contains
-    Tour "1" --> "*" TourSchedule : schedules
-    TourSchedule "1" --> "*" Booking : booked_in
-    User "1" --> "*" Booking : places
-    Booking "1" --> "*" Payment : payments
-    TourSchedule "1" --> "*" GuideAssignment : assigns
-    TourGuide "1" --> "*" GuideAssignment : assigned_to
-    Tour "1" --> "*" Feedback : reviews
-    User "1" --> "*" Feedback : writes
-    Booking "1" --> "0..1" Feedback : relates_to
+    Destination "1" --> "0..*" Tour : contains
+    Tour "1" --> "0..*" TourSchedule : has
+    TourSchedule "1" --> "0..*" Booking : booked_for
+    User "1" --> "0..*" Booking : places
+    Booking "1" --> "0..*" Payment : payment_history
+    Payment "0..*" --> "0..1" User : verified_by
+    Booking "1" --> "0..1" RefundRequest : refund_request
+    RefundRequest "0..*" --> "0..1" User : processed_by
+    TourSchedule "1" --> "0..*" GuideAssignment : guide_assignments
+    TourGuide "1" --> "0..*" GuideAssignment : assignments
+    User "1" --> "0..*" Feedback : writes
+    Tour "1" --> "0..*" Feedback : receives
+    Booking "0..1" --> "0..1" Feedback : verified_review
+    TourSchedule "1" --> "0..*" TourExpense : operating_expenses
+    User "0..1" --> "0..*" TourExpense : created_by
+```
+
+**Ràng buộc miền quan trọng:**
+
+- `TourSchedule.available_seats` luôn nằm trong `[0, total_seats]`; chỉ lịch `OPEN` mới nhận đặt chỗ.
+- `Booking` có các trạng thái `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`; việc hủy hoàn chỗ về lịch khởi hành.
+- `Payment.payment_type` gồm `DEPOSIT`, `FULL`, `REMAINING`, `REFUND`. Thanh toán thành công không phải `REFUND` xác nhận booking.
+- Mỗi `Booking` có tối đa một `RefundRequest`; yêu cầu được duyệt sinh một `Payment` kiểu `REFUND`.
+- `Feedback.booking_id` có thể rỗng theo schema, nhưng nghiệp vụ chỉ cho đánh giá một lần trên booking đã `COMPLETED`.
+
+### 2.2 Các lớp service và phụ thuộc thực thi
+
+```mermaid
+classDiagram
+    class AuthService {
+        +register_user(email, password, full_name, phone, role) dict
+        +login_user(email, password) dict
+        +get_user_by_id(user_id) dict
+        +update_customer(user_id, full_name, phone, email, password) dict
+    }
+    class TourService {
+        +get_tours(filters) list
+        +create_tour(...) int
+        +update_tour(...) void
+        +create_schedule(...) int
+        +update_schedule(...) void
+        +postpone_schedule(schedule_id, reason) void
+        +resume_schedule(schedule_id) void
+    }
+    class BookingService {
+        +create_booking(...) dict
+        +cancel_booking(booking_id, user_id, reason) bool
+        +update_booking_status(booking_id, status) bool
+        +get_user_bookings(user_id) list
+    }
+    class PaymentService {
+        +record_payment(...) int
+        +get_payments_by_booking(booking_id) list
+    }
+    class RefundService {
+        +create_request(booking_id, reason, amount) dict
+        +approve_request(request_id, approver_id, amount, notes) bool
+        +reject_request(request_id, approver_id, notes) bool
+        +get_policy_percent(departure_date) int
+    }
+    class GuideService {
+        +create_guide(...) int
+        +assign_guide(schedule_id, guide_id, role, notes) int
+        +get_assignments(guide_id) list
+        +get_assigned_group_customers() list
+    }
+    class FeedbackService {
+        +create_feedback(...) int
+        +has_reviewed_booking(booking_id) bool
+        +update_feedback(...) bool
+        +delete_feedback(...) bool
+    }
+    class AccountingService {
+        +confirm_payment(payment_id, accountant_id) bool
+        +record_debt_payment(...) bool
+        +record_tour_expense(...) int
+        +get_schedule_pnl(schedule_id) dict
+        +get_cashflow_summary(...) dict
+    }
+    class AnalyticsService {
+        +get_dashboard_stats() dict
+        +get_top_selling_tours(limit) list
+        +get_occupancy_rates(filter) list
+    }
+    class RAGService {
+        +answer_question(question, session_id, role) dict
+    }
+    class QuestionAnalyzer {
+        +analyze_question(question) dict
+        +is_feedback_summary_question(question) bool
+    }
+    class TourRetriever {
+        +retrieve_tours(intent, limit) list
+        +retrieve_alternative_tours(intent, limit) list
+    }
+    class ContextBuilder {
+        +build_context(tours, alternatives) string
+    }
+    class PromptBuilder {
+        +build_prompt(question, context) string
+    }
+    class GroundedAnswerBuilder {
+        +build(question, intent, tours, alternatives) string
+    }
+    class GeminiService {
+        +is_configured() bool
+        +generate_content(prompt, temperature, fallback, timeout) string
+    }
+    class AIContentService {
+        +generate_tour_description(...) dict
+        +summarize_feedbacks(feedbacks) string
+    }
+    class ImageUploadService {
+        +save(file) string
+    }
+
+    BookingService ..> RefundService : creates request
+    RefundService ..> AccountingService : records refund
+    RAGService ..> QuestionAnalyzer : analyzes
+    RAGService ..> TourRetriever : retrieves
+    RAGService ..> ContextBuilder : builds context
+    RAGService ..> PromptBuilder : builds prompt
+    RAGService ..> GroundedAnswerBuilder : fallback
+    RAGService ..> GeminiService : generates answer
+    RAGService ..> FeedbackService : reads feedback
+    RAGService ..> AIContentService : summarizes feedback
+    AIContentService ..> GeminiService : generates content
 ```
 
 ---
@@ -273,27 +426,24 @@ sequenceDiagram
     actor Customer as 👤 Khách hàng
     participant Route as 🌐 BookingRoute
     participant Service as ⚙️ BookingService
-    participant SchedRepo as 💾 ScheduleRepository
-    participant BookRepo as 💾 BookingRepository
-    participant DB as 🗄️ MySQL Database
+    participant DB as 🗄️ SQLite Database
 
-    Customer->>Route: POST /bookings (schedule_id, num_adults, num_children, contact_info)
+    Customer->>Route: POST /booking/new/{schedule_id} (form data)
     Route->>Service: create_booking(user_id, schedule_id, adults, children, contact)
-    Service->>SchedRepo: get_schedule_for_update(schedule_id)
-    SchedRepo->>DB: SELECT * FROM tour_schedules WHERE id = ? FOR UPDATE
-    DB-->>SchedRepo: schedule record (available_seats)
+    Service->>DB: Mở transaction và đọc lịch theo ID
+    DB-->>Service: schedule (status, available_seats, prices)
 
-    alt available_seats < (num_adults + num_children)
+    alt status != OPEN hoặc available_seats < requested_seats
         Service-->>Route: Raise OverbookingError("Không đủ số chỗ khả dụng")
-        Route-->>Customer: 400 Bad Request ("Chuyến đi chỉ còn X chỗ")
-    else available_seats >= requested_seats
-        Service->>SchedRepo: update available_seats = available_seats - requested_seats
-        SchedRepo->>DB: UPDATE tour_schedules SET available_seats = ...
-        Service->>BookRepo: insert_booking(booking_data)
-        BookRepo->>DB: INSERT INTO bookings ...
-        DB-->>BookRepo: Booking Created (BK-XXXXX)
+        Route-->>Customer: Hiển thị lỗi và render lại form
+    else lịch đang mở và còn đủ chỗ
+        Service->>DB: Atomic update giảm available seats
+        DB-->>Service: Cập nhật thành công
+        Service->>DB: Tạo booking trạng thái PENDING
+        Service->>DB: Đổi lịch thành FULL nếu hết chỗ
+        DB-->>Service: Commit, tạo booking BK-XXXXX
         Service-->>Route: Return Booking Object
-        Route-->>Customer: 201 Created (Chuyển hướng trang xác nhận & thanh toán)
+        Route-->>Customer: 302 Redirect /booking/success/{booking_code}
     end
 ```
 
@@ -307,9 +457,10 @@ sequenceDiagram
     participant RAG as 🧠 RAGService
     participant Analyzer as 🔍 QuestionAnalyzer
     participant Retriever as 🎯 TourRetriever
-    participant DB as 🗄️ MySQL Database
+    participant DB as 🗄️ SQLite Database
     participant CtxBuilder as 📝 ContextBuilder
     participant PromptBuilder as 📄 PromptBuilder
+    participant GroundedAnswerBuilder as 🧾 GroundedAnswerBuilder
     participant Gemini as 🤖 GeminiService
 
     Customer->>UI: Nhập: "Có tour Đà Nẵng 3 ngày dưới 4 triệu không?"
@@ -317,27 +468,31 @@ sequenceDiagram
     ChatAPI->>RAG: answer_question("Có tour Đà Nẵng...")
     
     RAG->>Analyzer: analyze_question(question)
-    Analyzer-->>RAG: Structured Intent: { destination: "Đà Nẵng", max_price: 4000000, duration: 3 }
+    Analyzer-->>RAG: Structured Intent: { destinations: ["Đà Nẵng"], max_price: 4000000, duration_days: 3 }
 
     RAG->>Retriever: retrieve_tours(intent)
-    Retriever->>DB: SELECT * FROM tours JOIN tour_schedules WHERE ... AND available_seats > 0
-    DB-->>Retriever: [Tour "Đà Nẵng - Hội An 3N2Đ", Giá: 3.500.000, Còn: 8 chỗ]
+    Retriever->>DB: SELECT active tours with OPEN schedules and seats > 0
+    DB-->>Retriever: strict matches
     Retriever-->>RAG: List[TourData]
 
-    alt Không có tour nào phù hợp (Empty List)
-        RAG-->>ChatAPI: "Hiện tại không tìm thấy tour phù hợp với yêu cầu của bạn..."
-        ChatAPI-->>UI: Hiển thị thông báo không có tour và gợi ý xem các tour khác
-    else Tìm thấy tour
-        RAG->>CtxBuilder: build_context(tours)
-        CtxBuilder-->>RAG: Context Text (Danh sách tour chuẩn hóa từ CSDL)
-        RAG->>PromptBuilder: build_prompt(question, context)
-        PromptBuilder-->>RAG: Grounded Prompt (Cấm bịa dữ liệu)
-        RAG->>Gemini: generate_content(prompt)
-        Gemini-->>RAG: Câu trả lời tư vấn chi tiết
-        RAG-->>ChatAPI: { "answer": "...", "tours": [...] }
-        ChatAPI-->>UI: 200 OK (Render văn bản + Thẻ Tour Cards)
-        UI-->>Customer: Hiển thị câu trả lời và thẻ tour trực quan
+    alt Không có strict match
+        RAG->>Retriever: retrieve_alternative_tours(intent)
+        Retriever->>DB: SELECT closest available tours
+        DB-->>Retriever: alternatives or []
+        Retriever-->>RAG: alternatives
     end
+
+    RAG->>CtxBuilder: build_context(matches, alternatives)
+    CtxBuilder-->>RAG: Context grounded in database rows
+    RAG->>PromptBuilder: build_prompt(question, context)
+    PromptBuilder-->>RAG: Grounded prompt
+    RAG->>GroundedAnswerBuilder: build(question, intent, matches, alternatives)
+    GroundedAnswerBuilder-->>RAG: fallback answer
+    RAG->>Gemini: generate_content(prompt, fallback_answer)
+    Gemini-->>RAG: grounded answer or fallback
+    RAG-->>ChatAPI: { "answer": "...", "tours": matches or alternatives }
+    ChatAPI-->>UI: 200 OK (text + tour cards)
+    UI-->>Customer: Hiển thị câu trả lời
 ```
 
 ---
@@ -373,11 +528,19 @@ flowchart TD
     FinishTour --> SendFeedback[Gửi đánh giá & phản hồi chất lượng]
     SendFeedback --> End([Kết thúc])
 
-    ConfirmBooking --> CustomerCancel{Khách yêu cầu Hủy tour?}
-    CustomerCancel -- Có --> ApplyPolicy[Áp dụng chính sách hoàn hủy]
-    ApplyPolicy --> ReleaseSeats[Cộng hoàn trả số chỗ vào Lịch trình]
-    ReleaseSeats --> UpdateCancelled[Cập nhật trạng thái CANCELLED]
-    UpdateCancelled --> End
+    CreateBooking --> CustomerCancel{Khách yêu cầu Hủy tour?}
+    ConfirmBooking --> CustomerCancel
+    CustomerCancel -- Có --> UpdateCancelled[Cập nhật booking CANCELLED]
+    UpdateCancelled --> ReleaseSeats[Cộng hoàn trả số chỗ và mở lại lịch nếu phù hợp]
+    ReleaseSeats --> CheckPaid{Đã có payment SUCCESS?}
+    CheckPaid -- Không --> End
+    CheckPaid -- Có --> CreateRefundRequest[Tạo refund_request PENDING bằng số tiền đã trả]
+    CreateRefundRequest --> AccountantDecision{Kế toán/Admin duyệt?}
+    AccountantDecision -- Từ chối --> RejectRefund[Lưu REJECTED và lý do]
+    AccountantDecision -- Duyệt --> RecordRefund[Ghi payment REFUND với số tiền quyết định]
+    RecordRefund --> ApproveRefund[Lưu APPROVED và thông tin xử lý]
+    RejectRefund --> End
+    ApproveRefund --> End
 ```
 
 ---
@@ -388,14 +551,19 @@ flowchart TD
 erDiagram
     USERS ||--o{ BOOKINGS : "places"
     USERS ||--o{ FEEDBACKS : "submits"
+    USERS o|--o{ PAYMENTS : "verifies"
+    USERS o|--o{ REFUND_REQUESTS : "processes"
+    USERS o|--o{ TOUR_EXPENSES : "creates"
     DESTINATIONS ||--o{ TOURS : "contains"
     TOURS ||--o{ TOUR_SCHEDULES : "has"
     TOURS ||--o{ FEEDBACKS : "receives"
     TOUR_SCHEDULES ||--o{ BOOKINGS : "scheduled_in"
     TOUR_SCHEDULES ||--o{ GUIDE_ASSIGNMENTS : "assigned"
+    TOUR_SCHEDULES ||--o{ TOUR_EXPENSES : "incurs"
     TOUR_GUIDES ||--o{ GUIDE_ASSIGNMENTS : "guides"
     BOOKINGS ||--o{ PAYMENTS : "paid_by"
-    BOOKINGS ||--o| FEEDBACKS : "verified_for"
+    BOOKINGS ||--o| REFUND_REQUESTS : "has"
+    BOOKINGS o|--o{ FEEDBACKS : "may_verify"
 
     USERS {
         int id PK
@@ -410,8 +578,8 @@ erDiagram
     DESTINATIONS {
         int id PK
         string name UK
-        string region "Bắc, Trung, Nam, Quốc tế"
-        string description
+        string region
+        text description
         string image_url
         datetime created_at
     }
@@ -421,7 +589,7 @@ erDiagram
         int destination_id FK
         string title
         string slug UK
-        string description
+        text description
         int duration_days
         int duration_nights
         decimal base_price
@@ -441,7 +609,9 @@ erDiagram
         decimal child_price
         int total_seats
         int available_seats
-        string status "OPEN, FULL, CLOSED, CANCELLED"
+        string status "OPEN, FULL, CLOSED, CANCELLED, POSTPONED"
+        text postpone_reason
+        datetime postponed_at
         datetime created_at
     }
 
@@ -475,6 +645,20 @@ erDiagram
         text notes
     }
 
+    REFUND_REQUESTS {
+        int id PK
+        int booking_id FK, UK
+        decimal paid_amount
+        decimal request_amount
+        text reason
+        string status "PENDING, APPROVED, REJECTED"
+        datetime requested_at
+        int processed_by FK
+        datetime processed_at
+        decimal decision_amount
+        text decision_notes
+    }
+
     TOUR_GUIDES {
         int id PK
         string full_name
@@ -484,6 +668,7 @@ erDiagram
         int experience_years
         text bio
         boolean is_active
+        datetime created_at
     }
 
     GUIDE_ASSIGNMENTS {
@@ -499,7 +684,7 @@ erDiagram
         int id PK
         int user_id FK
         int tour_id FK
-        int booking_id FK
+        int booking_id FK "nullable"
         int rating "1 to 5"
         text comment
         datetime created_at
@@ -512,6 +697,20 @@ erDiagram
         text intent_json
         text retrieved_tour_ids
         text bot_response
+        datetime created_at
+    }
+
+    TOUR_EXPENSES {
+        int id PK
+        int schedule_id FK
+        string category "HOTEL, TRANSPORT, MEAL, TICKETS, GUIDE_FEE, OTHER"
+        string title
+        decimal amount
+        string supplier_name
+        string invoice_code
+        date expense_date
+        int created_by FK
+        text notes
         datetime created_at
     }
 ```

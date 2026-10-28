@@ -24,7 +24,7 @@
 - **FR-007:** Hệ thống cung cấp công cụ AI hỗ trợ tự động sinh bản mô tả tour hấp dẫn và tóm tắt lịch trình du lịch dựa trên các điểm đến và từ khóa do nhân viên nhập.
 
 ### Phân hệ 3: Lịch khởi hành & Kiểm soát chỗ (Schedule & Capacity)
-- **FR-008:** Nhân viên/Admin có thể tạo và quản lý các đợt khởi hành cho từng tour (ngày đi, ngày về, tổng số chỗ, giá theo đợt, trạng thái).
+- **FR-008:** Nhân viên/Admin có thể tạo và quản lý các đợt khởi hành cho từng tour (ngày đi, ngày về, tổng số chỗ, giá theo đợt, trạng thái); trạng thái `POSTPONED` phải có lý do và không nhận booking mới.
 - **FR-009:** Hệ thống tự động tính toán và cập nhật số chỗ còn trống (available seats) theo thời gian thực khi có booking mới hoặc khi hủy booking.
 - **FR-010:** Hệ thống phải ngăn chặn tình trạng đặt vượt quá số chỗ khả dụng (overbooking).
 
@@ -36,7 +36,7 @@
 
 ### Phân hệ 5: Thanh toán & Quản lý Hủy tour
 - **FR-015:** Khách hàng hoặc Kế toán có thể ghi nhận thanh toán (đặt cọc hoặc thanh toán toàn bộ) cho đơn đặt chỗ.
-- **FR-016:** Hệ thống hỗ trợ quy trình hủy tour theo chính sách: cập nhật trạng thái hủy, hoàn lại số chỗ trống cho lịch khởi hành và ghi nhận phí hoàn tiền (nếu có).
+- **FR-016:** Hệ thống hỗ trợ quy trình hủy tour: cập nhật trạng thái hủy, hoàn lại số chỗ, tự tạo một phiếu báo hoàn `PENDING` khi khách đã thanh toán; Kế toán/Admin duyệt hoặc từ chối và ghi nhận payment `REFUND`. Mức 90% / 50% / 0% là gợi ý nghiệp vụ, không tự động áp số tiền cuối cùng.
 
 ### Phân hệ 6: Hướng dẫn viên & Phân công
 - **FR-017:** Quản trị viên/Nhân viên có thể quản lý danh sách hồ sơ hướng dẫn viên du lịch.
@@ -52,7 +52,7 @@
 ### Phân hệ 9: Trợ lý AI Tư Vấn Tour (RAG Chatbot)
 - **FR-022:** Khách hàng có thể tương tác với Chatbot bằng ngôn ngữ tự nhiên tiếng Việt để tìm kiếm và nhận tư vấn tour.
 - **FR-023:** Chatbot phân tích câu hỏi người dùng thành các tiêu chí có cấu trúc (điểm đến, ngân sách tối đa, thời lượng, ngày đi, sở thích).
-- **FR-024:** Chatbot bắt buộc phải truy vấn dữ liệu từ MySQL/SQLite để lấy các tour còn chỗ phù hợp với tiêu chí của khách.
+- **FR-024:** Chatbot bắt buộc phải truy vấn dữ liệu từ CSDL ứng dụng hiện tại (SQLite) để lấy các tour còn chỗ phù hợp với tiêu chí của khách.
 - **FR-025:** Nếu không tìm thấy tour nào phù hợp trong cơ sở dữ liệu, Chatbot phải thông báo rõ ràng rằng hiện không có tour thỏa mãn thay vì tự bịa ra thông tin giả mạo.
 
 ---
@@ -60,11 +60,11 @@
 ## 3. Yêu cầu phi chức năng (Non-Functional Requirements)
 
 - **NFR-001 (Hiệu năng):** Thời gian phản hồi trang web trung bình dưới 1.5 giây đối với các tác vụ CRUD thông thường; thời gian phản hồi của Chatbot AI dưới 4 giây.
-- **NFR-002 (Bảo mật - Mật khẩu):** Mật khẩu người dùng phải được băm an toàn bằng thuật toán bcrypt/pbkdf2 trước khi lưu vào CSDL.
-- **NFR-003 (Bảo mật - Secrets):** API Key của AI Engine (Gemini API Key) và Secret Key của ứng dụng phải lưu trong biến môi trường (`.env`), tuyệt đối không hardcode trong mã nguồn hoặc client-side JS.
+- **NFR-002 (Bảo mật - Mật khẩu):** Mật khẩu người dùng phải được băm an toàn bằng thuật toán PBKDF2 của Werkzeug trước khi lưu vào CSDL.
+- **NFR-003 (Bảo mật - Secrets):** API Key của AI Engine (Gemini API Key) và Secret Key của ứng dụng phải lưu trong biến môi trường (`.env`), tuyệt đối không hardcode trong mã nguồn hoặc client-side JS. Trạng thái hiện tại: production phải đặt `SECRET_KEY` vì mã còn fallback dành cho local/demo.
 - **NFR-004 (Bảo mật - Injection):** Toàn bộ truy vấn cơ sở dữ liệu phải dùng parameterized query hoặc ORM để triệt tiêu lỗ hổng SQL Injection.
 - **NFR-005 (Toàn vẹn dữ liệu):** Ràng buộc tính nhất quán số chỗ trống: `available_seats = total_seats - SUM(num_adults + num_children của booking PENDING, CONFIRMED, COMPLETED)` luôn được bảo đảm bằng giao dịch (database transaction). Booking `PENDING` đã giữ chỗ; booking `CANCELLED` được hoàn chỗ và không được tính vào số ghế đã giữ.
 - **NFR-006 (Giao diện & Trải nghiệm):** Giao diện thân thiện, tương thích đa thiết bị (responsive trên mobile, tablet, desktop).
 - **NFR-007 (Độ tin cậy của AI):** Cơ chế Zero-Hallucination: Prompt hệ thống của RAG Chatbot nghiêm cấm việc suy đoán hoặc tự tạo tour, giá tiền hay ngày khởi hành không có trong ngữ cảnh CSDL được cấp.
-- **NFR-008 (Khả năng mở rộng):** Thiết kế theo mô hình kiến trúc phân lớp (Layered Architecture: Route -> Service -> Repository/Model) giúp dễ dàng tích hợp thêm các dịch vụ thanh toán và mô hình AI khác.
+- **NFR-008 (Khả năng mở rộng):** Thiết kế theo mô hình kiến trúc phân lớp (Route -> Service -> `database/db.py`) giúp dễ mở rộng. Phiên bản hiện tại chưa có repository/model ORM riêng.
 

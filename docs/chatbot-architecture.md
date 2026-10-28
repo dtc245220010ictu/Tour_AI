@@ -15,7 +15,7 @@ flowchart TD
     
     QA["1. Question Analyzer (services/question_analyzer.py)"]
     TR["2. Tour Retriever (services/tour_retriever.py)"]
-    DB[("🗄️ MySQL / SQLite (Bảng tours, schedules)")]
+    DB[("🗄️ SQLite (Bảng tours, schedules)")]
     CB["3. Context Builder (services/context_builder.py)"]
     PB["4. Prompt Builder (services/prompt_builder.py)"]
     GS["5. Gemini Service (services/gemini_service.py)"]
@@ -31,24 +31,24 @@ flowchart TD
     RAG -->|Bước 2: Truy xuất tour| TR
     TR -->|Parameterized SQL query| DB
     DB -->|Tour records còn chỗ| TR
-    TR -->|List Tour Objects| RAG
+    TR -->|Danh sách tour khớp| RAG
+    Match{"Có tour khớp chính xác?"}
+    Alternative["Bước 2b: Tìm tối đa 3 tour thay thế còn chỗ"]
+    RAG --> Match
+    Match -->|Có| CB
+    Match -->|Không| Alternative
+    Alternative -->|Danh sách thay thế| CB
+
+    CB -->|Clean Compact Context| RAG
+    RAG -->|Bước 4: Tạo Prompt Grounded| PB
+    PB -->|System + Grounding + User Prompt| RAG
     
-    alt Không tìm thấy tour nào (Zero Results)
-        RAG -->|Trả thông báo lịch sự không bịa| Endpoint
-    else Tìm thấy tour phù hợp
-        RAG -->|Bước 3: Chuẩn hóa context| CB
-        CB -->|Clean Compact Context| RAG
-        
-        RAG -->|Bước 4: Tạo Prompt Grounded| PB
-        PB -->|System + Grounding + User Prompt| RAG
-        
-        RAG -->|Bước 5: Gọi AI Engine| GS
-        GS -->|REST HTTPS| ExtAI
-        ExtAI -->|Phản hồi văn bản| GS
-        GS -->|Answer Text| RAG
-    end
+    RAG -->|Bước 5: Gọi AI Engine| GS
+    GS -->|REST HTTPS| ExtAI
+    ExtAI -->|Phản hồi văn bản| GS
+    GS -->|Answer Text hoặc grounded fallback| RAG
     
-    RAG -->|Trả {answer, tours}| Endpoint
+    RAG -->|Trả answer và tours| Endpoint
     Endpoint -->|HTTP 200 JSON| ChatUI
     ChatUI -->|Render Text + Product Cards| Client
 ```
@@ -59,7 +59,7 @@ flowchart TD
 1. **Chatbot API (`routes/chat_routes.py`):**
    - Tiếp nhận câu hỏi, kiểm tra tính hợp lệ (`question` không rỗng), bắt ngoại lệ, không lộ stack trace.
 2. **Question Analyzer (`services/question_analyzer.py`):**
-   - Trích xuất điểm đến, ngân sách tối đa/tối thiểu, số ngày đi, từ khóa sở thích.
+   - Trích xuất điểm đến, ngân sách tối đa/tối thiểu, số ngày đi (một giá trị hoặc khoảng), từ khóa và sắp xếp giá. Từ khóa có thể ánh xạ sang điểm đến khi người dùng chưa nêu trực tiếp.
    - Nhận diện ý định đặc biệt **tổng hợp phản hồi khách hàng** (động từ tóm tắt + danh từ phản hồi) để rẽ nhánh pipeline.
 3. **Tour Retriever (`services/tour_retriever.py`):**
    - Xây dựng SQL có tham số, lọc các tour đang hoạt động (`is_active = 1`) và có lịch trình còn chỗ (`available_seats > 0`).
@@ -68,7 +68,7 @@ flowchart TD
 5. **Prompt Builder (`services/prompt_builder.py`):**
    - Đặt vai trò chuyên gia tư vấn du lịch, ban hành các quy tắc cấm bịa đặt (Grounding Rules) và hướng dẫn cách so sánh, gợi ý cho khách hàng.
 6. **Gemini Service (`services/gemini_service.py`):**
-   - Giao tiếp với Google Gemini API (model `gemini-1.5-flash`), xử lý timeout, bảo mật key và cơ chế fallback.
+   - Giao tiếp với Google Gemini API (mặc định `gemini-3.6-flash`, có thể ghi đè bằng `GEMINI_MODEL`), xử lý timeout, bảo mật key và cơ chế fallback.
 7. **RAG Service (`services/rag_service.py`):**
    - Điều phối tuần tự các bước trên và ghi log vào bảng `chat_logs`.
    - Nhánh đặc biệt: nếu câu hỏi là yêu cầu tổng hợp phản hồi khách hàng → bỏ qua truy xuất tour; `ADMIN` nhận báo cáo dựng từ bảng `feedbacks` (số lượng, điểm trung bình, phân tích AI), các vai trò khác nhận thông báo dành cho Quản trị viên.

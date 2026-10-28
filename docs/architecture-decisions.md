@@ -69,23 +69,23 @@ Nhiều khách hàng có thể cùng đặt chỗ cho một đợt khởi hành 
 
 ---
 
-## ADR-004: Hỗ trợ Linh hoạt Cả SQLite và MySQL (Dual Database Strategy)
+## ADR-004: Lưu trữ SQLite trong phiên bản hiện tại
 
 ### Trạng thái
-**APPROVED**
+**SUPERSEDED — tài liệu đã được đồng bộ với hiện trạng mã nguồn**
 
 ### Bối cảnh
-Đề tài 17 yêu cầu MySQL cho môi trường sản phẩm/triển khai, nhưng khi chạy test tự động trong môi trường CI/CD hoặc máy tính cá nhân chưa cài đặt sẵn MySQL Server, cần có khả năng chạy ngay tức thì không cần cài thêm service bên ngoài.
+Tài liệu cũ từng mô tả chiến lược dual database. Kiểm tra `database/db.py` cho thấy runtime chỉ tạo `sqlite3.connect(...)`; không có driver, connection factory hay chuyển đổi placeholder cho MySQL.
 
 ### Quyết định
-Xây dựng lớp `database/db.py` hỗ trợ linh hoạt:
-- Mặc định sử dụng SQLite (`database/tour_ai.db`) khi chưa cấu hình MySQL.
-- Tự động chuyển sang MySQL khi có biến môi trường `DATABASE_URL` hoặc cấu hình `MYSQL_HOST`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DB`.
-- Cú pháp `database/schema.sql` được chuẩn hóa tương thích chuẩn SQL ANSI, dễ dàng khởi tạo trên cả hai hệ quản trị CSDL.
+Phiên bản hiện tại chính thức dùng SQLite:
+- Mặc định dùng `database/tour_ai.db`; có thể đổi vị trí bằng `SQLITE_DB_PATH`.
+- `database/schema.sql` và migration trong `init_db()` là nguồn khởi tạo dữ liệu.
+- MySQL là hạng mục chưa triển khai, không phải tùy chọn cấu hình hiện hành.
 
 ### Hệ quả
-- **Tích cực:** Dự án chạy được ngay lập tức ở mọi môi trường mà không gặp rào cản kết nối MySQL, đồng thời hoàn toàn sẵn sàng cho production MySQL.
-- **Tiêu cực:** Phải tránh dùng các hàm cú pháp đặc thù riêng biệt của từng hệ CSDL.
+- **Tích cực:** Thiết lập đơn giản, phù hợp local/demo và test isolated.
+- **Giới hạn:** Production đa tiến trình/ghi đồng thời lớn cần thiết kế backend MySQL/PostgreSQL riêng; không được quảng bá khả năng này trước khi implement driver, migration và test tương thích.
 
 ---
 

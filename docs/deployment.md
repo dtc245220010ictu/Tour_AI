@@ -1,94 +1,78 @@
-# Hướng Dẫn Triển Khai Hệ Thống (Production Deployment Guide) - TourAI
+# Triển khai TourAI hiện tại (SQLite, Gunicorn và Nginx)
 
-Tài liệu này hướng dẫn chi tiết quy trình đưa ứng dụng **TourAI (Đề tài 17)** lên môi trường máy chủ sản phẩm (Ubuntu Server, Nginx, Gunicorn, MySQL 8).
+Tài liệu này phản ánh mã nguồn đang có. `database/db.py` chỉ sử dụng SQLite; dự án **chưa có** backend MySQL, cấu hình `DATABASE_URL` hay Docker deployment. Không dùng các hướng dẫn MySQL cũ cho phiên bản này.
 
----
+## 1. Điều kiện chạy
 
-## 1. Yêu Cầu Hạ Tầng Môi Trường
-- **Hệ điều hành:** Ubuntu 22.04 LTS hoặc 24.04 LTS.
-- **Python:** 3.10 trở lên.
-- **Cơ sở dữ liệu:** MySQL 8.0+.
-- **Web Server & Reverse Proxy:** Nginx 1.18+.
-- **WSGI Application Server:** Gunicorn.
+- Ubuntu Server có Python 3.10 trở lên và Nginx.
+- Một thư mục dữ liệu có quyền ghi cho tiến trình ứng dụng.
+- Một worker Gunicorn. SQLite phù hợp cho quy mô nhỏ hoặc demo; tăng nhiều worker ghi đồng thời có thể gây lock database.
 
----
+## 2. Cài đặt ứng dụng
 
-## 2. Cài Đặt Cơ Sở Dữ Liệu MySQL Trên Server
+```bash
+sudo apt update
+sudo apt install -y python3 python3-venv nginx
+sudo useradd --system --create-home --shell /usr/sbin/nologin tourai
+sudo mkdir -p /var/www/tourai /var/lib/tourai
+sudo chown -R tourai:www-data /var/www/tourai /var/lib/tourai
+```
 
-1. **Cài đặt MySQL Server:**
-   ```bash
-   sudo apt update
-   sudo apt install -y mysql-server
-   sudo mysql_secure_installation
-   ```
+Sao chép mã nguồn vào `/var/www/tourai`, sau đó cài dependency:
 
-2. **Tạo CSDL và cấp quyền:**
-   ```sql
-   CREATE DATABASE tour_ai_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   CREATE USER 'tourai_user'@'localhost' IDENTIFIED BY 'MatKhauBaoMatCuaBan2026!';
-   GRANT ALL PRIVILEGES ON tour_ai_db.* TO 'tourai_user'@'localhost';
-   FLUSH PRIVILEGES;
-   EXIT;
-   ```
+```bash
+cd /var/www/tourai
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt gunicorn
+```
 
-3. **Nạp Schema và Dữ liệu mẫu:**
-   ```bash
-   mysql -u tourai_user -p tour_ai_db < database/schema.sql
-   ```
+## 3. Cấu hình biến môi trường và SQLite
 
----
+Tạo `/var/www/tourai/.env`, thay các giá trị mẫu bằng secret thực tế:
 
-## 3. Cài Đặt Ứng Dụng & Cấu Hình Biến Môi Trường
+```ini
+SECRET_KEY=replace-with-a-long-random-secret
+FLASK_DEBUG=0
+PORT=5000
+SQLITE_DB_PATH=/var/lib/tourai/tour_ai.db
+ENABLE_DEMO_QUICK_LOGIN=0
+SEED_DEMO_DATA=0
 
-1. **Clone mã nguồn:**
-   ```bash
-   cd /var/www
-   git clone https://github.com/your-org/TourAI.git tourai
-   cd tourai
-   ```
+# Tùy chọn: chatbot/sinh nội dung AI sẽ dùng fallback nếu không có key.
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.6-flash
+```
 
-2. **Tạo môi trường ảo và cài đặt thư viện:**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   pip install gunicorn pymysql cryptography
-   ```
+`SECRET_KEY` phải được đặt khi triển khai. Giá trị fallback trong mã chỉ dành cho môi trường local/demo và không phù hợp production.
 
-3. **Tạo file `.env` sản phẩm:**
-   ```ini
-   SECRET_KEY=kHOA_bAO_mAT_pROD_2026_sUPER_sECURE
-   FLASK_ENV=production
-   FLASK_DEBUG=0
-   PORT=5000
+Khởi tạo schema SQLite bằng chính mã ứng dụng:
 
-   # Kết nối MySQL Production
-   DATABASE_URL=mysql+pymysql://tourai_user:MatKhauBaoMatCuaBan2026!@localhost:3306/tour_ai_db
-   
-   # Google Gemini API Key
-   GEMINI_API_KEY=AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-   GEMINI_MODEL=gemini-1.5-flash
-   ```
+```bash
+cd /var/www/tourai
+source venv/bin/activate
+python -c "from database.db import init_db; init_db()"
+```
 
----
+Không bật `SEED_DEMO_DATA` trên môi trường chứa dữ liệu thật. Nếu cần dữ liệu minh họa cho môi trường demo riêng, chạy `python database/seeder.py` một lần.
 
-## 4. Cấu Hình Systemd Service (Quản lý tiến trình chạy ngầm)
+## 4. Systemd và Gunicorn
 
-Tạo file dịch vụ: `/etc/systemd/system/tourai.service`:
+Tạo `/etc/systemd/system/tourai.service`:
+
 ```ini
 [Unit]
-Description=TourAI Flask Application
-After=network.target mysql.service
+Description=TourAI Flask application
+After=network.target
 
 [Service]
-User=www-data
+User=tourai
 Group=www-data
 WorkingDirectory=/var/www/tourai
 Environment="PATH=/var/www/tourai/venv/bin"
 EnvironmentFile=/var/www/tourai/.env
-ExecStart=/var/www/tourai/venv/bin/gunicorn --workers 4 --bind 127.0.0.1:5000 app:app
-
+ExecStart=/var/www/tourai/venv/bin/gunicorn --workers 1 --bind 127.0.0.1:5000 app:app
 Restart=always
 RestartSec=5
 
@@ -96,50 +80,56 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-Kích hoạt và khởi chạy service:
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl start tourai
-sudo systemctl enable tourai
+sudo systemctl enable --now tourai
 sudo systemctl status tourai
 ```
 
----
+## 5. Nginx reverse proxy
 
-## 5. Cấu Hình Nginx Reverse Proxy & SSL (HTTPS)
+Tạo `/etc/nginx/sites-available/tourai`:
 
-1. **Tạo file cấu hình Nginx:** `/etc/nginx/sites-available/tourai.conf`:
-   ```nginx
-   server {
-       listen 80;
-       server_name tourai.vn www.tourai.vn;
+```nginx
+server {
+    listen 80;
+    server_name example.com;
 
-       location / {
-           proxy_pass http://127.0.0.1:5000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-       }
+    location / {
+        proxy_pass http://127.0.0.1:5000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 
-       location /static/ {
-           alias /var/www/tourai/static/;
-           expires 30d;
-           add_header Cache-Control "public, no-transform";
-       }
-   }
-   ```
+    location /static/ {
+        alias /var/www/tourai/static/;
+        expires 30d;
+    }
+}
+```
 
-2. **Kích hoạt site và kiểm tra cú pháp:**
-   ```bash
-   sudo ln -s /etc/nginx/sites-available/tourai.conf /etc/nginx/sites-enabled/
-   sudo nginx -t
-   sudo systemctl restart nginx
-   ```
+```bash
+sudo ln -s /etc/nginx/sites-available/tourai /etc/nginx/sites-enabled/tourai
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
-3. **Cài đặt chứng chỉ SSL miễn phí qua Certbot:**
-   ```bash
-   sudo apt install -y certbot python3-certbot-nginx
-   sudo certbot --nginx -d tourai.vn -d www.tourai.vn
-   ```
+## 6. Sao lưu và vận hành
 
+Sao lưu định kỳ cả cơ sở dữ liệu và ảnh tải lên; hai nơi này đều là dữ liệu người dùng:
+
+```bash
+sudo -u tourai mkdir -p /var/backups/tourai
+sudo -u tourai cp /var/lib/tourai/tour_ai.db /var/backups/tourai/tour_ai-$(date +%F).db
+sudo -u tourai tar -czf /var/backups/tourai/uploads-$(date +%F).tar.gz -C /var/www/tourai/static uploads
+```
+
+Kiểm tra log khi có sự cố:
+
+```bash
+sudo journalctl -u tourai -f
+```
+
+Khi cần quy mô ghi đồng thời lớn hoặc triển khai nhiều instance, cần triển khai và kiểm thử một data-access backend MySQL/PostgreSQL trước; không chỉ thay biến môi trường.

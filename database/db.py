@@ -1,7 +1,6 @@
 """
-Database connection and execution manager for TourAI.
-Supports both SQLite (default for local development & automated tests)
-and MySQL (configured via DATABASE_URL or MYSQL_* environment variables).
+SQLite connection and execution manager for TourAI.
+Uses SQLite for local development, automated tests and the current deployment profile.
 """
 
 import os

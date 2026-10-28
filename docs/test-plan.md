@@ -15,6 +15,10 @@ Tài liệu này đặc tả kế hoạch kiểm thử tự động và thủ c�
 ## 2. Phạm vi kiểm thử (Scope of Testing)
 
 ### 2.1 Kiểm thử Đơn vị (Unit Tests)
+- `tests/test_accounting.py`:
+  - Đối soát payment, công nợ, chi phí vận hành, P&L, dòng tiền và quyền kế toán.
+- `tests/test_ai_content_service.py`:
+  - Sinh mô tả/lịch trình theo số ngày, kiểm tra cấu trúc phản hồi AI và fallback khi Gemini không khả dụng.
 - `tests/test_auth.py`:
   - Đăng ký tài khoản thành công, mật khẩu được băm an toàn (`generate_password_hash`).
   - Đăng nhập xác thực chính xác mật khẩu, từ chối mật khẩu sai.
@@ -33,6 +37,8 @@ Tài liệu này đặc tả kế hoạch kiểm thử tự động và thủ c�
 - `tests/test_context_builder.py`:
   - Định dạng thông tin tour thành văn bản ngắn gọn, trung thực, kèm số chỗ còn và giá chuẩn VNĐ.
   - Xuất thông báo rõ ràng khi danh sách tour rỗng.
+- `tests/test_grounded_answer_builder.py`:
+  - Câu trả lời fallback chỉ dùng tour, giá và ngày có trong dữ liệu truy xuất; phân biệt strict match với tour thay thế.
 - `tests/test_booking_capacity.py`:
   - Đặt tour thành công và trừ chính xác số chỗ khả dụng trong CSDL.
   - Ngăn chặn Overbooking: ném lỗi `OverbookingError` khi đặt số chỗ lớn hơn `available_seats`.
@@ -40,6 +46,10 @@ Tài liệu này đặc tả kế hoạch kiểm thử tự động và thủ c�
 - `tests/test_price_consistency.py`:
   - Đồng bộ giá tour và giá lịch khởi hành.
   - Khi sửa lịch khởi hành đã có booking, tính lại `available_seats` từ booking `PENDING`/`CONFIRMED`/`COMPLETED`; chặn giảm `total_seats` thấp hơn số ghế đã giữ.
+- `tests/test_schedule_duration_and_completed.py`:
+  - Tính ngày về theo thời lượng tour, nhận diện đợt đã hoàn thành và các bộ lọc lịch.
+- `tests/test_customer_review_management.py`:
+  - Khách chỉ xem/sửa/xóa đánh giá của chính mình; xóa đánh giá cho phép đánh giá lại booking đã hoàn thành.
 
 ### 2.2 Kiểm thử Tích hợp (Integration Tests)
 - `tests/test_rag_pipeline.py`:
@@ -48,6 +58,10 @@ Tài liệu này đặc tả kế hoạch kiểm thử tự động và thủ c�
   - Kiểm tra tính hợp lệ dữ liệu đầu vào: câu hỏi rỗng trả về mã lỗi HTTP 400.
   - Kịch bản Zero-Hallucination: khi hỏi tour giá dưới 100k, chatbot trả lời lịch sự không có tour, không bịa thông tin.
   - Kịch bản yêu cầu mơ hồ: "Tư vấn cho tôi đi du lịch" và "Có tour gì hay không?" chỉ trả các tour thực tế còn chỗ; "Tầm 5 triệu thì đi đâu?" chỉ trả tour có giá không vượt 5.000.000 VNĐ.
+- `tests/test_refund_request_flow.py`:
+  - Hủy đơn đã thanh toán tạo một phiếu `PENDING`, kiểm tra giới hạn số tiền, duyệt/từ chối, giao dịch `REFUND` và RBAC.
+- `tests/test_schedule_and_review_flow.py`:
+  - Tạm hoãn bắt buộc có lý do, chặn booking mới, khôi phục `OPEN`/`FULL`; chỉ cho gửi một đánh giá sau khi booking hoàn thành.
 
 ### 2.3 Kiểm thử Phân quyền & Luồng Quản trị Tour (RBAC & Admin Flow Tests)
 - `tests/test_rbac.py`:

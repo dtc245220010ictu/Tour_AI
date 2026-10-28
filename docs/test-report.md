@@ -6,18 +6,17 @@ Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự độn
 
 ## 1. Tóm tắt kết quả kiểm thử (Executive Summary)
 
-- **Thời điểm thực thi:** 26/09/2026
+- **Thời điểm thực thi:** 28/10/2026
 - **Test Framework:** `pytest 9.1.1`
 - **Môi trường:** Python 3.14 (Windows)
-- **Tổng số ca kiểm thử:** **103/103 PASSED**
+- **Tổng số ca kiểm thử:** **175/175 PASSED**
 - **Tỷ lệ thành công:** **100.0%**
-- **Thời gian thực thi:** 3.54 giây
+- **Thời gian thực thi:** 10.94 giây
 - **Tình trạng:** **PASSED - READY FOR PRODUCTION**
 
 ```text
-103 tests collected
-....................................................................................................
-103 passed in 3.54s
+175 tests collected
+175 passed in 10.78s
 ```
 
 ---
@@ -26,18 +25,22 @@ Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự độn
 
 | STT | Tên Test File | Số ca test | Kết quả | Trọng tâm kiểm thử |
 |---|---|---|---|---|
-| 1 | `test_accounting.py` | 6 | 6/6 PASS | Đối soát thanh toán, công nợ, chi phí tour, P&L, hoàn tiền hủy tour, RBAC |
-| 2 | `test_ai_content_service.py` | 9 | 9/9 PASS | AI sinh mô tả/lịch trình có fallback cấu trúc, retry và validation output |
-| 3 | `test_auth.py` | 6 | 6/6 PASS | Mật khẩu băm an toàn, đăng ký, đăng nhập và quick-login theo cấu hình |
-| 4 | `test_booking_capacity.py` | 5 | 5/5 PASS | Trừ số chỗ nguyên tử, chặn overbooking, hoàn chỗ và guardrails hủy đơn |
-| 5 | `test_context_builder.py` | 2 | 2/2 PASS | Định dạng context ngắn gọn, thông báo rỗng chuẩn mực |
-| 6 | `test_grounded_answer_builder.py` | 4 | 4/4 PASS | Câu trả lời chỉ dùng tour/giá/ngày đi có trong dữ liệu retrieve |
-| 7 | `test_image_upload.py` | 6 | 6/6 PASS | Upload/paste ảnh hợp lệ, chặn file sai, RBAC và ô ảnh form Sửa tour |
-| 8 | `test_price_consistency.py` | 5 | 5/5 PASS | Giá tour–lịch, tổng tiền booking và số chỗ tự tính khi sửa lịch |
-| 9 | `test_question_analyzer.py` | 17 | 17/17 PASS | Ngân sách, thời lượng/range, điểm đến, sở thích, regression "khoảng 5 triệu" & nhận diện yêu cầu tóm tắt phản hồi |
-| 10 | `test_rag_pipeline.py` | 15 | 15/15 PASS | API chat, zero-hallucination, alternatives, câu hỏi mơ hồ & phân nhánh tóm tắt phản hồi (ADMIN) |
-| 11 | `test_rbac.py` | 22 | 22/22 PASS | Ma trận phân quyền Admin/Staff/Accountant/Guide/Customer; nút Sửa & form sửa tour |
-| 12 | `test_tour_retrieval.py` | 5 | 5/5 PASS | Parameterized SQL, lọc tour còn chỗ và alternatives |
+| 1 | `test_accounting.py` | 6 | 6/6 PASS | Đối soát, công nợ, chi phí, P&L và dòng tiền |
+| 2 | `test_ai_content_service.py` | 9 | 9/9 PASS | AI sinh mô tả/lịch trình và fallback cấu trúc |
+| 3 | `test_auth.py` | 6 | 6/6 PASS | Đăng ký, đăng nhập và quick-login theo cấu hình |
+| 4 | `test_booking_capacity.py` | 5 | 5/5 PASS | Trừ chỗ nguyên tử, chặn overbooking và hủy đơn |
+| 5 | `test_context_builder.py` | 2 | 2/2 PASS | Context grounded và thông báo rỗng |
+| 6 | `test_customer_review_management.py` | 15 | 15/15 PASS | Xem, sửa, xóa đánh giá và kiểm soát sở hữu |
+| 7 | `test_grounded_answer_builder.py` | 4 | 4/4 PASS | Câu trả lời chỉ dùng dữ liệu retrieved |
+| 8 | `test_image_upload.py` | 7 | 7/7 PASS | Upload, tạo tour và giữ ảnh khi sửa |
+| 9 | `test_price_consistency.py` | 5 | 5/5 PASS | Giá tour–lịch và tính lại số chỗ |
+| 10 | `test_question_analyzer.py` | 17 | 17/17 PASS | Ý định, ngân sách, thời lượng, điểm đến và feedback-summary intent |
+| 11 | `test_rag_pipeline.py` | 15 | 15/15 PASS | RAG, alternatives, zero-hallucination và báo cáo feedback cho ADMIN |
+| 12 | `test_rbac.py` | 25 | 25/25 PASS | RBAC năm vai trò, quản trị tour/HDV và điều hướng |
+| 13 | `test_refund_request_flow.py` | 19 | 19/19 PASS | Tạo, duyệt/từ chối phiếu báo hoàn và phân quyền |
+| 14 | `test_schedule_and_review_flow.py` | 21 | 21/21 PASS | Tạm hoãn/khôi phục lịch và điều kiện đánh giá sau tour |
+| 15 | `test_schedule_duration_and_completed.py` | 14 | 14/14 PASS | Ngày về, trạng thái hoàn thành và bộ lọc lịch |
+| 16 | `test_tour_retrieval.py` | 5 | 5/5 PASS | Truy xuất tour có tham số và alternatives |
 
 ---
 

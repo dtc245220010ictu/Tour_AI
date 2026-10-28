@@ -1,7 +1,7 @@
 -- ==========================================================
 -- Schema Database cho Hệ Thống Quản Lý Tour Du Lịch (TourAI)
 -- Đề tài 17: Hệ thống quản lý tour du lịch có tích hợp AI
--- Tương thích: MySQL 8.0+ và SQLite 3
+-- Runtime hiện tại: SQLite 3
 -- ==========================================================
 
 -- 1. Bảng USERS (Quản lý người dùng và phân quyền)

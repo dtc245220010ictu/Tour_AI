@@ -110,3 +110,24 @@ Tài liệu này định nghĩa các tiêu chí chấp nhận cụ thể cho cá
   4. Nút **Sửa** hiển thị cho cả ADMIN và STAFF; nút **Xóa** chỉ hiển thị với ADMIN.
   5. Ô **Ảnh đại diện** hiển thị sẵn ảnh hiện tại; với ảnh upload nội bộ (`/static/uploads/...`), nhân viên **không bị bắt nhập lại URL** khi bấm **Lưu thay đổi** và ảnh cũ vẫn được giữ nguyên.
 
+---
+
+### AC-012 (Tạm hoãn và khôi phục lịch khởi hành)
+- **Given:** Một lịch khởi hành đang `OPEN` và còn chỗ.
+- **When:** ADMIN hoặc STAFF chọn **Tạm hoãn** nhưng không nhập lý do.
+- **Then:** Hệ thống từ chối thao tác và không đổi trạng thái lịch.
+- **When:** Người dùng nhập lý do hợp lệ và xác nhận tạm hoãn.
+- **Then:** Lịch chuyển sang `POSTPONED`, lưu lý do và thời điểm hoãn; không hiển thị trong danh sách lịch có thể đặt, đồng thời khách vẫn xem được lý do trên chi tiết tour.
+- **When:** ADMIN hoặc STAFF chọn **Khôi phục** lịch `POSTPONED`.
+- **Then:** Hệ thống xóa dữ liệu hoãn và chuyển lịch về `OPEN` nếu còn chỗ, hoặc `FULL` nếu hết chỗ.
+
+---
+
+### AC-013 (Phiếu báo hoàn tiền và duyệt hoàn)
+- **Given:** Khách sở hữu booking `CONFIRMED` đã có payment `SUCCESS` và hủy booking.
+- **Then:** Hệ thống đổi booking thành `CANCELLED`, hoàn số chỗ, đồng thời tạo đúng một `refund_request` có trạng thái `PENDING`, `paid_amount` và `request_amount` không vượt số tiền đã trả.
+- **When:** ADMIN hoặc ACCOUNTANT duyệt phiếu với số tiền hợp lệ.
+- **Then:** Hệ thống lưu người/thời điểm/số tiền quyết định, đổi phiếu thành `APPROVED` và tạo một payment `REFUND` thành công.
+- **When:** ADMIN hoặc ACCOUNTANT từ chối phiếu.
+- **Then:** Hệ thống yêu cầu lý do, đổi phiếu thành `REJECTED` và không tạo payment `REFUND`.
+

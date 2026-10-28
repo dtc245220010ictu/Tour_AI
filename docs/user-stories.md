@@ -29,7 +29,7 @@
 ### Nhóm 3: Lịch khởi hành & Kiểm soát chỗ
 - **US-005 (Quản lý lịch khởi hành):**
   - *As an* nhân viên điều hành tour,
-  - *I want to* tạo các đợt khởi hành với số chỗ giới hạn và giá vé tương ứng,
+  - *I want to* tạo, tạm hoãn có lý do và khôi phục các đợt khởi hành với số chỗ giới hạn và giá vé tương ứng,
   - *so that* khách hàng có thể lựa chọn ngày đi cụ thể.
   - *Traceability:* `FR-008`
 - **US-006 (Kiểm soát số chỗ trống):**
@@ -59,7 +59,7 @@
 - **US-010 (Hủy đơn tour):**
   - *As a* khách hàng hoặc nhân viên,
   - *I want to* hủy đơn đặt tour khi có nhu cầu đột xuất,
-  - *so that* chỗ trống được giải phóng cho khách hàng khác và quy trình hoàn cọc được kích hoạt.
+  - *so that* chỗ trống được giải phóng cho khách hàng khác và phiếu báo hoàn được gửi tới Kế toán/Admin xử lý.
   - *Traceability:* `FR-016`
 
 ### Nhóm 6: Hướng dẫn viên & Phản hồi
@@ -70,7 +70,7 @@
   - *Traceability:* `FR-017`, `FR-018`
 - **US-012 (Gửi phản hồi chuyến đi):**
   - *As a* khách hàng sau khi đi tour về,
-  - *I want to* chấm sao và gửi nhận xét đánh giá,
+  - *I want to* chấm sao, gửi, xem, sửa hoặc xóa nhận xét đánh giá của chính mình sau chuyến đi,
   - *so that* chia sẻ trải nghiệm và đóng góp ý kiến nâng cao chất lượng dịch vụ.
   - *Traceability:* `FR-019`
 - **US-013 (AI tóm tắt phản hồi):**

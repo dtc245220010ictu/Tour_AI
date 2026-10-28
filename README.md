@@ -2,9 +2,9 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
-[![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20SQLite-orange.svg)](https://www.sqlite.org/)
+[![Database](https://img.shields.io/badge/Database-SQLite-orange.svg)](https://www.sqlite.org/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-172%2F172%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-175%2F175%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -88,7 +88,7 @@ TourAI/
 │   └── user-guide.md                   # Hướng dẫn sử dụng cho Khách hàng & Nhân viên
 │
 ├── database/
-│   ├── schema.sql                      # Schema DDL (MySQL 8 & SQLite), gồm bảng tour_expenses
+│   ├── schema.sql                      # Schema DDL SQLite, gồm hoàn tiền và chi phí tour
 │   ├── db.py                           # Database Manager, execute_query & migration tương thích
 │   └── seeder.py                       # Seeder dữ liệu mẫu (chỉ chạy khi cần demo)
 │
@@ -170,7 +170,7 @@ TourAI/
 │   │   └── chat.js                     # Xử lý fetch API chat, render cards, loading
 │   └── uploads/                        # Ảnh admin tải lên/dán (Ctrl+V) — gitignore, chỉ giữ file .gitkeep
 │
-├── tests/                              # Bộ kiểm thử tự động (Pytest) - 172 ca PASSED
+├── tests/                              # Bộ kiểm thử tự động (Pytest) - 175 ca PASSED
 │   ├── conftest.py                     # Cấu hình test database cô lập
 │   ├── test_auth.py                    # Kiểm thử xác thực, băm mật khẩu & đăng nhập nhanh (6)
 │   ├── test_rbac.py                    # Kiểm thử phân quyền 5 vai trò trên mọi route (22)
@@ -242,7 +242,7 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả mong đợi:** 172/172 tests `PASSED` 100%.
+**Kết quả đã xác minh:** 175/175 tests `PASSED` 100%.
 *(Bao gồm xác thực/RBAC, CRUD & đồng bộ tour–lịch, booking–thanh toán–duyệt hoàn tiền, chống overbooking, RAG zero-hallucination, phân nhánh tóm tắt phản hồi khách hàng cho ADMIN, AI content fallback, đăng ký đánh giá chỉ khi đã đi tour và các truy vấn tư vấn mơ hồ.)*
 
 ---
@@ -327,7 +327,7 @@ Phân hệ dành riêng cho vai trò **Kế toán (Accountant)** và **Admin**, 
 4. Mọi trạng thái được hiển thị lại cho khách dưới dạng thẻ màu: **Chờ duyệt / Đã hoàn tiền / Đã từ chối** kèm ghi chú quyết định.
 
 ### Kiểm thử phân hệ kế toán
-Các test trong `tests/test_accounting.py` (nằm trong tổng 172 test):
+Các test trong `tests/test_accounting.py` (nằm trong tổng 175 test):
 - `test_record_and_verify_payment` — quy trình kế toán duyệt thanh toán chuyển khoản.
 - `test_debt_calculation` — tính công nợ khi khách mới đặt cọc một phần.
 - `test_tour_expense_and_pnl` — ghi nhận chi phí tour & kiểm tra công thức Lợi nhuận = Doanh thu − Chi phí.

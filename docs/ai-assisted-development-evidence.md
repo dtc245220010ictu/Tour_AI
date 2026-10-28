@@ -50,7 +50,7 @@ Trả lời bằng tiếng Việt, Markdown có bảng.
 ### Prompt tái lập
 
 ```text
-Bạn là Python Flask engineer. Với kiến trúc Route -> Service -> SQLite/MySQL,
+Bạn là Python Flask engineer. Với kiến trúc Route -> Service -> SQLite,
 hãy review thiết kế CRUD Tour và TourSchedule, sau đó đề xuất cơ chế chống lệch
 available_seats khi có booking.
 

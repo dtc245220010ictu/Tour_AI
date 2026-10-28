@@ -35,7 +35,7 @@ Nguyên tắc kiểm soát truy cập:
 * Tour.
 * Điểm đến.
 * Lịch khởi hành.
-* Khách hàng.
+* Khách hàng (chỉ xem danh sách; không tạo, sửa hoặc xóa tài khoản khách hàng).
 
 **Không có quyền** tham gia hoặc quản lý các chức năng còn lại, bao gồm:
 
@@ -111,10 +111,10 @@ Hướng dẫn viên **được sử dụng Trợ lý AI** (không đi kèm quy�
 | 1. Đăng nhập và phân quyền quản lý, nhân viên tư vấn, kế toán | Xem, Thêm, Sửa, Xóa, Xử lý (quản lý tài khoản và phân quyền người dùng) | Đăng nhập: Có quyền — Xem, Thêm, Sửa, Xóa, Xử lý tài khoản/phân quyền: **Không có quyền** | Đăng nhập: Có quyền — Xem, Thêm, Sửa, Xóa, Xử lý tài khoản/phân quyền: **Không có quyền** | Đăng nhập: Có quyền — Xem, Thêm, Sửa, Xóa, Xử lý tài khoản/phân quyền: **Không có quyền** | Đăng nhập: Có quyền — Xem, Thêm, Sửa, Xóa, Xử lý tài khoản/phân quyền: **Không có quyền** |
 | 2. Quản lý tour, điểm đến, lịch trình, giá tour | Xem, Thêm, Sửa, Xóa, Xử lý | Xem, Thêm, Sửa, Xử lý — Xóa: **Không có quyền** | Xem (thông tin tour, điểm đến) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** | Xem — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** | Xem — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
 | 3. Quản lý lịch khởi hành và số chỗ | Xem, Thêm, Sửa, Xóa, Xử lý | Xem, Thêm, Sửa, Xử lý — Xóa: **Không có quyền** | **Không có quyền** | Xem — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** | Xem — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
-| 4. Quản lý khách hàng và đặt chỗ | Xem, Thêm, Sửa, Xóa, Xử lý | Xem, Thêm, Sửa, Xử lý (khách hàng và tiếp nhận đặt chỗ, không gồm các bước tài chính) — Xóa: **Không có quyền** | **Không có quyền** | Xem (các tour mà chính mình đã đặt), Thêm (đặt tour) — Sửa, Xóa, Xử lý: **Không có quyền** | Xem (khách thuộc tất cả đoàn có phân công hướng dẫn viên) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
+| 4. Quản lý khách hàng và đặt chỗ | Xem, Thêm, Sửa, Xóa, Xử lý | Xem danh sách khách và booking; cập nhật trạng thái booking — Thêm, Sửa, Xóa khách hàng: **Không có quyền** | **Không có quyền** | Xem booking của chính mình, Thêm booking, tự thanh toán/tự hủy đơn của chính mình — không thao tác booking của người khác | Xem (khách thuộc tất cả đoàn có phân công hướng dẫn viên) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
 | 5. Theo dõi thanh toán, đặt cọc, hủy tour | Xem, Thêm, Sửa, Xóa, Xử lý | **Không có quyền** | Xem, Thêm, Sửa, Xử lý (quản lý thanh toán, hoàn tiền, các khoản tiền liên quan hủy tour) — Xóa: **Không có quyền** | **Không có quyền** | **Không có quyền** |
 | 6. Quản lý hướng dẫn viên và phân công tour | Xem, Thêm, Sửa, Xóa, Xử lý | **Không có quyền** | **Không có quyền** | Xem (hướng dẫn viên) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** | Xem (bảng phân công của chính mình và của đồng nghiệp) — Thêm, Sửa, Xóa, Xử lý: **Không có quyền** |
-| 7. Thu thập phản hồi sau tour | Xem, Thêm, Sửa, Xóa, Xử lý | **Không có quyền** | **Không có quyền** | Thêm (gửi đánh giá/phản hồi của chính mình sau tour) — Xem, Sửa, Xóa, Xử lý: **Không có quyền** | **Không có quyền** |
+| 7. Thu thập phản hồi sau tour | Xem, Thêm, Sửa, Xóa, Xử lý | **Không có quyền** | **Không có quyền** | Xem, Thêm, Sửa, Xóa đánh giá của chính mình sau tour hoàn thành — không có quyền với đánh giá người khác | **Không có quyền** |
 | 8. Thống kê doanh thu, tour bán chạy, tỷ lệ lấp đầy | Xem, Thêm, Sửa, Xóa, Xử lý | **Không có quyền** | Xem, Xử lý (lập báo cáo tài chính) — Thêm, Sửa, Xóa: **Không có quyền** | **Không có quyền** | **Không có quyền** |
 | Trợ lý AI | **Có quyền sử dụng** | **Có quyền sử dụng** | **Có quyền sử dụng** | **Có quyền sử dụng** | **Có quyền sử dụng** |
 

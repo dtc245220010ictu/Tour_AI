@@ -1,6 +1,6 @@
 # Tài Liệu Thiết Kế Cơ Sở Dữ Liệu (Database Design Specification)
 
-Tài liệu này đặc tả thiết kế cơ sở dữ liệu quan hệ cho hệ thống TourAI (Đề tài 17) đạt chuẩn chuẩn hóa 3NF, hỗ trợ cả MySQL và SQLite.
+Tài liệu này đặc tả thiết kế cơ sở dữ liệu quan hệ cho hệ thống TourAI (Đề tài 17) đạt chuẩn chuẩn hóa 3NF. Phiên bản mã nguồn hiện tại sử dụng SQLite qua `sqlite3`; MySQL chưa được triển khai như một runtime backend.
 
 ---
 
@@ -33,7 +33,7 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `duration_days` INT NOT NULL DEFAULT 1
 - `duration_nights` INT NOT NULL DEFAULT 0
 - `base_price` DECIMAL(12,2) NOT NULL
-- `transportation` VARCHAR(100) DEFAULT 'Xe du lịch / Máy bay'
+- `transportation` VARCHAR(100) DEFAULT 'Xe du lịch máy lạnh'
 - `itinerary_text` TEXT
 - `image_url` VARCHAR(255)
 - `is_active` BOOLEAN DEFAULT TRUE
@@ -48,7 +48,9 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `child_price` DECIMAL(12,2) NOT NULL
 - `total_seats` INT NOT NULL DEFAULT 20
 - `available_seats` INT NOT NULL DEFAULT 20
-- `status` VARCHAR(20) NOT NULL DEFAULT 'OPEN' (`OPEN`, `FULL`, `CLOSED`, `CANCELLED`)
+- `status` VARCHAR(20) NOT NULL DEFAULT 'OPEN' (`OPEN`, `FULL`, `CLOSED`, `CANCELLED`, `POSTPONED`)
+- `postpone_reason` TEXT (bắt buộc ở tầng service khi trạng thái là `POSTPONED`)
+- `postponed_at` DATETIME
 - `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 
 *Ràng buộc toàn vẹn:* `CHECK (available_seats <= total_seats AND available_seats >= 0)`.
@@ -83,7 +85,22 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `verified_at` DATETIME
 - `notes` TEXT
 
-### 1.7 Bảng `tour_expenses` (Chi phí vận hành theo đoàn tour / lịch khởi hành)
+### 1.7 Bảng `refund_requests` (Phiếu báo hoàn tiền)
+- `id` INT PRIMARY KEY AUTO_INCREMENT
+- `booking_id` INT NOT NULL UNIQUE (FK -> `bookings.id`; mỗi booking có tối đa một yêu cầu)
+- `paid_amount` DECIMAL(12,2) NOT NULL (tổng tiền khách đã thanh toán thành công, chưa tính hoàn)
+- `request_amount` DECIMAL(12,2) NOT NULL (số tiền khách yêu cầu hoàn, không vượt `paid_amount`)
+- `reason` TEXT
+- `status` VARCHAR(20) NOT NULL DEFAULT 'PENDING' (`PENDING`, `APPROVED`, `REJECTED`)
+- `requested_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+- `processed_by` INT (FK -> `users.id`)
+- `processed_at` DATETIME
+- `decision_amount` DECIMAL(12,2)
+- `decision_notes` TEXT
+
+Khi khách hủy booking đã thanh toán, hệ thống tự tạo phiếu ở trạng thái `PENDING`. Tỷ lệ 90% / 50% / 0% là mức gợi ý theo ngày khởi hành; Kế toán hoặc Admin quyết định số tiền hoàn cuối cùng, rồi hệ thống ghi một payment kiểu `REFUND`.
+
+### 1.8 Bảng `tour_expenses` (Chi phí vận hành theo đoàn tour / lịch khởi hành)
 - `id` INT PRIMARY KEY AUTO_INCREMENT
 - `schedule_id` INT NOT NULL (FK -> `tour_schedules.id`)
 - `category` VARCHAR(50) NOT NULL (`HOTEL`, `TRANSPORT`, `MEAL`, `TICKETS`, `GUIDE_FEE`, `OTHER`)
@@ -96,7 +113,7 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `notes` TEXT
 - `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 
-### 1.8 Bảng `tour_guides` (Hồ sơ hướng dẫn viên)
+### 1.9 Bảng `tour_guides` (Hồ sơ hướng dẫn viên)
 - `id` INT PRIMARY KEY AUTO_INCREMENT
 - `full_name` VARCHAR(100) NOT NULL
 - `phone` VARCHAR(20) NOT NULL UNIQUE
@@ -105,8 +122,9 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `experience_years` INT DEFAULT 1
 - `bio` TEXT
 - `is_active` BOOLEAN DEFAULT TRUE
+- `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 
-### 1.8 Bảng `guide_assignments` (Phân công hướng dẫn viên theo lịch)
+### 1.10 Bảng `guide_assignments` (Phân công hướng dẫn viên theo lịch)
 - `id` INT PRIMARY KEY AUTO_INCREMENT
 - `schedule_id` INT NOT NULL (FK -> `tour_schedules.id`)
 - `guide_id` INT NOT NULL (FK -> `tour_guides.id`)
@@ -114,7 +132,7 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `notes` TEXT
 - `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 
-### 1.9 Bảng `feedbacks` (Đánh giá chất lượng sau chuyến đi)
+### 1.11 Bảng `feedbacks` (Đánh giá chất lượng sau chuyến đi)
 - `id` INT PRIMARY KEY AUTO_INCREMENT
 - `user_id` INT NOT NULL (FK -> `users.id`)
 - `tour_id` INT NOT NULL (FK -> `tours.id`)
@@ -123,7 +141,7 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 - `comment` TEXT NOT NULL
 - `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 
-### 1.10 Bảng `chat_logs` (Nhật ký tư vấn Chatbot)
+### 1.12 Bảng `chat_logs` (Nhật ký tư vấn Chatbot)
 - `id` INT PRIMARY KEY AUTO_INCREMENT
 - `session_id` VARCHAR(100) NOT NULL
 - `user_message` TEXT NOT NULL
@@ -146,10 +164,16 @@ Lưu thông tin tài khoản của khách hàng, nhân viên tư vấn, kế to�
 1. `idx_tours_destination` trên `tours(destination_id)`
 2. `idx_tours_price` trên `tours(base_price)`
 3. `idx_tours_duration` trên `tours(duration_days)`
-4. `idx_schedules_lookup` trên `tour_schedules(tour_id, departure_date, available_seats)`
-5. `idx_bookings_user` trên `bookings(user_id)`
-6. `idx_bookings_schedule` trên `bookings(schedule_id)`
-7. `idx_feedbacks_tour` trên `feedbacks(tour_id)`
+4. `idx_schedules_tour` trên `tour_schedules(tour_id)`
+5. `idx_schedules_lookup` trên `tour_schedules(tour_id, departure_date, available_seats)`
+6. `idx_bookings_user` trên `bookings(user_id)`
+7. `idx_bookings_schedule` trên `bookings(schedule_id)`
+8. `idx_feedbacks_tour` trên `feedbacks(tour_id)`
+9. `idx_expenses_schedule` trên `tour_expenses(schedule_id)`
+10. `idx_payments_booking` trên `payments(booking_id)`
+11. `idx_payments_status` trên `payments(payment_status)`
+12. `idx_refund_requests_status` trên `refund_requests(status)`
+13. `idx_refund_requests_booking` trên `refund_requests(booking_id)`
 
 Các chỉ mục trên tối ưu hóa đặc biệt cho RAG Tour Retriever khi thực hiện câu lệnh lọc:
 `WHERE available_seats > 0 AND base_price <= ? AND duration_days = ?`.

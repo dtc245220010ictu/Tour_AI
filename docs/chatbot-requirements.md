@@ -11,7 +11,7 @@ Hệ thống cần cung cấp trợ lý ảo AI thông minh, hỗ trợ khách h
 
 ## 2. Các nguyên tắc và ràng buộc cốt lõi
 1. **Chính sách Không bịa đặt dữ liệu (Zero Hallucination Policy):**
-   - Chatbot bắt buộc phải dựa vào dữ liệu tour thực tế được truy xuất từ cơ sở dữ liệu (MySQL / SQLite).
+   - Chatbot bắt buộc phải dựa vào dữ liệu tour thực tế được truy xuất từ cơ sở dữ liệu SQLite của ứng dụng.
    - Tuyệt đối không được tự ý bịa đặt tên tour, giá tiền, địa điểm, lịch trình hoặc ngày khởi hành không có thật trong hệ thống.
    - Nếu trong CSDL không có tour nào thỏa mãn yêu cầu của khách hàng, Chatbot phải thông báo lịch sự rằng hiện chưa có tour phù hợp và đề xuất các tour tương tự hoặc mời khách liên hệ nhân viên tư vấn.
 2. **Ngôn ngữ:**

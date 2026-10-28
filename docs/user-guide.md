@@ -50,14 +50,14 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
 2. Khách hàng có thể nhấn **Chi tiết** để xem lại biên nhận hoặc bấm **Hủy tour** khi có việc đột xuất.
 3. Bạn được **tự hủy trực tiếp** các đơn ở trạng thái **Chờ thanh toán** hoặc **Đã xác nhận** mà không cần chờ nhân viên tư vấn phê duyệt. Đơn đã hoàn thành hoặc đã hủy trước đó sẽ không thể hủy thêm lần nữa.
 4. Khi bạn nhấn Hủy tour, hệ thống sẽ tự động giải phóng và cộng trả lại số chỗ trống vào lịch trình để khách hàng khác có thể đặt.
-5. Nếu đơn đã thanh toán, số tiền hoàn trả được áp dụng chính sách: hủy trước ≥ 7 ngày so với khởi hành: hoàn **90%**; từ 3–6 ngày: hoàn **50%**; dưới 3 ngày: không hoàn. Kế toán sẽ lập phiếu chi hoàn tiền sau khi bạn hủy.
+5. Nếu đơn đã thanh toán, hệ thống tạo **phiếu báo hoàn tiền** ở trạng thái chờ duyệt. Mức 90% (hủy trước ≥ 7 ngày), 50% (3–6 ngày) hoặc 0% (dưới 3 ngày) chỉ là **gợi ý** cho Kế toán/Admin; số tiền hoàn cuối cùng được phê duyệt và hiển thị trong *Tour của tôi*.
 
 ---
 
 ## PHẦN II. HƯỚNG DẪN DÀNH CHO NHÂN VIÊN & QUẢN TRỊ VIÊN
 
 ### 1. Bảng Điều Khiển Báo Cáo (Admin Dashboard)
-1. Đăng nhập bằng tài khoản quản trị (`admin@tourai.vn` / `admin123`) hoặc nhân viên (`staff@tourai.vn` / `staff123`).
+1. Với môi trường đã nạp demo bằng `python database/seeder.py`, đăng nhập bằng tài khoản quản trị (`admin@tourai.vn` / `admin123`) hoặc nhân viên (`staff@tourai.vn` / `staff123`). Ở môi trường không seed, dùng tài khoản do quản trị viên tạo.
 2. Nhấn vào mục **📊 Quản trị** trên thanh menu:
    - Theo dõi 4 chỉ số cốt lõi: Tổng doanh thu thực thu, Tổng đơn đặt, Số lượng tour mở bán, Số khách hàng đăng ký.
    - Xem bảng xếp hạng **Top Tour Bán Chạy Nhất**.
@@ -84,6 +84,7 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
 3. Nhấn **Lưu Lịch Khởi Hành** để mở bán trên trang web.
 4. Khi sửa một lịch đã có booking, chỉ cập nhật tổng số chỗ, ngày đi/về, giá và trạng thái. Trường **Số chỗ còn lại** là chỉ đọc: hệ thống tự tính bằng tổng số chỗ trừ số khách của các booking chưa hủy.
 5. Không thể giảm tổng số chỗ thấp hơn số chỗ đã giữ; hệ thống sẽ báo lỗi và giữ nguyên dữ liệu nếu thao tác không hợp lệ.
+6. ADMIN hoặc STAFF có thể **Tạm hoãn** một lịch khởi hành nhưng phải nhập lý do. Lịch `POSTPONED` không nhận booking mới và lý do hoãn hiển thị cho khách; thao tác **Khôi phục** sẽ trả lịch về `OPEN` hoặc `FULL` theo số chỗ còn lại.
 
 ### 4. Phân Tích & Tóm Tắt Đánh Giá Bằng AI (Chỉ dành cho Quản trị viên)
 1. Truy cập mục **Đánh Giá AI** (yêu cầu quyền Quản trị viên - ADMIN).
@@ -110,7 +111,7 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
 
 ## PHẦN IV. HƯỚNG DẪN DÀNH CHO KẾ TOÁN (ACCOUNTANT / ADMIN)
 
-Đăng nhập bằng tài khoản kế toán (`accountant@tourai.vn` / `accountant123`) hoặc quản trị viên (`admin@tourai.vn` / `admin123`), sau đó mở **Không gian làm việc → Tài chính**.
+Với môi trường demo, đăng nhập bằng tài khoản kế toán (`accountant@tourai.vn` / `accountant123`) hoặc quản trị viên (`admin@tourai.vn` / `admin123`); ở môi trường không seed, dùng tài khoản được cấp. Sau đó mở **Không gian làm việc → Tài chính**.
 
 ### 1. Dashboard Tài Chính Kế Toán
 1. Truy cập **Kế toán → Bảng điều khiển**.
@@ -158,10 +159,10 @@ Tài liệu này cung cấp hướng dẫn thao tác chi tiết dành cho Khách
 
 ### 6. Quản Lý Hoàn Tiền Khi Hủy Tour
 1. Truy cập **Kế toán → Hoàn Tiền Hủy**.
-2. Chính sách hoàn tiền tự động tính theo 3 mốc thời gian:
+2. Hệ thống hiển thị mức **gợi ý** hoàn tiền theo 3 mốc thời gian:
    - Hủy trước ≥ 7 ngày trước khởi hành → Hoàn **90%** tiền đã nộp.
    - Hủy từ 3 đến 6 ngày → Hoàn **50%**.
    - Hủy dưới 3 ngày → **Không hoàn tiền (0%)**.
-3. Kế toán xem danh sách đơn hủy, số tiền đề xuất hoàn và nhấn **Lập phiếu chi** để xuất quỹ.
-4. Có thể điều chỉnh số tiền hoàn trả thực tế trước khi xác nhận nếu cần.
+3. Kế toán/Admin xem phiếu `PENDING`, số tiền khách yêu cầu, mức gợi ý và lý do hủy; sau đó chọn **Duyệt** hoặc **Từ chối**.
+4. Khi duyệt, có thể điều chỉnh số tiền hoàn thực tế nhưng không vượt số tiền khách đã thanh toán; hệ thống tạo giao dịch `REFUND`. Khi từ chối, phải nhập lý do để khách theo dõi.
 
