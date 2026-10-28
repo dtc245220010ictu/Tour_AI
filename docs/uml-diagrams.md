@@ -1,6 +1,6 @@
 # Tài Liệu Thiết Kế Biểu Đồ & Bảng UML (UML Diagrams Specification)
 
-Tài liệu này được tạo dựa trên `uml-design` skill, mô hình hóa toàn diện hệ thống quản lý tour du lịch tích hợp AI (Đề tài 17) bao gồm: Use Case Diagram, Class Diagram, Sequence Diagrams, Activity Diagrams và Entity-Relationship Diagram (ERD).
+Tài liệu này mô hình hóa **trạng thái triển khai hiện tại (as-built)** của hệ thống quản lý tour du lịch tích hợp AI (Đề tài 17), gồm: Use Case Diagram, Class Diagram, Sequence Diagrams, Activity Diagrams và Entity-Relationship Diagram (ERD). Các quyền và luồng được đối chiếu với Flask routes, service và SQLite schema đang có.
 
 ---
 
@@ -19,8 +19,9 @@ flowchart LR
     end
 
     subgraph AuthSubsystem["Phân Hệ Xác Thực"]
-        UC1["Đăng ký & Đăng nhập"]
-        UC2["Quản lý thông tin cá nhân"]
+        Register["Đăng ký tài khoản Customer"]
+        Login["Đăng nhập / Đăng xuất"]
+        ManageCustomers["Quản lý tài khoản Customer"]
     end
 
     subgraph TourSubsystem["Phân Hệ Quản Lý Tour"]
@@ -36,6 +37,12 @@ flowchart LR
         UC9["Hủy tour & Hoàn chỗ"]
     end
 
+    subgraph FinanceSubsystem["Phân Hệ Kế Toán & Tài Chính"]
+        FinancePayment["Đối soát thanh toán & Công nợ"]
+        FinanceRefund["Duyệt / Từ chối hoàn tiền"]
+        FinanceReport["Chi phí, P&L & Sổ quỹ"]
+    end
+
     subgraph OperationsSubsystem["Phân Hệ Điều Hành & Đánh Giá"]
         UC10["Phân công Hướng dẫn viên"]
         UC11["Xem lịch dẫn đoàn"]
@@ -49,8 +56,8 @@ flowchart LR
     end
 
     %% Connections
-    Customer --> UC1
-    Customer --> UC2
+    Customer --> Register
+    Customer --> Login
     Customer --> UC3
     Customer --> UC7
     Customer --> UC8
@@ -58,47 +65,57 @@ flowchart LR
     Customer --> UC12
     Customer --> UC15
 
-    Staff --> UC1
+    Staff --> Login
     Staff --> UC4
     Staff --> UC5
     Staff --> UC6
     Staff --> UC7
-    Staff --> UC13
+    Staff --> UC9
 
-    Accountant --> UC1
+    Accountant --> Login
     Accountant --> UC8
-    Accountant --> UC9
+    Accountant --> FinancePayment
+    Accountant --> FinanceRefund
+    Accountant --> FinanceReport
     Accountant --> UC14
 
-    Guide --> UC1
+    Guide --> Login
     Guide --> UC11
 
-    Admin --> UC1
+    Admin --> Login
+    Admin --> ManageCustomers
     Admin --> UC4
     Admin --> UC5
     Admin --> UC6
+    Admin --> UC7
     Admin --> UC8
     Admin --> UC9
     Admin --> UC10
     Admin --> UC13
     Admin --> UC14
+    Admin --> FinancePayment
+    Admin --> FinanceRefund
+    Admin --> FinanceReport
 
     UC6 -.-> AI
     UC13 -.-> AI
     UC15 -.-> AI
 ```
 
+> **Phạm vi as-built:** hệ thống hiện có đăng ký công khai cho `CUSTOMER`, đăng nhập/đăng xuất cho mọi vai trò và màn hình Admin quản lý tài khoản khách hàng. Chưa có route/trang để người dùng tự cập nhật hồ sơ cá nhân, nên use case này không được thể hiện như một chức năng đã triển khai.
+
 ### 1.2 Bảng mô tả chi tiết các Use Case chính
 
 | Mã Use Case | Tên Use Case | Tác nhân chính | Tiền điều kiện | Hậu điều kiện |
 |---|---|---|---|---|
-| `UC-01` | Đặt chỗ tour (Booking) | Khách hàng | Khách đã chọn đợt khởi hành còn chỗ (`available_seats > 0`) | Tạo bản ghi booking, giảm số chỗ trống tương ứng |
-| `UC-02` | Hủy đặt chỗ (Cancel Booking) | Khách hàng / Kế toán | Đơn đặt chỗ ở trạng thái PENDING hoặc CONFIRMED | Đơn chuyển CANCELLED, hoàn trả số chỗ về lịch trình |
+| `UC-01` | Đặt chỗ tour (Booking) | Khách hàng; Staff/Admin theo quyền hỗ trợ booking | Đã chọn đợt khởi hành `OPEN` và còn chỗ (`available_seats > 0`) | Tạo bản ghi booking, giảm số chỗ trống tương ứng |
+| `UC-02` | Hủy đặt chỗ (Cancel Booking) | Khách hàng sở hữu đơn; Staff/Admin qua quản lý booking | Đơn ở trạng thái PENDING hoặc CONFIRMED | Đơn chuyển CANCELLED, hoàn trả số chỗ; tạo phiếu báo hoàn nếu đã thanh toán |
 | `UC-03` | Chatbot tư vấn tour (RAG) | Khách hàng | Người dùng nhập câu hỏi tự nhiên | Chatbot trả lời thông tin chính xác từ CSDL, không bịa |
 | `UC-04` | AI sinh mô tả tour | Nhân viên / Admin | Nhân viên nhập điểm đến, từ khóa | AI sinh đoạn văn mô tả chuẩn SEO và lịch trình chi tiết |
-| `UC-05` | AI tóm tắt phản hồi | Admin / Quản lý | Đã có các phản hồi đánh giá trong CSDL | AI sinh báo cáo tổng hợp ưu/nhược điểm dịch vụ |
-| `UC-06` | Ghi nhận thanh toán / đặt cọc | Khách hàng / Kế toán / Admin | Booking tồn tại; khách chỉ thao tác trên đơn của mình | Có bản ghi payment; booking được xác nhận khi thanh toán thành công hoặc kế toán duyệt giao dịch |
-| `UC-07` | Xử lý hoàn tiền hủy tour | Kế toán / Admin | Booking đã `CANCELLED` và có giao dịch thanh toán thành công | Có phiếu `REFUND` đã được xác nhận, không vượt quá số tiền thực đã thanh toán |
+| `UC-05` | AI tóm tắt phản hồi | Admin | Đã có các phản hồi đánh giá trong CSDL | AI sinh báo cáo tổng hợp ưu/nhược điểm dịch vụ |
+| `UC-06` | Ghi nhận thanh toán / đặt cọc | Khách hàng (đơn của mình), Kế toán, Admin | Booking tồn tại; khách chỉ thao tác trên đơn của mình | Có bản ghi payment; booking được xác nhận khi thanh toán thành công hoặc kế toán duyệt giao dịch |
+| `UC-07` | Xử lý hoàn tiền hủy tour | Kế toán / Admin | Booking đã `CANCELLED`, có `refund_request` PENDING và giao dịch thanh toán thành công | Phiếu hoàn được APPROVED/REJECTED; khi duyệt sinh payment loại `REFUND` không vượt quá số tiền thực đã thanh toán |
+| `UC-08` | Quản lý tài chính theo đoàn | Kế toán / Admin | Người dùng có quyền vào phân hệ kế toán | Đối soát giao dịch, ghi nhận công nợ/chi phí, xem P&L và sổ quỹ |
 
 ### 1.3 Đặc tả luồng Use Case trọng yếu
 
@@ -114,7 +131,7 @@ flowchart LR
 - **Hậu điều kiện:** lịch sử thanh toán được lưu, trạng thái booking phản ánh kết quả duyệt.
 
 #### UC-07 — Hủy tour và xử lý hoàn tiền
-- **Tác nhân:** Khách hàng (hủy đơn của mình), Admin (hủy đơn), Kế toán/Admin (hoàn tiền).
+- **Tác nhân:** Khách hàng (hủy đơn của mình), Staff/Admin (đổi trạng thái booking sang hủy), Kế toán/Admin (hoàn tiền).
 - **Tiền điều kiện:** booking ở `PENDING` hoặc `CONFIRMED`; booking `COMPLETED` không được hủy.
 - **Luồng chính:**
   1. Hệ thống chuyển booking sang `CANCELLED` và hoàn số hành khách về lịch khởi hành.
@@ -132,8 +149,6 @@ flowchart LR
 > **Phạm vi và cách đọc:** mã nguồn Flask hiện tại không khai báo các lớp entity/ORM riêng; dữ liệu được đọc từ SQLite dưới dạng `sqlite3.Row` và được xử lý bởi các lớp service tĩnh. Vì vậy, sơ đồ 2.1 là **mô hình lớp miền** ánh xạ 1-1 với `database/schema.sql`; sơ đồ 2.2 thể hiện các **lớp thực thi** trong thư mục `services/` và các phụ thuộc chính của chúng.
 
 ### 2.1 Mô hình lớp miền
-
-Ảnh PNG đã xuất: [mở biểu đồ lớp](class-diagram-domain.png).
 
 ```mermaid
 classDiagram
@@ -310,6 +325,7 @@ classDiagram
 - `Payment.payment_type` gồm `DEPOSIT`, `FULL`, `REMAINING`, `REFUND`. Thanh toán thành công không phải `REFUND` xác nhận booking.
 - Mỗi `Booking` có tối đa một `RefundRequest`; yêu cầu được duyệt sinh một `Payment` kiểu `REFUND`.
 - `Feedback.booking_id` có thể rỗng theo schema, nhưng nghiệp vụ chỉ cho đánh giá một lần trên booking đã `COMPLETED`.
+- `users.role = GUIDE` và hồ sơ `tour_guides` hiện chưa có khóa ngoại liên kết trực tiếp; các trang Guide chỉ đọc danh sách phân công/khách theo dữ liệu phân công hiện có.
 
 ### 2.2 Các lớp service và phụ thuộc thực thi
 
@@ -325,6 +341,7 @@ classDiagram
         +get_tours(filters) list
         +create_tour(...) int
         +update_tour(...) void
+        +sync_schedule_prices(tour_id, base_price) int
         +create_schedule(...) int
         +update_schedule(...) void
         +postpone_schedule(schedule_id, reason) void
@@ -359,11 +376,15 @@ classDiagram
         +delete_feedback(...) bool
     }
     class AccountingService {
+        +get_payment_reconciliation_list(status) list
         +confirm_payment(payment_id, accountant_id) bool
+        +get_booking_debt_list() list
         +record_debt_payment(...) bool
         +record_tour_expense(...) int
+        +get_tour_expenses(schedule_id) list
         +get_schedule_pnl(schedule_id) dict
         +get_cashflow_summary(...) dict
+        +process_refund(booking_id, refund_amount, accountant_id, notes) bool
     }
     class AnalyticsService {
         +get_dashboard_stats() dict
@@ -392,7 +413,7 @@ classDiagram
     }
     class GeminiService {
         +is_configured() bool
-        +generate_content(prompt, temperature, fallback, timeout) string
+        +generate_content(prompt, temperature, fallback_answer, timeout) string
     }
     class AIContentService {
         +generate_tour_description(...) dict
@@ -490,6 +511,7 @@ sequenceDiagram
     GroundedAnswerBuilder-->>RAG: fallback answer
     RAG->>Gemini: generate_content(prompt, fallback_answer)
     Gemini-->>RAG: grounded answer or fallback
+    RAG->>DB: INSERT chat_logs (non-blocking audit log)
     RAG-->>ChatAPI: { "answer": "...", "tours": matches or alternatives }
     ChatAPI-->>UI: 200 OK (text + tour cards)
     UI-->>Customer: Hiển thị câu trả lời
@@ -531,7 +553,7 @@ flowchart TD
     CreateBooking --> CustomerCancel{Khách yêu cầu Hủy tour?}
     ConfirmBooking --> CustomerCancel
     CustomerCancel -- Có --> UpdateCancelled[Cập nhật booking CANCELLED]
-    UpdateCancelled --> ReleaseSeats[Cộng hoàn trả số chỗ và mở lại lịch nếu phù hợp]
+    UpdateCancelled --> ReleaseSeats[Cộng hoàn trả số chỗ và cập nhật lịch OPEN]
     ReleaseSeats --> CheckPaid{Đã có payment SUCCESS?}
     CheckPaid -- Không --> End
     CheckPaid -- Có --> CreateRefundRequest[Tạo refund_request PENDING bằng số tiền đã trả]
