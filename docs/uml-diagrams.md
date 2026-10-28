@@ -1,6 +1,6 @@
 # Tài Liệu Thiết Kế Biểu Đồ & Bảng UML (UML Diagrams Specification)
 
-Tài liệu này mô hình hóa **trạng thái triển khai hiện tại (as-built)** của hệ thống quản lý tour du lịch tích hợp AI (Đề tài 17), gồm: Use Case Diagram, Class Diagram, Sequence Diagrams, Activity Diagrams và Entity-Relationship Diagram (ERD). Các quyền và luồng được đối chiếu với Flask routes, service và SQLite schema đang có.
+Tài liệu này mô hình hóa **trạng thái triển khai hiện tại (as-built)** của hệ thống quản lý tour du lịch tích hợp AI (Đề tài 17), gồm: Use Case Diagram, Class Diagram, Sequence Diagrams, Activity Diagrams và Entity-Relationship Diagram (ERD). Các quyền và luồng được đối chiếu với Flask routes, service và MySQL schema đang có.
 
 ---
 
@@ -146,7 +146,7 @@ flowchart LR
 
 ## 2. Biểu đồ Lớp (Class Diagram)
 
-> **Phạm vi và cách đọc:** mã nguồn Flask hiện tại không khai báo các lớp entity/ORM riêng; dữ liệu được đọc từ SQLite dưới dạng `sqlite3.Row` và được xử lý bởi các lớp service tĩnh. Vì vậy, sơ đồ 2.1 là **mô hình lớp miền** ánh xạ 1-1 với `database/schema.sql`; sơ đồ 2.2 thể hiện các **lớp thực thi** trong thư mục `services/` và các phụ thuộc chính của chúng.
+> **Phạm vi và cách đọc:** mã nguồn Flask hiện tại không khai báo các lớp entity/ORM riêng; dữ liệu được đọc từ MySQL qua adapter và được chuẩn hóa thành `dict`/`Row` trước khi xử lý bởi các lớp service tĩnh. Vì vậy, sơ đồ 2.1 là **mô hình lớp miền** ánh xạ 1-1 với `database/schema.sql`; sơ đồ 2.2 thể hiện các **lớp thực thi** trong thư mục `services/` và các phụ thuộc chính của chúng.
 
 ### 2.1 Mô hình lớp miền
 
@@ -447,7 +447,7 @@ sequenceDiagram
     actor Customer as 👤 Khách hàng
     participant Route as 🌐 BookingRoute
     participant Service as ⚙️ BookingService
-    participant DB as 🗄️ SQLite Database
+    participant DB as 🗄️ MySQL 8 Database
 
     Customer->>Route: POST /booking/new/{schedule_id} (form data)
     Route->>Service: create_booking(user_id, schedule_id, adults, children, contact)
@@ -478,7 +478,7 @@ sequenceDiagram
     participant RAG as 🧠 RAGService
     participant Analyzer as 🔍 QuestionAnalyzer
     participant Retriever as 🎯 TourRetriever
-    participant DB as 🗄️ SQLite Database
+    participant DB as 🗄️ MySQL 8 Database
     participant CtxBuilder as 📝 ContextBuilder
     participant PromptBuilder as 📄 PromptBuilder
     participant GroundedAnswerBuilder as 🧾 GroundedAnswerBuilder

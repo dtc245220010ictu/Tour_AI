@@ -2,7 +2,7 @@
 
 Tài liệu này mô tả chi tiết dữ liệu đi qua pipeline RAG của TourAI. Các giá trị
 tour cụ thể bên dưới chỉ minh họa cấu trúc phản hồi; dữ liệu thực tế luôn được
-truy xuất từ SQLite tại thời điểm người dùng gửi câu hỏi.
+truy xuất từ MySQL tại thời điểm người dùng gửi câu hỏi.
 
 ---
 
@@ -57,7 +57,7 @@ params = ["Hạ Long", "Đà Nẵng", 4000000.0, 2, 3, 4]
 
 Nếu `sort_by` là `price_asc` hoặc `price_desc`, truy vấn sắp xếp theo giá; nếu
 không, dùng thứ tự lịch khởi hành gần nhất rồi giá. Mọi giá trị lọc đi qua
-placeholder SQLite `?`, không ghép trực tiếp từ câu hỏi.
+placeholder nội bộ `?` (được adapter chuyển sang `%s` của MySQL Connector), không ghép trực tiếp từ câu hỏi.
 
 ### Bước 4: Tour Retriever Result (bản ghi CSDL)
 

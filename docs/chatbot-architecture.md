@@ -15,7 +15,7 @@ flowchart TD
     
     QA["1. Question Analyzer (services/question_analyzer.py)"]
     TR["2. Tour Retriever (services/tour_retriever.py)"]
-    DB[("🗄️ SQLite (Bảng tours, schedules)")]
+    DB[("🗄️ MySQL 8 (Bảng tours, schedules)")]
     CB["3. Context Builder (services/context_builder.py)"]
     PB["4. Prompt Builder (services/prompt_builder.py)"]
     GS["5. Gemini Service (services/gemini_service.py)"]

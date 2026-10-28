@@ -1,5 +1,5 @@
 """
-Purge demo/seed business data from the TourAI database, keeping:
+Purge demo/seed business data from the configured TourAI MySQL database, keeping:
 - The 5 role accounts (admin/staff/accountant/guide/customer)
 - Destinations (master data)
 - Real chat logs created during actual usage
@@ -11,7 +11,6 @@ payments -> feedbacks -> guide_assignments -> tour_expenses
 Usage:
     python scripts/purge_demo_data.py            # only rows marked as seed
     python scripts/purge_demo_data.py --all      # wipe business tables entirely
-    python scripts/purge_demo_data.py --db path/to/db.sqlite
 
 NOTE: The default mode identifies seed rows by the known seed markers
 (booking codes BK-2026100x and the seed batch timestamp). Re-seeding via
@@ -19,12 +18,13 @@ NOTE: The default mode identifies seed rows by the known seed markers
 """
 
 import argparse
-import sqlite3
 import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_DB = BASE_DIR / "database" / "tour_ai.db"
+sys.path.insert(0, str(BASE_DIR))
+
+from database.db import get_db, init_db
 
 # Markers identifying rows created by database/seeder.py
 SEED_BOOKING_CODES = ("BK-20261001", "BK-20261002", "BK-20261003", "BK-20261004")
@@ -137,7 +137,6 @@ def purge_all(cur):
 
 def main():
     parser = argparse.ArgumentParser(description="Purge demo/seed business data.")
-    parser.add_argument("--db", default=str(DEFAULT_DB), help="Path to SQLite database")
     parser.add_argument(
         "--all",
         action="store_true",
@@ -145,26 +144,13 @@ def main():
     )
     args = parser.parse_args()
 
-    db_path = Path(args.db)
-    if not db_path.exists():
-        print(f"ERROR: database not found: {db_path}")
-        sys.exit(1)
-
-    conn = sqlite3.connect(str(db_path))
-    conn.execute("PRAGMA foreign_keys = ON;")
-    cur = conn.cursor()
-
-    try:
+    init_db()
+    with get_db() as conn:
+        cur = conn.cursor()
         summary = purge_all(cur) if args.all else purge_seed(cur)
-        conn.commit()
-    except Exception:
-        conn.rollback()
-        raise
-    finally:
-        conn.close()
 
     mode = "FULL WIPE (--all)" if args.all else "seed-marked rows"
-    print(f"Purged {mode} from {db_path}:")
+    print(f"Purged {mode} from the configured MySQL database:")
     for table, count in summary.items():
         print(f"  {table}: {count} rows deleted")
     print("Kept: users (5 role accounts), destinations, chat_logs (real usage).")

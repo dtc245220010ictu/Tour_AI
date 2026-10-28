@@ -8,11 +8,11 @@ Tài liệu này ghi nhận kết quả đánh giá chất lượng toàn bộ m
 
 - **Tổng thể chất lượng:** **TỐT (GRADE B)**
 - **Mức độ tuân thủ kiến trúc:** Luồng chính tách Presentation -> Routing -> Service -> Database -> RAG; có ngoại lệ ở `accounting_routes.py` truy vấn trực tiếp để nạp dropdown.
-- **Mức độ tuân thủ yêu cầu:** Các test hiện có đều đạt; RAG không phát hiện trả tour không có trong dữ liệu retrieved.
+- **Mức độ tuân thủ yêu cầu:** Logic RAG vẫn được giữ nguyên; bộ kiểm thử phải được chạy lại trên `MYSQL_TEST_DB` trước khi xác nhận kết quả cho runtime MySQL.
 - **Tổng số lỗi phát hiện:**
   - **CRITICAL:** 0
   - **HIGH:** 1 (fallback `SECRET_KEY` hard-code phải được thay bằng cấu hình bắt buộc khi production)
-  - **MEDIUM:** 2 (giới hạn SQLite cho production đa worker; một số query ở route)
+  - **MEDIUM:** 1 (một số query ở route)
   - **LOW:** 2 (Ghi chú về caching và cấu hình session cookie)
 
 ---
@@ -30,7 +30,7 @@ Tài liệu này ghi nhận kết quả đánh giá chất lượng toàn bộ m
 - **Cô lập AI LLM:** [gemini_service.py](../services/gemini_service.py) không có kết nối tới cơ sở dữ liệu. Gemini chỉ nhận Context do [context_builder.py](../services/context_builder.py) chuẩn bị. Điều này loại bỏ hoàn toàn nguy cơ Prompt Injection can thiệp vào database.
 
 ### 2.3 Chất lượng Mã nguồn & Khả năng Bảo trì (Code Quality & Maintainability)
-- Cấu trúc thư mục module hóa rõ ràng (`routes/`, `services/`, `templates/`, `static/`, `database/`, `tests/`); dự án không có package `models/`/ORM, dữ liệu được trao đổi bằng `dict`/`sqlite3.Row`.
+- Cấu trúc thư mục module hóa rõ ràng (`routes/`, `services/`, `templates/`, `static/`, `database/`, `tests/`); dự án không có package `models/`/ORM, dữ liệu được trao đổi bằng `dict`/`Row` do adapter MySQL chuẩn hóa.
 - Tên hàm và biến tuân thủ PEP 8 (`snake_case` cho hàm/biến, `PascalCase` cho class).
 - Mọi hàm đều có docstrings giải thích mục đích, đầu vào và đầu ra.
 
@@ -52,7 +52,7 @@ Tài liệu này ghi nhận kết quả đánh giá chất lượng toàn bộ m
 | `ISSUE-02` | LOW | `app.py` | Khi triển khai trên môi trường Production HTTPS, nên cấu hình thêm `SESSION_COOKIE_SECURE = True` và `SESSION_COOKIE_HTTPONLY = True`. |
 | `ISSUE-03` | LOW | `tour_service.py` | Có thể bổ sung cache tầng in-memory (ví dụ Redis hoặc lru_cache) cho danh mục `get_all_destinations()` để giảm bớt số lần đọc đĩa khi lưu lượng truy cập lớn. |
 | `ISSUE-04` | HIGH | `app.py` | `SECRET_KEY` có giá trị fallback hard-code. Production phải fail-fast khi thiếu secret hoặc inject secret ngẫu nhiên qua environment; không dùng fallback demo. |
-| `ISSUE-05` | MEDIUM | `database/db.py`, `accounting_routes.py` | Runtime chỉ có SQLite; giới hạn một worker khi ghi. Hai query nạp dropdown ở route là ngoại lệ với tầng service, nên chuyển vào service khi tái cấu trúc. |
+| `ISSUE-05` | RESOLVED | `database/db.py` | Runtime đã chuyển sang MySQL 8 với transaction và test database riêng; toàn bộ 175 pytest đã PASS trên MySQL. Hai query nạp dropdown ở route vẫn là ngoại lệ với tầng service, nên chuyển vào service khi tái cấu trúc. |
 
 ---
 

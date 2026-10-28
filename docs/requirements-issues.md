@@ -22,7 +22,7 @@ Tài liệu này ghi nhận các điểm mơ hồ (ambiguities), giả định (
 - **Giả định 2 (Kiểm soát chỗ - Concurrency):** Khi khách hàng tạo booking, hệ thống giữ chỗ ngay bằng kiểm tra điều kiện `available_seats >= requested_seats` và cập nhật nguyên tử trong cùng transaction để bảo đảm không bị race condition. Booking `PENDING`, `CONFIRMED`, `COMPLETED` giữ chỗ; booking `CANCELLED` hoàn chỗ.
 - **Giả định 3 (AI Fallback):** Trong trường hợp người dùng chưa cấu hình `GEMINI_API_KEY` hoặc mạng bị gián đoạn, hệ thống phải có cơ chế fallback thông minh (Rule-based Search & Mock Response) để không làm crash hệ thống và vẫn phục vụ được khách hàng.
 - **Giả định 4 (Phân quyền):** Người dùng có vai trò `ADMIN` có toàn quyền truy cập các module quản trị; `STAFF` quản lý tour/lịch/điểm đến, xem khách và xử lý trạng thái booking nhưng không quản lý feedback hoặc tài chính; `CUSTOMER` chỉ quản lý booking và feedback của chính mình.
-- **Giả định 5 (Lưu trữ):** Mã hiện tại sử dụng SQLite. MySQL là yêu cầu/hướng phát triển chưa được implement và không được coi là backend cấu hình sẵn.
+- **Giả định 5 (Lưu trữ):** MySQL 8 là backend bắt buộc. Môi trường test phải dùng database MySQL riêng qua `MYSQL_TEST_DB` (hậu tố `_test`); không dùng SQLite cho runtime hoặc test tích hợp.
 
 ---
 

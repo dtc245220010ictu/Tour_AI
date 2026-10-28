@@ -2,9 +2,9 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Framework-Flask%203.0%2B-green.svg)](https://flask.palletsprojects.com/)
-[![Database](https://img.shields.io/badge/Database-SQLite-orange.svg)](https://www.sqlite.org/)
+[![Database](https://img.shields.io/badge/Database-MySQL%208-blue.svg)](https://www.mysql.com/)
 [![AI Engine](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%20%7C%20RAG-purple.svg)](https://aistudio.google.com/)
-[![Tests](https://img.shields.io/badge/Tests-175%2F175%20PASSED%20(100%25)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
+[![Tests](https://img.shields.io/badge/Tests-175%2F175%20PASSED%20(MySQL)-brightgreen.svg)](#-chạy-kiểm-thử-tự-động)
 
 ---
 
@@ -88,8 +88,8 @@ TourAI/
 │   └── user-guide.md                   # Hướng dẫn sử dụng cho Khách hàng & Nhân viên
 │
 ├── database/
-│   ├── schema.sql                      # Schema DDL SQLite, gồm hoàn tiền và chi phí tour
-│   ├── db.py                           # Database Manager, execute_query & migration tương thích
+│   ├── schema.sql                      # Schema DDL MySQL 8, gồm hoàn tiền và chi phí tour
+│   ├── db.py                           # MySQL connection manager và truy vấn có tham số
 │   └── seeder.py                       # Seeder dữ liệu mẫu (chỉ chạy khi cần demo)
 │
 ├── routes/                             # Flask Blueprints (Controllers)
@@ -203,6 +203,7 @@ TourAI/
 ### 3.1 Yêu cầu hệ thống
 - Python 3.10 trở lên
 - Git
+- MySQL 8.0 trở lên
 
 ### 3.2 Các bước cài đặt
 1. **Clone repository và mở thư mục dự án:**
@@ -221,10 +222,16 @@ TourAI/
    ```bash
    copy .env.example .env
    ```
+   Cập nhật các biến `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD` và `MYSQL_DB` bằng tài khoản MySQL có quyền tạo bảng. Không đưa mật khẩu thật vào Git.
    *(Tùy chọn: Nhập `GEMINI_API_KEY` từ Google AI Studio nếu muốn gọi trực tiếp Google Gemini API. Nếu chưa có API key, hệ thống tự động kích hoạt chế độ Thông Minh Fallback để phục vụ đầy đủ mọi chức năng).*
 
 4. **Khởi tạo cơ sở dữ liệu:**
-   Bảng được tự tạo tự động khi chạy app (schema.sql). Hệ thống **không tự nạp dữ liệu demo** theo mặc định — chỉ có dữ liệu thật bạn tạo.
+   Tạo database MySQL và schema trước khi chạy ứng dụng:
+   ```bash
+   python -c "from database.db import create_database_if_missing, init_db; create_database_if_missing(); init_db()"
+   ```
+   Hệ thống **không tự nạp dữ liệu demo** theo mặc định — chỉ có dữ liệu thật bạn tạo.
+   Nếu cần chuyển dữ liệu từ file SQLite cũ, sao lưu trước rồi chạy `python scripts/migrate_sqlite_to_mysql.py --source database/tour_ai.db`. Tool sẽ từ chối ghi đè target đã có dữ liệu; tùy chọn `--replace` xóa toàn bộ dữ liệu TourAI trong MySQL target trước khi import.
    - *(Tùy chọn)* Nạp dữ liệu mẫu để demo/test:
      ```bash
      python database/seeder.py
@@ -242,7 +249,9 @@ Chạy toàn bộ bộ test kiểm tra tính đúng đắn, phòng chống Overb
 ```bash
 python -m pytest -v
 ```
-**Kết quả đã xác minh:** 175/175 tests `PASSED` 100%.
+Thiết lập `MYSQL_TEST_DB` là một database MySQL riêng có hậu tố `_test`. Pytest sẽ xóa và tạo lại riêng database này ở đầu phiên chạy; tuyệt đối không trỏ biến này tới database vận hành.
+
+**Kết quả đã xác minh trên MySQL 8:** 175/175 tests `PASSED` trong 17,63 giây. Suite dùng database `MYSQL_TEST_DB` tách biệt và tạo lại database này ở đầu mỗi phiên chạy.
 *(Bao gồm xác thực/RBAC, CRUD & đồng bộ tour–lịch, booking–thanh toán–duyệt hoàn tiền, chống overbooking, RAG zero-hallucination, phân nhánh tóm tắt phản hồi khách hàng cho ADMIN, AI content fallback, đăng ký đánh giá chỉ khi đã đi tour và các truy vấn tư vấn mơ hồ.)*
 
 ---

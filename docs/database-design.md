@@ -1,6 +1,6 @@
 # Tài Liệu Thiết Kế Cơ Sở Dữ Liệu (Database Design Specification)
 
-Tài liệu này đặc tả thiết kế cơ sở dữ liệu quan hệ cho hệ thống TourAI (Đề tài 17) đạt chuẩn chuẩn hóa 3NF. Phiên bản mã nguồn hiện tại sử dụng SQLite qua `sqlite3`; MySQL chưa được triển khai như một runtime backend.
+Tài liệu này đặc tả thiết kế cơ sở dữ liệu quan hệ cho hệ thống TourAI (Đề tài 17) đạt chuẩn chuẩn hóa 3NF. Runtime sử dụng **MySQL 8** qua `mysql-connector-python`; DDL nguồn nằm tại `database/schema.sql`.
 
 ---
 

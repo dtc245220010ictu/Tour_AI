@@ -52,7 +52,7 @@
 ### Phân hệ 9: Trợ lý AI Tư Vấn Tour (RAG Chatbot)
 - **FR-022:** Khách hàng có thể tương tác với Chatbot bằng ngôn ngữ tự nhiên tiếng Việt để tìm kiếm và nhận tư vấn tour.
 - **FR-023:** Chatbot phân tích câu hỏi người dùng thành các tiêu chí có cấu trúc (điểm đến, ngân sách tối đa, thời lượng, ngày đi, sở thích).
-- **FR-024:** Chatbot bắt buộc phải truy vấn dữ liệu từ CSDL ứng dụng hiện tại (SQLite) để lấy các tour còn chỗ phù hợp với tiêu chí của khách.
+- **FR-024:** Chatbot bắt buộc phải truy vấn dữ liệu từ CSDL ứng dụng hiện tại (MySQL) để lấy các tour còn chỗ phù hợp với tiêu chí của khách.
 - **FR-025:** Nếu không tìm thấy tour nào phù hợp trong cơ sở dữ liệu, Chatbot phải thông báo rõ ràng rằng hiện không có tour thỏa mãn thay vì tự bịa ra thông tin giả mạo.
 
 ---

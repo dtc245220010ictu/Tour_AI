@@ -2,6 +2,8 @@
 
 Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự động toàn diện cho hệ thống **TourAI (Đề tài 17)** theo tiêu chuẩn `testing` skill.
 
+> **Kết quả xác nhận sau migration MySQL:** `python -m pytest -q` đã chạy trên MySQL 8 với database `tourai_test` tách biệt và cho kết quả **175 passed in 17.63s**. Fixture chỉ tạo lại database có hậu tố `_test`, không tác động database vận hành `tourai`.
+
 ---
 
 ## 1. Tóm tắt kết quả kiểm thử (Executive Summary)
@@ -11,12 +13,11 @@ Tài liệu này ghi nhận kết quả thực thi bộ kiểm thử tự độn
 - **Môi trường:** Python 3.14 (Windows)
 - **Tổng số ca kiểm thử:** **175/175 PASSED**
 - **Tỷ lệ thành công:** **100.0%**
-- **Thời gian thực thi:** 10.94 giây
+- **Thời gian thực thi:** 17.63 giây (MySQL 8)
 - **Tình trạng:** **PASSED - READY FOR PRODUCTION**
 
 ```text
-175 tests collected
-175 passed in 10.78s
+175 passed in 17.63s
 ```
 
 ---

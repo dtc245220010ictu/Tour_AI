@@ -1,24 +1,24 @@
-# Triển khai TourAI hiện tại (SQLite, Gunicorn và Nginx)
+# Triển khai TourAI với MySQL 8, Gunicorn và Nginx
 
-Tài liệu này phản ánh mã nguồn đang có. `database/db.py` chỉ sử dụng SQLite; dự án **chưa có** backend MySQL, cấu hình `DATABASE_URL` hay Docker deployment. Không dùng các hướng dẫn MySQL cũ cho phiên bản này.
+Tài liệu này phản ánh runtime hiện tại: Flask kết nối trực tiếp **MySQL 8** qua `mysql-connector-python`. SQLite không còn là backend của ứng dụng. Trước khi triển khai, cần có một database MySQL và tài khoản ứng dụng có quyền trên database đó.
 
 ## 1. Điều kiện chạy
 
-- Ubuntu Server có Python 3.10 trở lên và Nginx.
-- Một thư mục dữ liệu có quyền ghi cho tiến trình ứng dụng.
-- Một worker Gunicorn. SQLite phù hợp cho quy mô nhỏ hoặc demo; tăng nhiều worker ghi đồng thời có thể gây lock database.
+- Ubuntu Server có Python 3.10+, MySQL 8.0+ và Nginx.
+- Tài khoản hệ điều hành `tourai` để chạy ứng dụng.
+- Tài khoản MySQL riêng cho ứng dụng. Tài khoản bootstrap có quyền tạo database/schema; tài khoản chạy Gunicorn chỉ cần các quyền DML cần thiết sau khi schema đã được khởi tạo. Không dùng tài khoản `root` cho Gunicorn.
 
 ## 2. Cài đặt ứng dụng
 
 ```bash
 sudo apt update
-sudo apt install -y python3 python3-venv nginx
+sudo apt install -y python3 python3-venv nginx mysql-server
 sudo useradd --system --create-home --shell /usr/sbin/nologin tourai
-sudo mkdir -p /var/www/tourai /var/lib/tourai
-sudo chown -R tourai:www-data /var/www/tourai /var/lib/tourai
+sudo mkdir -p /var/www/tourai
+sudo chown -R tourai:www-data /var/www/tourai
 ```
 
-Sao chép mã nguồn vào `/var/www/tourai`, sau đó cài dependency:
+Sao chép mã nguồn vào `/var/www/tourai`, sau đó cài dependencies:
 
 ```bash
 cd /var/www/tourai
@@ -28,26 +28,38 @@ pip install --upgrade pip
 pip install -r requirements.txt gunicorn
 ```
 
-## 3. Cấu hình biến môi trường và SQLite
+## 3. Cấu hình MySQL và biến môi trường
 
-Tạo `/var/www/tourai/.env`, thay các giá trị mẫu bằng secret thực tế:
+Tạo database và tài khoản ứng dụng bằng quản trị viên MySQL. Đổi mật khẩu mẫu trước khi dùng:
+
+```sql
+CREATE DATABASE tourai CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'tourai_app'@'127.0.0.1' IDENTIFIED BY 'replace-with-a-strong-password';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, REFERENCES
+    ON tourai.* TO 'tourai_app'@'127.0.0.1';
+FLUSH PRIVILEGES;
+```
+
+Tạo `/var/www/tourai/.env` và thay toàn bộ giá trị mẫu:
 
 ```ini
 SECRET_KEY=replace-with-a-long-random-secret
 FLASK_DEBUG=0
 PORT=5000
-SQLITE_DB_PATH=/var/lib/tourai/tour_ai.db
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=tourai_app
+MYSQL_PASSWORD=replace-with-a-strong-password
+MYSQL_DB=tourai
 ENABLE_DEMO_QUICK_LOGIN=0
 SEED_DEMO_DATA=0
 
-# Tùy chọn: chatbot/sinh nội dung AI sẽ dùng fallback nếu không có key.
+# Không bắt buộc: thiếu key thì AI dùng fallback an toàn.
 GEMINI_API_KEY=
 GEMINI_MODEL=gemini-3.6-flash
 ```
 
-`SECRET_KEY` phải được đặt khi triển khai. Giá trị fallback trong mã chỉ dành cho môi trường local/demo và không phù hợp production.
-
-Khởi tạo schema SQLite bằng chính mã ứng dụng:
+Khởi tạo bảng và chỉ mục từ `database/schema.sql`:
 
 ```bash
 cd /var/www/tourai
@@ -55,7 +67,13 @@ source venv/bin/activate
 python -c "from database.db import init_db; init_db()"
 ```
 
-Không bật `SEED_DEMO_DATA` trên môi trường chứa dữ liệu thật. Nếu cần dữ liệu minh họa cho môi trường demo riêng, chạy `python database/seeder.py` một lần.
+Nếu database chưa tồn tại và tài khoản có quyền tạo database, dùng lệnh sau thay cho lệnh trên:
+
+```bash
+python -c "from database.db import create_database_if_missing, init_db; create_database_if_missing(); init_db()"
+```
+
+Không bật `SEED_DEMO_DATA` trên môi trường chứa dữ liệu thật. Với môi trường demo riêng, chạy `python database/seeder.py` một lần sau khi khởi tạo schema.
 
 ## 4. Systemd và Gunicorn
 
@@ -64,7 +82,7 @@ Tạo `/etc/systemd/system/tourai.service`:
 ```ini
 [Unit]
 Description=TourAI Flask application
-After=network.target
+After=network.target mysql.service
 
 [Service]
 User=tourai
@@ -72,7 +90,7 @@ Group=www-data
 WorkingDirectory=/var/www/tourai
 Environment="PATH=/var/www/tourai/venv/bin"
 EnvironmentFile=/var/www/tourai/.env
-ExecStart=/var/www/tourai/venv/bin/gunicorn --workers 1 --bind 127.0.0.1:5000 app:app
+ExecStart=/var/www/tourai/venv/bin/gunicorn --workers 2 --bind 127.0.0.1:5000 app:app
 Restart=always
 RestartSec=5
 
@@ -85,6 +103,8 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now tourai
 sudo systemctl status tourai
 ```
+
+Số worker phải được điều chỉnh theo CPU, dung lượng MySQL và tải thực tế. Booking vẫn dùng cập nhật có điều kiện trong transaction để bảo vệ số chỗ.
 
 ## 5. Nginx reverse proxy
 
@@ -116,20 +136,28 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## 6. Sao lưu và vận hành
+## 6. Sao lưu, khôi phục và kiểm thử
 
-Sao lưu định kỳ cả cơ sở dữ liệu và ảnh tải lên; hai nơi này đều là dữ liệu người dùng:
+Sao lưu database bằng `mysqldump` và sao lưu ảnh tải lên. Bảo quản bản sao ở vị trí khác máy chủ:
 
 ```bash
-sudo -u tourai mkdir -p /var/backups/tourai
-sudo -u tourai cp /var/lib/tourai/tour_ai.db /var/backups/tourai/tour_ai-$(date +%F).db
+sudo mkdir -p /var/backups/tourai
+mysqldump --single-transaction --routines --triggers -h 127.0.0.1 -u tourai_app -p tourai > /var/backups/tourai/tourai-$(date +%F).sql
 sudo -u tourai tar -czf /var/backups/tourai/uploads-$(date +%F).tar.gz -C /var/www/tourai/static uploads
 ```
 
-Kiểm tra log khi có sự cố:
+Kiểm thử khôi phục định kỳ vào một database tách biệt, ví dụ `tourai_restore_test`; không khôi phục đè database vận hành.
+
+Để chạy pytest, khai báo `MYSQL_TEST_DB=tourai_test`. Fixture sẽ **xóa và tạo lại** database này ở đầu phiên. Database test phải kết thúc bằng `_test` và tuyệt đối không trỏ tới `tourai`.
+
+Do fixture thực hiện `DROP DATABASE` và `CREATE DATABASE`, chỉ chạy pytest với tài khoản phát triển/test chuyên dụng có quyền đó; không cấp quyền này cho tài khoản Gunicorn production.
+
+```bash
+python -m pytest -v
+```
+
+Theo dõi log khi có sự cố:
 
 ```bash
 sudo journalctl -u tourai -f
 ```
-
-Khi cần quy mô ghi đồng thời lớn hoặc triển khai nhiều instance, cần triển khai và kiểm thử một data-access backend MySQL/PostgreSQL trước; không chỉ thay biến môi trường.

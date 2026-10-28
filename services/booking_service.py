@@ -4,7 +4,7 @@ Guarantees zero-overbooking using atomic database transactions.
 """
 
 import time
-import random
+import secrets
 from database.db import get_db, execute_query
 
 class OverbookingError(Exception):
@@ -15,8 +15,10 @@ class BookingService:
     @staticmethod
     def generate_booking_code() -> str:
         timestamp = time.strftime("%Y%m%d")
-        rand = random.randint(1000, 9999)
-        return f"BK-{timestamp}-{rand}"
+        # Four random digits can collide during a busy test run or when many
+        # bookings are created on the same day.  Keep a readable date prefix
+        # while using enough cryptographic randomness for the UNIQUE column.
+        return f"BK-{timestamp}-{secrets.token_hex(6).upper()}"
 
     @staticmethod
     def create_booking(user_id: int, schedule_id: int, customer_name: str,
@@ -176,7 +178,7 @@ class BookingService:
                 cursor.execute(
                     """UPDATE bookings
                        SET status = 'CANCELLED',
-                           notes = COALESCE(notes || ' | ', '') || ?
+                           notes = CONCAT(COALESCE(CONCAT(notes, ' | '), ''), ?)
                        WHERE id = ?;""",
                     (f"Lý do hủy: {reason.strip()}", booking_id)
                 )

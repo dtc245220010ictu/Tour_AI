@@ -1,6 +1,6 @@
 # Yêu Cầu Khách Hàng (Customer Requirements) - Đề Tài 17
 
-> **Trạng thái thực hiện:** Đây là hồ sơ yêu cầu đầu vào và được giữ nguyên để truy xuất nguồn gốc. Mã hiện tại đáp ứng bằng SQLite (chưa có MySQL runtime); trạng thái booking triển khai là `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`. Các chênh lệch và quyết định triển khai được ghi tại `docs/requirements-issues.md` và `docs/architecture-decisions.md`.
+> **Trạng thái thực hiện:** Đây là hồ sơ yêu cầu đầu vào và được giữ nguyên để truy xuất nguồn gốc. Runtime hiện đáp ứng yêu cầu CSDL bằng MySQL 8; trạng thái booking triển khai là `PENDING`, `CONFIRMED`, `COMPLETED`, `CANCELLED`. Các chênh lệch và quyết định triển khai được ghi tại `docs/requirements-issues.md` và `docs/architecture-decisions.md`.
 
 ## 1. Bối cảnh dự án
 Công ty du lịch cần một hệ thống thông tin toàn diện để quản lý hoạt động kinh doanh lữ hành, bao gồm: tour du lịch, lịch khởi hành, quản lý khách hàng, đặt chỗ (booking), thanh toán, phân công hướng dẫn viên và tiếp nhận phản hồi sau chuyến đi.
@@ -45,7 +45,7 @@ Trong thực tế, khách hàng thường gặp khó khăn khi tìm kiếm tour 
 
 ## 3. Yêu cầu kỹ thuật & Ràng buộc
 - Backend: Python Flask.
-- Cơ sở dữ liệu: MySQL (hỗ trợ SQLite cho môi trường local/test).
+- Cơ sở dữ liệu: MySQL 8 (môi trường test dùng một database MySQL tách biệt).
 - AI Engine: Google Gemini API (hoặc OpenAI/Claude), có cơ chế bảo vệ API Key an toàn trong biến môi trường `.env`, có fallback khi chưa cấu hình key.
 - Giao diện: Web responsive hiện đại, trực quan, thẩm mỹ cao (HTML5, CSS3, JavaScript).
 

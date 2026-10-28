@@ -52,7 +52,7 @@ graph TD
 
     subgraph DataLayer["5. Data Access & Persistence Layer"]
         DB_Manager["Database Manager (database/db.py)"]
-        DB_Storage[("SQLite Database")]
+        DB_Storage[("MySQL 8 Database")]
     end
 
     %% Flow connections
@@ -92,7 +92,7 @@ graph TD
 | **RAG** | `context_builder.py` | Nhận kết quả từ Retriever, trích lọc thông tin cần thiết, định dạng thành văn bản ngắn gọn, chính xác. |
 | **RAG** | `prompt_builder.py` | Gắn context vào System Prompt với các quy tắc ràng buộc nghiêm ngặt: "Chỉ trả lời dựa trên CONTEXT, tuyệt đối không bịa tour/giá". |
 | **RAG** | `gemini_service.py` | Gửi prompt đến Gemini API qua biến môi trường an toàn, có timeout, xử lý ngoại lệ và fallback. |
-| **Data Access** | `database/db.py` | Mở kết nối SQLite theo thao tác, bật foreign keys, quản lý transaction và migration tương thích cho SQLite. |
+| **Data Access** | `database/db.py` | Mở kết nối MySQL theo thao tác, quản lý commit/rollback và chuẩn hóa hàng dữ liệu cho các service. |
 
 > Ngoại lệ hiện hữu: `accounting_routes.py` gọi `execute_query()` để nạp danh sách lịch cho dropdown của trang Chi phí và P&L. Đây là chi tiết triển khai hiện tại; khi tái cấu trúc nên chuyển các query này vào `AccountingService`.
 
@@ -103,7 +103,7 @@ graph TD
    - Client-side (JavaScript) tuyệt đối KHÔNG có quyền truy cập hay chứa Gemini API Key.
    - Toàn bộ lời gọi tới AI phải thông qua endpoint nội bộ `POST /api/chat`.
 2. **Ngăn chặn SQL Injection:**
-   - Các truy vấn nhận dữ liệu đầu vào trong `TourRetriever` và service dùng Parameterized Query SQLite (`?`), không ghép giá trị đầu vào trực tiếp vào SQL.
+   - Các truy vấn nhận dữ liệu đầu vào trong `TourRetriever` và service dùng truy vấn có tham số. Mã nguồn dùng dấu `?` qua adapter nội bộ; adapter chuyển an toàn sang `%s` của MySQL Connector, không ghép giá trị đầu vào trực tiếp vào SQL.
 3. **Kiểm soát truy cập (RBAC):**
    - Sử dụng decorator `@login_required` và `@roles_required(['ADMIN', 'STAFF'])` cho các route quản trị.
 4. **Cô lập RAG với Database:**

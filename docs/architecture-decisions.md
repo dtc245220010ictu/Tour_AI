@@ -69,23 +69,24 @@ Nhiều khách hàng có thể cùng đặt chỗ cho một đợt khởi hành 
 
 ---
 
-## ADR-004: Lưu trữ SQLite trong phiên bản hiện tại
+## ADR-004: Lưu trữ MySQL 8 cho runtime
 
 ### Trạng thái
-**SUPERSEDED — tài liệu đã được đồng bộ với hiện trạng mã nguồn**
+**APPROVED**
 
 ### Bối cảnh
-Tài liệu cũ từng mô tả chiến lược dual database. Kiểm tra `database/db.py` cho thấy runtime chỉ tạo `sqlite3.connect(...)`; không có driver, connection factory hay chuyển đổi placeholder cho MySQL.
+Yêu cầu dự án bắt buộc sử dụng MySQL. Backend cũ dùng SQLite không đáp ứng yêu cầu triển khai, kiểm soát đồng thời và đối chiếu báo cáo.
 
 ### Quyết định
-Phiên bản hiện tại chính thức dùng SQLite:
-- Mặc định dùng `database/tour_ai.db`; có thể đổi vị trí bằng `SQLITE_DB_PATH`.
-- `database/schema.sql` và migration trong `init_db()` là nguồn khởi tạo dữ liệu.
-- MySQL là hạng mục chưa triển khai, không phải tùy chọn cấu hình hiện hành.
+Phiên bản hiện tại chính thức dùng MySQL 8:
+- Kết nối được cấu hình bằng `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD` và `MYSQL_DB`.
+- `database/schema.sql` là DDL MySQL; `init_db()` tạo bảng và chỉ mục.
+- `database/db.py` dùng `mysql-connector-python`, quản lý transaction và cung cấp adapter giữ hợp đồng truy vấn có tham số của các service.
+- Dữ liệu SQLite cũ chỉ được chuyển bằng `scripts/migrate_sqlite_to_mysql.py` khi người vận hành chủ động chạy.
 
 ### Hệ quả
-- **Tích cực:** Thiết lập đơn giản, phù hợp local/demo và test isolated.
-- **Giới hạn:** Production đa tiến trình/ghi đồng thời lớn cần thiết kế backend MySQL/PostgreSQL riêng; không được quảng bá khả năng này trước khi implement driver, migration và test tương thích.
+- **Tích cực:** Đáp ứng yêu cầu MySQL, hỗ trợ nhiều worker và có ràng buộc khóa ngoại/chỉ mục ở server CSDL.
+- **Giới hạn:** Cần quản lý tài khoản, sao lưu, quyền truy cập và một database test riêng; không dùng `MYSQL_TEST_DB` cho dữ liệu vận hành.
 
 ---
 
